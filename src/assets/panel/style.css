@@ -24,7 +24,7 @@
 body {
     background-image: url('https://framagit.org/1208149336/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads') !important;
     background-size: cover !important;
-    background-position: center !important;
+    background-position: left !important;
     background-repeat: no-repeat !important;
     background-attachment: fixed !important;
     font-family: Twemoji Country Flags, system-ui;
