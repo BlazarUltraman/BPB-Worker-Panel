@@ -6,8 +6,12 @@ import { globSync } from 'glob';
 import { minify as jsMinify } from 'terser';
 import { minify as htmlMinify } from 'html-minifier';
 import JSZip from "jszip";
+import obfs from 'javascript-obfuscator';
 import pkg from '../package.json' with { type: 'json' };
 import { gzipSync } from 'zlib';
+
+const env = process.env.NODE_ENV || 'mangle';
+const mangleMode = env === 'mangle';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = pathDirname(__filename);
@@ -55,16 +59,37 @@ async function processHtmlPages() {
         result[dir] = JSON.stringify(htmlBase64);
     }
 
-    console.log(`${success} Assets bundled successfully!`);
+    console.log(`${success} Assets bundled successfuly!`);
     return result;
 }
 
+function generateJunkCode() {
+    const minVars = 50, maxVars = 500;
+    const minFuncs = 50, maxFuncs = 500;
+
+    const varCount = Math.floor(Math.random() * (maxVars - minVars + 1)) + minVars;
+    const funcCount = Math.floor(Math.random() * (maxFuncs - minFuncs + 1)) + minFuncs;
+
+    const junkVars = Array.from({ length: varCount }, (_, i) => {
+        const varName = `__junk_${Math.random().toString(36).substring(2, 10)}_${i}`;
+        const value = Math.floor(Math.random() * 100000);
+        return `let ${varName} = ${value};`;
+    }).join('\n');
+
+    const junkFuncs = Array.from({ length: funcCount }, (_, i) => {
+        const funcName = `__junkFunc_${Math.random().toString(36).substring(2, 10)}_${i}`;
+        return `function ${funcName}() { return ${Math.floor(Math.random() * 1000)}; }`;
+    }).join('\n');
+
+    return `${junkVars}\n${junkFuncs}\n`;
+}
+
 async function buildWorker() {
+
     const htmls = await processHtmlPages();
     const faviconBuffer = readFileSync('./src/assets/favicon.ico');
     const faviconBase64 = faviconBuffer.toString('base64');
 
-    // 使用esbuild构建TypeScript代码
     const code = await build({
         entryPoints: [join(__dirname, '../src/worker.ts')],
         bundle: true,
@@ -84,34 +109,55 @@ async function buildWorker() {
         }
     });
 
-    console.log(`${success} Worker built successfully!`);
+    console.log(`${success} Worker built successfuly!`);
 
-    // 压缩JavaScript代码
-    const minified = await jsMinify(code.outputFiles[0].text, {
-        module: true,
-        output: {
-            comments: false
-        },
-        compress: {
-            dead_code: false,
-            unused: false
-        }
-    });
+    const minifyCode = async (code) => {
+        const minified = await jsMinify(code, {
+            module: true,
+            output: {
+                comments: false
+            },
+            compress: {
+                dead_code: false,
+                unused: false
+            }
+        });
 
-    console.log(`${success} Worker minified successfully!`);
+        console.log(`${success} Worker minified successfuly!`);
+        return minified;
+    }
 
-    // 添加构建时间戳
+    let finalCode;
+
+    if (mangleMode) {
+        const junkCode = generateJunkCode();
+        const minifiedCode = await minifyCode(junkCode + code.outputFiles[0].text);
+        finalCode = minifiedCode.code;
+    } else {
+        const minifiedCode = await minifyCode(code.outputFiles[0].text);
+        const obfuscationResult = obfs.obfuscate(minifiedCode.code, {
+            stringArrayThreshold: 1,
+            stringArrayEncoding: [
+                "rc4"
+            ],
+            numbersToExpressions: true,
+            transformObjectKeys: true,
+            renameGlobals: true,
+            deadCodeInjection: true,
+            deadCodeInjectionThreshold: 0.2,
+            target: "browser"
+        });
+
+        console.log(`${success} Worker obfuscated successfuly!`);
+        finalCode = obfuscationResult.getObfuscatedCode();
+    }
+
     const buildTimestamp = new Date().toISOString();
     const buildInfo = `// Build: ${buildTimestamp}\n`;
-    const worker = `${buildInfo}// @ts-nocheck\n${minified.code}`;
-    
-    // 确保输出目录存在
+    const worker = `${buildInfo}// @ts-nocheck\n${finalCode}`;
     mkdirSync(DIST_PATH, { recursive: true });
-    
-    // 写入worker.js文件
     writeFileSync('./dist/worker.js', worker, 'utf8');
 
-    // 创建ZIP压缩包（可选）
     const zip = new JSZip();
     zip.file('_worker.js', worker);
     zip.generateAsync({
@@ -119,7 +165,7 @@ async function buildWorker() {
         compression: 'DEFLATE'
     }).then(nodebuffer => writeFileSync('./dist/worker.zip', nodebuffer));
 
-    console.log(`${success} Build completed!`);
+    console.log(`${success} Done!`);
 }
 
 buildWorker().catch(err => {
