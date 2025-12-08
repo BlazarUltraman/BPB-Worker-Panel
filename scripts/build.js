@@ -64,6 +64,7 @@ async function buildWorker() {
     const faviconBuffer = readFileSync('./src/assets/favicon.ico');
     const faviconBase64 = faviconBuffer.toString('base64');
 
+    // 使用esbuild构建TypeScript代码
     const code = await build({
         entryPoints: [join(__dirname, '../src/worker.ts')],
         bundle: true,
@@ -85,31 +86,32 @@ async function buildWorker() {
 
     console.log(`${success} Worker built successfully!`);
 
-    const minifyCode = async (code) => {
-        const minified = await jsMinify(code, {
-            module: true,
-            output: {
-                comments: false
-            },
-            compress: {
-                dead_code: false,
-                unused: false
-            }
-        });
+    // 压缩JavaScript代码
+    const minified = await jsMinify(code.outputFiles[0].text, {
+        module: true,
+        output: {
+            comments: false
+        },
+        compress: {
+            dead_code: false,
+            unused: false
+        }
+    });
 
-        console.log(`${success} Worker minified successfully!`);
-        return minified;
-    }
+    console.log(`${success} Worker minified successfully!`);
 
-    const minifiedCode = await minifyCode(code.outputFiles[0].text);
-    const finalCode = minifiedCode.code;
-
+    // 添加构建时间戳
     const buildTimestamp = new Date().toISOString();
     const buildInfo = `// Build: ${buildTimestamp}\n`;
-    const worker = `${buildInfo}// @ts-nocheck\n${finalCode}`;
+    const worker = `${buildInfo}// @ts-nocheck\n${minified.code}`;
+    
+    // 确保输出目录存在
     mkdirSync(DIST_PATH, { recursive: true });
+    
+    // 写入worker.js文件
     writeFileSync('./dist/worker.js', worker, 'utf8');
 
+    // 创建ZIP压缩包（可选）
     const zip = new JSZip();
     zip.file('_worker.js', worker);
     zip.generateAsync({
@@ -117,7 +119,7 @@ async function buildWorker() {
         compression: 'DEFLATE'
     }).then(nodebuffer => writeFileSync('./dist/worker.zip', nodebuffer));
 
-    console.log(`${success} Done!`);
+    console.log(`${success} Build completed!`);
 }
 
 buildWorker().catch(err => {
