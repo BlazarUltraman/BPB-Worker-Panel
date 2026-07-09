@@ -48,22 +48,33 @@ export function getProtocols() {
     return [].concatIf(VLConfigs, _VL_).concatIf(TRConfigs, _TR_);
 }
 
-export async function getConfigAddresses(isFragment: boolean): Promise<string[]> {
-    const {
-        httpConfig: { hostName },
-        settings: { enableIPv6, customCdnAddrs, cleanIPs }
-    } = globalThis;
+function getCleanIPRemark(address: string): string | null {
+    const cleanIPs = globalThis.settings.cleanIPs;
+    const normalizeAddr = (addr: string) => addr.replace(/^\[|\]$/g, '');
+    const normalizedTarget = normalizeAddr(address);
 
-    const { ipv4, ipv6 } = await resolveDNS(hostName, !enableIPv6);
+    for (const item of cleanIPs) {
+        const parts = item.split('#');
+        const addr = normalizeAddr(parts[0].trim());
+        if (addr === normalizedTarget && parts.length > 1) {
+            return parts.slice(1).join('#').trim();
+        }
+    }
+    return null;
+}
+
+export async function getConfigAddresses(isFragment: boolean): Promise<string[]> {
+    const { /* ... */ cleanIPs } = globalThis.settings;
+    // ...
+    const cleanAddresses = cleanIPs.map(item => item.split('#')[0].trim()).filter(Boolean);
     const addrs = [
         hostName,
         'www.speedtest.net',
         ...ipv4,
         ...ipv6.map((ip: string) => `[${ip}]`),
-        ...cleanIPs
+        ...cleanAddresses
     ];
-
-    return addrs.concatIf(!isFragment, customCdnAddrs);
+    // ...
 }
 
 export function generateRemark(
@@ -74,22 +85,16 @@ export function generateRemark(
     isFragment: boolean,
     isChain: boolean
 ): string {
-    const {
-        settings: { cleanIPs, customCdnAddrs },
-        dict: { _VL_, _VL_CAP_, _TR_CAP_ }
-    } = globalThis;
-
-    const isCustomAddr = customCdnAddrs.includes(address);
-    const configType = isCustomAddr ? ' C' : isFragment ? ' F' : '';
-    const chainSign = isChain ? '🔗 ' : '';
+    const { _VL_, _VL_CAP_, _TR_CAP_ } = globalThis.dict;
     const protoSign = protocol === _VL_ ? _VL_CAP_ : _TR_CAP_;
-    let addressType;
+    const prefix = isChain ? '🔗 ' : '';
+    const remark = getCleanIPRemark(address);
 
-    cleanIPs.includes(address)
-        ? addressType = 'Clean IP'
-        : addressType = isDomain(address) ? 'Domain' : isIPv4(address) ? 'IPv4' : isIPv6(address) ? 'IPv6' : '';
-
-    return `💦 ${index} - ${chainSign}${protoSign}${configType} - ${addressType} : ${port}`;
+    if (remark) {
+        return `☁ ${remark}-${prefix}${protoSign}-${port}`;
+    } else {
+        return `💦 ${index}-${prefix}${protoSign}-${port}`;
+    }
 }
 
 export function randomUpperCase(str: string): string {
