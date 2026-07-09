@@ -83,6 +83,9 @@ function getCleanIPRemark(address: string): string | null {
     return null;
 }
 
+// 在模块顶部维护一个 Map（每次生成配置前需重置）
+const remarkCounter = new Map<string, number>();
+
 export function generateRemark(
     index: number,
     port: number,
@@ -95,11 +98,15 @@ export function generateRemark(
     const protoSign = protocol === _VL_ ? _VL_CAP_ : _TR_CAP_;
     const prefix = isChain ? '🔗 ' : '';
     const remark = getCleanIPRemark(address);
-
     if (remark) {
-        return `${remark}-${prefix}${protoSign}-${port} ${index}`;
+        const count = (remarkCounter.get(remark) || 0) + 1;
+        remarkCounter.set(remark, count);
+        // return `${remark}-${prefix}${protoSign}-${port} ${count}`; // 有端口
+        return `${remark}-${prefix}${protoSign} #${count}`;
     } else {
-        return `💦 Clean-${prefix}${protoSign}-${port} ${index}`;
+        // 无备注仍用全局 index
+        // return `☁ Clean-${prefix}${protoSign}-${port} ${index}`; // 有端口
+        return `☁ Clean-${prefix}${protoSign} ${index}`;
     }
 }
 
