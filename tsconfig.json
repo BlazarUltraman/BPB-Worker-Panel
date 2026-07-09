@@ -1,28 +1,28 @@
 {
-    "include": ["src"],
-    "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "types": ["@cloudflare/workers-types"],
-        "moduleResolution": "node",
-        "baseUrl": "src",
-        "strict": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "paths": {
-            "@xray/*": ["cores/xray/*"],
-            "@sing-box/*": ["cores/sing-box/*"],
-            "@clash/*": ["cores/clash/*"],
-            "@utils": ["cores/utils"],
-            "@handlers": ["common/handlers"],
-            "@init": ["common/init"],
-            "@common": ["common/common"],
-            "@vless": ["protocols/websocket/vless"],
-            "@trojan": ["protocols/websocket/trojan"],
-            "@warp": ["protocols/warp"]
-        }
+  "include": ["src"],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "types": ["@cloudflare/workers-types"],
+    "moduleResolution": "bundler",         // ← 改为 bundler
+    // "baseUrl": "src",                   // ← 删除这一行
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "paths": {
+      "@xray/*": ["./src/cores/xray/*"],           // ← 修改为相对于项目根目录的路径
+      "@sing-box/*": ["./src/cores/sing-box/*"],
+      "@clash/*": ["./src/cores/clash/*"],
+      "@utils": ["./src/cores/utils"],
+      "@handlers": ["./src/common/handlers"],
+      "@init": ["./src/common/init"],
+      "@common": ["./src/common/common"],
+      "@vless": ["./src/protocols/websocket/vless"],
+      "@trojan": ["./src/protocols/websocket/trojan"],
+      "@warp": ["./src/protocols/warp"]
     }
+  }
 }
