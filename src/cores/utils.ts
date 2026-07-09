@@ -48,20 +48,6 @@ export function getProtocols() {
     return [].concatIf(VLConfigs, _VL_).concatIf(TRConfigs, _TR_);
 }
 
-function getCleanIPRemark(address: string): string | null {
-    const cleanIPs = globalThis.settings.cleanIPs;
-    const normalizeAddr = (addr: string) => addr.replace(/^\[|\]$/g, '');
-    const normalizedTarget = normalizeAddr(address);
-
-    for (const item of cleanIPs) {
-        const parts = item.split('#');
-        const addr = normalizeAddr(parts[0].trim());
-        if (addr === normalizedTarget && parts.length > 1) {
-            return parts.slice(1).join('#').trim();
-        }
-    }
-    return null;
-}
 
 export async function getConfigAddresses(isFragment: boolean): Promise<string[]> {
     const {
