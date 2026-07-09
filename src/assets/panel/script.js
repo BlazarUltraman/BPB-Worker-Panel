@@ -1382,7 +1382,7 @@ function resetBackground() {
         });
 }
 
-function applyBackgroundToPage(image, position, opacity) {function applyBackgroundToPage(image, position, opacity) {
+function applyBackgroundToPage(image, position, opacity) {
     // 使用 setProperty 添加 !important 覆盖 CSS
     document.body.style.setProperty('background-image', `url(${image})`, 'important');
     document.body.style.setProperty('background-position', position, 'important');
