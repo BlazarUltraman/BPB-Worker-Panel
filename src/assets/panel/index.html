@@ -1061,6 +1061,45 @@
                 <div id="qrcode-container"></div>
             </div>
         </div>
+        
+        <!-- ====== 背景设置（独立章节） ====== -->
+        <h2><span class="material-symbols-rounded">🎨</span> Background</h2>
+        <details id="bgDetails">
+            <summary>
+                <h3>SetBackground</h3>
+            </summary>
+            <div style="padding: 15px 10px 5px 10px; display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-control">
+                    <label style="flex: 1; text-align: left;">背景图 URL / Base64</label>
+                    <div style="flex: 2;">
+                        <input type="text" id="bgImageInput" class="form-control" style="width: 100%;" placeholder="输入图片链接或Base64">
+                    </div>
+                </div>
+                <div class="form-control">
+                    <label style="flex: 1; text-align: left;">对齐方式</label>
+                    <div style="flex: 2;">
+                        <select id="bgPositionSelect" class="form-control" style="width: 100%;">
+                            <option value="left">左对齐</option>
+                            <option value="center">居中</option>
+                            <option value="right">右对齐</option>
+                            <option value="top">顶部</option>
+                            <option value="bottom">底部</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-control">
+                    <label style="flex: 1; text-align: left;">透明度 (0 ~ 1)</label>
+                    <div style="flex: 2;">
+                        <input type="number" id="bgOpacityInput" class="form-control" style="width: 100%;" min="0" max="1" step="0.01" value="0.9">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 5px;">
+                    <button type="button" class="button" onclick="saveBackground()" style="background: #667eea; flex: 1;">保存</button>
+                    <button type="button" class="button" onclick="resetBackground()" style="background: #e53e3e; flex: 1;">重置默认</button>
+                </div>
+            </div>
+        </details>
+
         <div class="header-container">
             <h2><span class="material-symbols-rounded">fingerprint</span> My IP</h2>
             <button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
@@ -1099,47 +1138,6 @@
             </table>
         </div>
         
-        <!-- ====== 背景设置按钮 ====== -->
-		<div style="display: flex; justify-content: center; margin: 10px 0;">
-			<button type="button" class="button" onclick="openBgModal()" style="background: #4facfe;">
-				🎨 背景设置
-			</button>
-		</div>
-
-		<!-- ====== 背景设置模态框 ====== -->
-		<div id="bgModal" class="modal" style="display: none;">
-			<div class="modal-content" style="max-width: 500px;">
-				<div class="modal-header">
-					<h2 class="modal-title">🎨 背景设置</h2>
-					<span class="close" onclick="closeBgModal()">&times;</span>
-				</div>
-				<div style="padding: 10px 0;">
-					<div style="margin-bottom: 15px;">
-						<label style="display: block; text-align: left; font-weight: 600;">背景图 URL / Base64</label>
-						<input type="text" id="bgImageInput" class="form-control" style="width: 100%;" placeholder="输入图片链接或Base64">
-					</div>
-					<div style="margin-bottom: 15px;">
-						<label style="display: block; text-align: left; font-weight: 600;">对齐方式</label>
-						<select id="bgPositionSelect" class="form-control" style="width: 100%;">
-							<option value="left">左对齐</option>
-							<option value="center">居中</option>
-							<option value="right">右对齐</option>
-							<option value="top">顶部</option>
-							<option value="bottom">底部</option>
-						</select>
-					</div>
-					<div style="margin-bottom: 15px;">
-						<label style="display: block; text-align: left; font-weight: 600;">透明度 (0 ~ 1)</label>
-						<input type="number" id="bgOpacityInput" class="form-control" style="width: 100%;" min="0" max="1" step="0.01" value="0.9">
-					</div>
-					<div style="display: flex; gap: 10px; justify-content: center;">
-						<button type="button" class="button" onclick="saveBackground()" style="background: #667eea;">保存</button>
-						<button type="button" class="button" onclick="resetBackground()" style="background: #e53e3e;">重置默认</button>
-					</div>
-				</div>
-			</div>
-		</div>
-		
 		<div class="footer-container">
 			<div class="footer">
 				<div class="github-container">
