@@ -102,7 +102,7 @@ export function generateRemark(
         const count = (remarkCounter.get(remark) || 0) + 1;
         remarkCounter.set(remark, count);
         // return `${remark}-${prefix}${protoSign}-${port} ${count}`; // 有端口
-        return `${remark}-${prefix}${protoSign} #${count}`;
+        return `${remark}-${prefix}${protoSign} ${count}`;
     } else {
         // 无备注仍用全局 index
         // return `☁ Clean-${prefix}${protoSign}-${port} ${index}`; // 有端口
