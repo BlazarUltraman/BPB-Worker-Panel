@@ -64,8 +64,12 @@ function getCleanIPRemark(address: string): string | null {
 }
 
 export async function getConfigAddresses(isFragment: boolean): Promise<string[]> {
-    const { /* ... */ cleanIPs } = globalThis.settings;
-    // ...
+    const {
+        httpConfig: { hostName },          // ← 必须保留
+        settings: { enableIPv6, customCdnAddrs, cleanIPs }
+    } = globalThis;
+
+    const { ipv4, ipv6 } = await resolveDNS(hostName, !enableIPv6); // ← 必须保留
     const cleanAddresses = cleanIPs.map(item => item.split('#')[0].trim()).filter(Boolean);
     const addrs = [
         hostName,
@@ -74,7 +78,23 @@ export async function getConfigAddresses(isFragment: boolean): Promise<string[]>
         ...ipv6.map((ip: string) => `[${ip}]`),
         ...cleanAddresses
     ];
-    // ...
+
+    return addrs.concatIf(!isFragment, customCdnAddrs);
+}
+
+function getCleanIPRemark(address: string): string | null {
+    const cleanIPs = globalThis.settings.cleanIPs;
+    const normalizeAddr = (addr: string) => addr.replace(/^\[|\]$/g, '');
+    const normalizedTarget = normalizeAddr(address);
+
+    for (const item of cleanIPs) {
+        const parts = item.split('#');
+        const addr = normalizeAddr(parts[0].trim());
+        if (addr === normalizedTarget && parts.length > 1) {
+            return parts.slice(1).join('#').trim();
+        }
+    }
+    return null;
 }
 
 export function generateRemark(
