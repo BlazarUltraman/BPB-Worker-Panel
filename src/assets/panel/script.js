@@ -76,6 +76,8 @@ function initiatePanel(proxySettings) {
     renderUdpNoiseBlock(xrayUdpNoises);
     initiateForm();
     fetchIPInfo();
+    // 最后添加
+    loadBackgroundOnInit();
 }
 
 function populatePanel(proxySettings) {
@@ -1293,4 +1295,111 @@ function renderUdpNoiseBlock(xrayUdpNoises) {
     });
 
     globalThis.xrayNoiseCount = xrayUdpNoises.length;
+}
+
+// ============ 背景设置 ============
+function openBgModal() {
+    fetch('/panel/background-config')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('bgImageInput').value = data.body.image || '';
+                document.getElementById('bgPositionSelect').value = data.body.position || 'left';
+                document.getElementById('bgOpacityInput').value = data.body.opacity || 0.9;
+                document.getElementById('bgModal').style.display = 'block';
+            } else {
+                alert('获取背景配置失败');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('获取背景配置出错');
+        });
+}
+
+function closeBgModal() {
+    document.getElementById('bgModal').style.display = 'none';
+}
+
+function saveBackground() {
+    const image = document.getElementById('bgImageInput').value.trim();
+    const position = document.getElementById('bgPositionSelect').value;
+    const opacity = parseFloat(document.getElementById('bgOpacityInput').value);
+    if (!image) {
+        alert('请输入背景图地址');
+        return;
+    }
+    if (isNaN(opacity) || opacity < 0 || opacity > 1) {
+        alert('透明度必须在 0 ~ 1 之间');
+        return;
+    }
+    const config = { image, position, opacity };
+    fetch('/panel/background-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            applyBackgroundToPage(image, position, opacity);
+            alert('✅ 背景设置已保存');
+            closeBgModal();
+        } else {
+            alert('保存失败: ' + (data.message || '未知错误'));
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('保存请求失败');
+    });
+}
+
+function resetBackground() {
+    if (!confirm('确定重置为默认背景吗？')) return;
+    fetch('/panel/reset-background', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const defaultBg = {
+                    image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads',
+                    position: 'left',
+                    opacity: 0.85
+                };
+                applyBackgroundToPage(defaultBg.image, defaultBg.position, defaultBg.opacity);
+                document.getElementById('bgImageInput').value = defaultBg.image;
+                document.getElementById('bgPositionSelect').value = defaultBg.position;
+                document.getElementById('bgOpacityInput').value = defaultBg.opacity;
+                alert('✅ 已重置为默认背景');
+                closeBgModal();
+            } else {
+                alert('重置失败');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('重置请求失败');
+        });
+}
+
+function applyBackgroundToPage(image, position, opacity) {
+    document.body.style.backgroundImage = `url(${image})`;
+    document.body.style.backgroundPosition = position;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.querySelectorAll('.container').forEach(el => {
+        el.style.opacity = opacity;
+    });
+}
+
+function loadBackgroundOnInit() {
+    fetch('/panel/background-config')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.body) {
+                const { image, position, opacity } = data.body;
+                if (image) applyBackgroundToPage(image, position, opacity);
+            }
+        })
+        .catch(err => console.error('加载背景配置失败:', err));
 }
