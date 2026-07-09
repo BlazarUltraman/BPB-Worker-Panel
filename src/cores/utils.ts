@@ -97,9 +97,9 @@ export function generateRemark(
     const remark = getCleanIPRemark(address);
 
     if (remark) {
-        return `${remark}-${prefix}${protoSign}-${port}$ {index}`;
+        return `${remark}-${prefix}${protoSign}-${port} ${index}`;
     } else {
-        return `💦 ${index}-${prefix}${protoSign}-${port}`;
+        return `💦 Clean-${prefix}${protoSign}-${port} ${index}`;
     }
 }
 
