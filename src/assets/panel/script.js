@@ -695,21 +695,32 @@ function validateCustomRules() {
 }
 
 function validateMultipleHostNames() {
-    const invalidValues = [
-        'cleanIPs',
-        'customCdnAddrs',
-        'customCdnSni',
-        'customCdnHost'
-    ].flatMap(parseElmValues)
-        .filter(value => !isValidHostName(value));
+    const fields = ['cleanIPs', 'customCdnAddrs', 'customCdnSni', 'customCdnHost'];
+    const invalidValues = [];
+
+    for (const field of fields) {
+        const values = parseElmValues(field);
+        for (const value of values) {
+            let addr = value;
+            // 仅对 cleanIPs 允许 '#' 备注
+            if (field === 'cleanIPs') {
+                const hashIndex = value.indexOf('#');
+                if (hashIndex !== -1) {
+                    addr = value.substring(0, hashIndex).trim();
+                }
+            }
+            if (!isValidHostName(addr)) {
+                invalidValues.push(value);
+            }
+        }
+    }
 
     if (invalidValues.length) {
         alert(
             '⛔ Invalid IPs or Domains.\n' +
             '💡 Please enter each value in a new line.\n\n' +
-            invalidValues.map(ip => `⚠️ ${ip}`).join('\n')
+            invalidValues.map(val => `⚠️ ${val}`).join('\n')
         );
-
         return false;
     }
 
