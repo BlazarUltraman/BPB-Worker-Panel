@@ -22,11 +22,11 @@
 }
 
 body {
-    background-image: url('https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads') !important;
-    background-size: cover !important;
-    background-position: left !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
+    background-image: url('https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads');
+    background-size: cover;
+    background-position: left;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     font-family: Twemoji Country Flags, system-ui;
     background-color: var(--background-color);
     color: var(--color);

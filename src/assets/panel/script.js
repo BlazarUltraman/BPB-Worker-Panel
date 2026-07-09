@@ -1382,13 +1382,14 @@ function resetBackground() {
         });
 }
 
-function applyBackgroundToPage(image, position, opacity) {
-    document.body.style.backgroundImage = `url(${image})`;
-    document.body.style.backgroundPosition = position;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundAttachment = 'fixed';
+function applyBackgroundToPage(image, position, opacity) {function applyBackgroundToPage(image, position, opacity) {
+    // 使用 setProperty 添加 !important 覆盖 CSS
+    document.body.style.setProperty('background-image', `url(${image})`, 'important');
+    document.body.style.setProperty('background-position', position, 'important');
+    document.body.style.setProperty('background-size', 'cover', 'important');
+    document.body.style.setProperty('background-attachment', 'fixed', 'important');
     document.querySelectorAll('.container').forEach(el => {
-        el.style.opacity = opacity;
+        el.style.setProperty('opacity', opacity, 'important');
     });
 }
 
