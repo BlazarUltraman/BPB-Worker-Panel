@@ -10,6 +10,12 @@ import { TrOverWSHandler } from "@trojan";
 import JSZip from "jszip";
 import { HttpStatus, respond } from "@common";
 
+interface BackgroundConfig {
+    image: string;
+    position: string;
+    opacity: number;
+}
+
 export async function handleWebsocket(request: Request): Promise<Response> {
     const { pathName } = globalThis.globalConfig;
     const encodedPathConfig = pathName.replace("/", "");
@@ -111,7 +117,7 @@ async function updateBackgroundConfig(request: Request, env: Env): Promise<Respo
     if (!auth) {
         return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
     }
-    const body = await request.json();
+    const body = await request.json() as { image: string; position: string; opacity: number };
     const { image, position, opacity } = body;
     if (!image || typeof position !== 'string' || typeof opacity !== 'number' || opacity < 0 || opacity > 1) {
         return respond(false, HttpStatus.BAD_REQUEST, 'Invalid config');
