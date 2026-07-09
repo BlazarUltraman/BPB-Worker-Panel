@@ -1342,16 +1342,22 @@ function saveBackground() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
+            // 应用并同步输入框
             applyBackgroundToPage(image, position, opacity);
+            // 确保输入框值与配置一致
+            document.getElementById('bgImageInput').value = image;
+            document.getElementById('bgPositionSelect').value = position;
+            document.getElementById('bgOpacityInput').value = opacity;
             alert('✅ 背景设置已保存');
-            closeBgModal();
+            // 可选：折叠面板自动收起
+            // document.getElementById('bgDetails').open = false;
         } else {
             alert('保存失败: ' + (data.message || '未知错误'));
         }
     })
     .catch(err => {
         console.error(err);
-        alert('保存请求失败');
+        alert('保存请求失败，请检查网络或稍后重试');
     });
 }
 
@@ -1371,7 +1377,6 @@ function resetBackground() {
                 document.getElementById('bgPositionSelect').value = defaultBg.position;
                 document.getElementById('bgOpacityInput').value = defaultBg.opacity;
                 alert('✅ 已重置为默认背景');
-                closeBgModal();
             } else {
                 alert('重置失败');
             }
@@ -1399,7 +1404,14 @@ function loadBackgroundOnInit() {
         .then(data => {
             if (data.success && data.body) {
                 const { image, position, opacity } = data.body;
-                if (image) applyBackgroundToPage(image, position, opacity);
+                if (image) {
+                    // 应用背景样式
+                    applyBackgroundToPage(image, position, opacity);
+                    // 填充输入框
+                    document.getElementById('bgImageInput').value = image;
+                    document.getElementById('bgPositionSelect').value = position;
+                    document.getElementById('bgOpacityInput').value = opacity;
+                }
             }
         })
         .catch(err => console.error('加载背景配置失败:', err));
