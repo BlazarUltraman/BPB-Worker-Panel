@@ -66,10 +66,68 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
 
         case '/panel/get-warp-configs':
             return await getWarpConfigs(request, env);
+            
+        // 在 handlePanel 的 switch 中添加
+		case '/panel/background-config':
+			if (request.method === 'GET') {
+				return await getBackgroundConfig(env);
+			} else if (request.method === 'POST') {
+				return await updateBackgroundConfig(request, env);
+			} else {
+				return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
+			}
+
+		case '/panel/reset-background':
+			if (request.method === 'POST') {
+				return await resetBackgroundConfig(request, env);
+			} else {
+				return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
+			}
 
         default:
             return await fallback(request);
     }
+}
+
+// 默认背景配置
+const defaultBackground = {
+    image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads',
+    position: 'left',
+    opacity: 0.85
+};
+
+async function getBackgroundConfig(env: Env): Promise<Response> {
+    let config = await env.kv.get('backgroundConfig', { type: 'json' });
+    if (!config) {
+        // 若不存在，写入默认值并返回
+        await env.kv.put('backgroundConfig', JSON.stringify(defaultBackground));
+        config = defaultBackground;
+    }
+    return respond(true, HttpStatus.OK, '', config);
+}
+
+async function updateBackgroundConfig(request: Request, env: Env): Promise<Response> {
+    const auth = await Authenticate(request, env);
+    if (!auth) {
+        return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
+    }
+    const body = await request.json();
+    const { image, position, opacity } = body;
+    if (!image || typeof position !== 'string' || typeof opacity !== 'number' || opacity < 0 || opacity > 1) {
+        return respond(false, HttpStatus.BAD_REQUEST, 'Invalid config');
+    }
+    const config = { image, position, opacity };
+    await env.kv.put('backgroundConfig', JSON.stringify(config));
+    return respond(true, HttpStatus.OK, 'Background config updated', config);
+}
+
+async function resetBackgroundConfig(request: Request, env: Env): Promise<Response> {
+    const auth = await Authenticate(request, env);
+    if (!auth) {
+        return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
+    }
+    await env.kv.put('backgroundConfig', JSON.stringify(defaultBackground));
+    return respond(true, HttpStatus.OK, 'Background reset to default', defaultBackground);
 }
 
 export async function renderError(error: any): Promise<Response> {
