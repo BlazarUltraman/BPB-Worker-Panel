@@ -100,14 +100,34 @@ function initiateForm() {
 
     configForm.addEventListener('input', enableApplyButton);
     configForm.addEventListener('change', enableApplyButton);
-    const textareas = document.querySelectorAll("textarea");
 
+    const textareas = document.querySelectorAll("textarea");
     textareas.forEach(textarea => {
         textarea.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = `${this.scrollHeight}px`;
         });
     });
+
+    // ----- 新增代码开始 -----
+    const cleanIPsInput = document.getElementById('cleanIPs');
+    if (cleanIPsInput) {
+        cleanIPsInput.addEventListener('blur', function() {
+            let value = this.value;
+            if (value.includes(',') || value.includes('，')) {
+                value = value.replace(/[,，]/g, '\n');
+                value = value.split('\n')
+                    .map(line => line.trim())
+                    .filter(Boolean)
+                    .join('\n');
+                this.value = value;
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+                this.style.height = 'auto';
+                this.style.height = `${this.scrollHeight}px`;
+            }
+        });
+    }
+    // ----- 新增代码结束 -----
 
     handleFragmentMode();
 }
