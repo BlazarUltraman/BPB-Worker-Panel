@@ -1527,7 +1527,6 @@ async function fetchcloudflareInfo() {
     if (icon) icon.classList.add('fa-spin');
 
     try {
-        // 获取 Request 和 KV 用量
         const [usageRes, kvRes] = await Promise.all([
             fetch('/panel/cloudflare-usage'),
             fetch('/panel/kv-usage')
@@ -1536,26 +1535,25 @@ async function fetchcloudflareInfo() {
         const kvData = await kvRes.json();
 
         // 更新 Request 行
-        if (usageData.success) {
-            const total = usageData.pages + usageData.workers;
+        if (usageData.success && usageData.body) {
+            const total = usageData.body.pages + usageData.body.workers;
             document.getElementById('cf-request-used').textContent = total.toLocaleString();
-            document.getElementById('cf-request-percent').textContent = usageData.percentage + '%';
+            document.getElementById('cf-request-percent').textContent = usageData.body.percentage + '%';
         } else {
             document.getElementById('cf-request-used').textContent = '--';
             document.getElementById('cf-request-percent').textContent = '--';
         }
 
         // 更新 KV 行
-        if (kvData.success) {
-            document.getElementById('cf-kv-read-used').textContent = kvData.readTotal.toLocaleString();
-            document.getElementById('cf-kv-read-percent').textContent = kvData.readPercentage + '%';
-            document.getElementById('cf-kv-write-used').textContent = kvData.writeTotal.toLocaleString();
-            document.getElementById('cf-kv-write-percent').textContent = kvData.writePercentage + '%';
+        if (kvData.success && kvData.body) {
+            document.getElementById('cf-kv-read-used').textContent = kvData.body.readTotal.toLocaleString();
+            document.getElementById('cf-kv-read-percent').textContent = kvData.body.readPercentage + '%';
+            document.getElementById('cf-kv-write-used').textContent = kvData.body.writeTotal.toLocaleString();
+            document.getElementById('cf-kv-write-percent').textContent = kvData.body.writePercentage + '%';
 
-            // 各空间详情
             let detailsHtml = '';
-            if (kvData.details && kvData.details.length) {
-                detailsHtml = kvData.details.map(ns =>
+            if (kvData.body.details && kvData.body.details.length) {
+                detailsHtml = kvData.body.details.map(ns =>
                     `<div><strong>${ns.namespaceName}</strong> 读:${ns.read} 写:${ns.write} 删:${ns.delete} 列:${ns.list}</div>`
                 ).join('');
             } else {
@@ -1571,7 +1569,6 @@ async function fetchcloudflareInfo() {
         }
     } catch (err) {
         console.error('获取 Cloudflare 用量失败:', err);
-        // 清空所有显示
         document.querySelectorAll('#cf-usage-table td:not(:first-child)').forEach(td => td.textContent = '--');
         document.getElementById('cf-kv-details').textContent = '加载失败';
     } finally {
