@@ -198,17 +198,17 @@ async function updateCloudflareConfig(request: Request, env: Env): Promise<Respo
     if (!auth) return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
 
     const config = await request.json() as CloudflareConfig;
-    // 只检查是否为字符串，允许空字符串（用于清除配置）
     if (typeof config.accountId !== 'string') {
-		return respond(false, HttpStatus.BAD_REQUEST, 'Invalid accountId');
-	}
-    // 允许配置为空（清除）
-    await saveCloudflareConfig(env, {
+        return respond(false, HttpStatus.BAD_REQUEST, 'Invalid accountId');
+    }
+
+    const cfConfig: CloudflareConfig = {
         accountId: config.accountId || '',
         apiToken: config.apiToken || '',
         email: config.email || '',
         globalApiKey: config.globalApiKey || ''
-    });
+    };
+    await saveCloudflareConfig(env, cfConfig);
     return respond(true, HttpStatus.OK, 'Cloudflare config updated');
 }
 
