@@ -636,7 +636,6 @@ export async function serveIcon(): Promise<Response> {
 
 async function renderPanel(request: Request, env: Env): Promise<Response> {
     const pwd = await env.kv.get('pwd');
-
     if (pwd) {
         const auth = await Authenticate(request, env);
         if (!auth) {
@@ -645,8 +644,22 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
         }
     }
 
-    const html = await decompressHtml(__PANEL_HTML_CONTENT__, false);
-    return new Response(html, {
+    // 获取背景配置
+    let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' });
+    if (!bgConfig) {
+        bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
+    }
+
+    const html = await decompressHtml(__PANEL_HTML_CONTENT__, false) as string;
+    
+    // 注入背景样式到 <body>
+    const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+    const modifiedHtml = html.replace(
+        /<body[^>]*>/,
+        `<body style="${bodyStyle}"`
+    );
+
+    return new Response(modifiedHtml, {
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
 }
@@ -658,11 +671,24 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         return Response.redirect(`${urlOrigin}/panel`, 302);
     }
 
-    const html = await decompressHtml(__LOGIN_HTML_CONTENT__, false);
-    return new Response(html, {
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8'
-        }
+    // 获取背景配置
+    let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' });
+    if (!bgConfig) {
+        bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
+    }
+
+    // ✅ 使用登录页的 HTML 内容
+    const html = await decompressHtml(__LOGIN_HTML_CONTENT__, false) as string;
+    
+    // 注入背景样式到 <body>
+    const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+    const modifiedHtml = html.replace(
+        /<body[^>]*>/,
+        `<body style="${bodyStyle}"`
+    );
+
+    return new Response(modifiedHtml, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
 }
 
