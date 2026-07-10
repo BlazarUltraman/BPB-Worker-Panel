@@ -763,6 +763,10 @@ details h3 {
     margin-bottom: 10px;
 }
 
+.fa-2x {
+    font-size: 1.5em;
+}
+
 summary h3 {
     display: inline-flex;
     align-items: center;
