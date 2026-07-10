@@ -576,7 +576,7 @@ table button:active {
     border: 1px solid var(--border-color);
     border-collapse: separate;
     border-spacing: 0;
-    border-radius: var(--inner-container-border-radius);
+    /* border-radius: var(--inner-container-border-radius); */
     /* margin-bottom: 20px; */
     overflow: hidden;
 }
