@@ -650,7 +650,7 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
 		bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
 	}
 
-    const html = await decompressHtml(__PANEL_HTML_CONTENT__, true);
+    const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
     
     // 注入背景样式到 <body>
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
@@ -678,7 +678,7 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
 	}
 
     // ✅ 使用登录页的 HTML 内容
-    const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true);
+    const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
     
     // 注入背景样式到 <body>
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
