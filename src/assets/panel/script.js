@@ -1410,14 +1410,10 @@ function loadBackgroundOnInit() {
         .then(data => {
             if (data.success && data.body) {
                 const { image, position, opacity } = data.body;
-                if (image) {
-                    // 应用背景样式
-                    applyBackgroundToPage(image, position, opacity);
-                    // 填充输入框
-                    document.getElementById('bgImageInput').value = image;
-                    document.getElementById('bgPositionSelect').value = position;
-                    document.getElementById('bgOpacityInput').value = opacity;
-                }
+                // 仅填充输入框，不再设置背景样式（因为已在服务端渲染）
+                document.getElementById('bgImageInput').value = image || '';
+                document.getElementById('bgPositionSelect').value = position || 'left';
+                document.getElementById('bgOpacityInput').value = opacity || 0.9;
             }
         })
         .catch(err => console.error('加载背景配置失败:', err));
