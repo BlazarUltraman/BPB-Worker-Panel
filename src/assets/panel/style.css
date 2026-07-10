@@ -31,6 +31,11 @@ body {
     background-color: var(--background-color);
     color: var(--color);
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-y: auto;          /* 允许内容溢出滚动 */
 }
 
 *,
@@ -68,11 +73,18 @@ h1 {
 .container {
     display: flex;
     flex-direction: column;
+    width: 90%;                /* 与登录页一致 */
+    max-width: 768px;          /* 与原 BPB Panel 的 .form-container 一致 */
+    max-height: 90vh;          /* 防止内容过多超出视口 */
+    overflow-y: auto;          /* 内容滚动 */
     border: 1px solid var(--border-color);
     border-radius: var(--container-border-radius);
     padding: var(--container-padding);
     box-shadow: var(--container-box-shadow);
-    opacity: 0.90; /* 添加透明度 */
+    opacity: 0.90;
+    background: var(--form-background-color); /* 保持背景色 */
+    /* 若需要毛玻璃效果，可添加 */
+    /* backdrop-filter: blur(10px); */
 }
 
 .section .container {
@@ -95,7 +107,7 @@ h1 {
 
 .form-container {
     max-width: 95%;
-    margin: 0 auto;
+    /* margin: 0 auto; */
     background: var(--form-background-color);
     margin-bottom: 30px;
 }
