@@ -20,41 +20,37 @@
 		</h1>
 		
         <!-- ====== Cloudflare USE ====== -->
-		<div class="my-ip">
+		<div class="my-ip" style="border: 1px solid var(--border-color);border-radius: var(--inner-container-border-radius);">
+			<div class="header-container" style="background: var(--table-active-color); border: 1px solid var(--border-color);">
+				<h3 style="color: #09639f;">Cloudflare USE</h3>
+				<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
+						<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+				</button>
+			</div>
 			<table id="cf-usage-table" class="my-ip">
 				<thead>
-					<tr>
-						<th colspan="3" class="header-container">
-							<h3 style="color: #09639f;">Cloudflare Use</h3>
-							<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
-									<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-							</button>
-						</th>
-					</tr>
+					<th>Type</th>
+					<th>Use level</th>
+					<th>Proportion</th>
 				</thead>
 				<tbody>
-					<tr>
-						<td>Type</td>
-						<td>Use Level</td>
-						<td>Proportion</td>
-					</tr>
 					<tr>
 						<td>Request</td>
 						<td id="cf-request-used">--</td>
 						<td id="cf-request-percent">--</td>
 					</tr>
 					<tr>
-						<td>KV Read</td>
+						<td>KV read</td>
 						<td id="cf-kv-read-used">--</td>
 						<td id="cf-kv-read-percent">--</td>
 					</tr>
 					<tr>
-						<td>KV Write</td>
+						<td>KV write</td>
 						<td id="cf-kv-write-used">--</td>
 						<td id="cf-kv-write-percent">--</td>
 					</tr>
 					<tr>
-						<td>KV Info</td>
+						<td>KV info</td>
 						<td colspan="2" id="cf-kv-details">--</td>
 					</tr>
 				</tbody>
@@ -1185,24 +1181,20 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="åœ¨ 'é
 			</form>
 		</details>
 
-        <div class="my-ip">
+       <div class="my-ip" style="border: 1px solid var(--border-color);border-radius: var(--inner-container-border-radius);">
+			<div class="header-container" style="background: var(--table-active-color); border: 1px solid var(--border-color);">
+				<h3 style="color: #09639f;"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
+				<button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
+					<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+				</button>
+			</div>
             <table id="ips" class="my-ip">
                 <thead>
-					<tr>
-						<th colspan="3" class="header-container">
-							<h3 style="color: #09639f;"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
-							<button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
-								<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-							</button>
-						</div>
-					</tr>
+                    <th>Information</th>
+                    <th>Cloudflare targets</th>
+                    <th>Other targets</th>
                 </thead>
                 <tbody>
-					<tr>
-						<th>Information</th>
-						<th>Cloudflare targets</th>
-						<th>Other targets</th>
-					</tr>
                     <tr>
                         <td>IP</td>
                         <td id="cf-ip"></td>
