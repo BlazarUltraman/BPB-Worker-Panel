@@ -154,19 +154,21 @@ async function getKvUsage(env: Env): Promise<Response> {
             detailsMap.set(id, { namespaceId: id, namespaceName: namespaceMap[id], read: 0, write: 0, delete: 0, list: 0 });
         });
 
-        for (const item of rawData) {
-            const action = item.dimensions?.actionType;
-            const count = Number(item.sum?.requests) || 0;
-            const nsId = item.dimensions?.namespaceId;
-            if (!detailsMap.has(nsId)) {
-                detailsMap.set(nsId, { namespaceId: nsId, namespaceName: nsId, read: 0, write: 0, delete: 0, list: 0 });
-            }
-            const entry = detailsMap.get(nsId)!;
-            if (action === 'read') { readTotal += count; entry.read += count; }
-            else if (action === 'write') { writeTotal += count; entry.write += count; }
-            else if (action === 'delete') entry.delete += count;
-            else if (action === 'list') entry.list += count;
-        }
+       for (const item of rawData) {
+			const nsId = item.dimensions?.namespaceId;
+			if (!nsId) continue; // 跳过无命名空间ID的记录
+			const action = item.dimensions?.actionType;
+			const count = Number(item.sum?.requests) || 0;
+
+			if (!detailsMap.has(nsId)) {
+				detailsMap.set(nsId, { namespaceId: nsId, namespaceName: nsId, read: 0, write: 0, delete: 0, list: 0 });
+			}
+			const entry = detailsMap.get(nsId)!;
+			if (action === 'read') { readTotal += count; entry.read += count; }
+			else if (action === 'write') { writeTotal += count; entry.write += count; }
+			else if (action === 'delete') entry.delete += count;
+			else if (action === 'list') entry.list += count;
+		}
 
         const readPercentage = Math.min((readTotal / KV_READ_LIMIT) * 100, 100);
         const writePercentage = Math.min((writeTotal / KV_WRITE_LIMIT) * 100, 100);
