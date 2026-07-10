@@ -94,7 +94,7 @@ h1 {
 }
 
 .form-container {
-    max-width: 90%;
+    max-width: 95%;
     margin: 0 auto;
     background: var(--form-background-color);
     margin-bottom: 30px;
@@ -776,7 +776,7 @@ summary h3 {
 
 @media only screen and (min-width: 768px) {
     .form-container {
-        max-width: calc(768px * 0.9);
+        max-width: calc(768px * 0.95);
     }
 }
 
