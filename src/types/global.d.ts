@@ -180,6 +180,13 @@ declare global {
     interface Object {
         omitEmpty<T>(): T | undefined;
     }
+    
+    interface CloudflareConfig {
+		accountId: string;
+		apiToken: string;
+		email: string;
+		globalApiKey: string;
+	}
 }
 
 export { };
