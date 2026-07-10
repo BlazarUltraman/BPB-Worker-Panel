@@ -1108,45 +1108,6 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '�
 				</details>
 			</details>
 		</form>
-				<div id="resetPassModal" class="modal">
-					<div class="modal-content">
-						<span class="close" id="closeResetPass" onclick="closeResetPass()">&times;</span>
-						<form id="passwordChangeForm" onsubmit="resetPassword(event)">
-							<h3 style="color: #09639f;">Change Password</h3>
-							<div class="section">
-								<div class="form-control">
-									<label for="newPassword">New Password</label>
-									<div class="password-wrapper">
-										<input type="password" id="newPassword" name="newPassword" required>
-										<span class="material-symbols-rounded toggle-password">
-											visibility_off
-										</span>
-									</div>
-								</div>
-								<div class="form-control">
-									<label for="confirmPassword">Confirm Password</label>
-									<div class="password-wrapper">
-										<input type="password" id="confirmPassword" name="confirmPassword" required>
-										<span class="material-symbols-rounded toggle-password">
-											visibility_off
-										</span>
-									</div>
-								</div>
-							</div>
-							<div id="passwordError" class="password-error"></div>
-							<button id="changePasswordBtn" type="submit" class="button">Change Password</button>
-						</form>
-					</div>
-				</div>
-				<div id="qrModal" class="modalQR">
-					<div class="modal-content" class="modal-content">
-						<div class="modal-header">
-							<span id="closeQR" class="close" onclick="closeQR()">&times;</span>
-							<span id="qrcodeTitle" class="qr-title"></span>
-						</div>
-						<div id="qrcode-container"></div>
-					</div>
-				</div>
         
         <!-- ====== 背景设置（独立章节） ====== -->
         <details>
@@ -1158,13 +1119,13 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '�
 					</summary>
 					<div style="padding: 15px 10px 5px 10px; display: flex; flex-direction: column; gap: 15px;">
 						<div class="form-control">
-							<label style="flex: 1; text-align: left;">背景图 URL / Base64</label>
+							<label style="flex: 1; text-align: left;">🖼 背景图 URL / Base64</label>
 							<div style="flex: 2;">
 								<input type="text" id="bgImageInput" class="form-control" style="width: 100%;" placeholder="输入图片链接或Base64">
 							</div>
 						</div>
 						<div class="form-control">
-							<label style="flex: 1; text-align: left;">对齐方式</label>
+							<label style="flex: 1; text-align: left;">⚖ 对齐方式</label>
 							<div style="flex: 2;">
 								<select id="bgPositionSelect" class="form-control" style="width: 100%;">
 									<option value="left">左对齐</option>
@@ -1176,7 +1137,7 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '�
 							</div>
 						</div>
 						<div class="form-control">
-							<label style="flex: 1; text-align: left;">透明度 (0 ~ 1)</label>
+							<label style="flex: 1; text-align: left;">💧 透明度 (0 ~ 1)</label>
 							<div style="flex: 2;">
 								<input type="number" id="bgOpacityInput" class="form-control" style="width: 100%;" min="0" max="1" step="0.01" value="0.9">
 							</div>
@@ -1189,11 +1150,11 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '�
 				</details>
 				<details>
 					<summary>
-						<h3>BASE64 Pic</h3>
+						<h3>Base64 image</h3>
 					</summary>
 					<div style="padding: 10px 0; display: flex; flex-direction: column; gap: 12px;">
 						<div class="form-control">
-							<label style="flex: 1; text-align: left;">选择图片文件</label>
+							<label style="flex: 1; text-align: left;">🖼 选择图片文件</label>
 							<div style="flex: 2;">
 								<input type="file" id="bgImageFile" accept="image/*" class="form-control" style="padding: 6px;">
 							</div>
@@ -1202,7 +1163,7 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '�
 							<img id="bgPreviewImg" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--border-color);">
 						</div>
 						<div class="form-control">
-							<label style="flex: 1; text-align: left;">Base64 编码结果</label>
+							<label style="flex: 1; text-align: left;">🔠 Base64 编码结果</label>
 							<div style="flex: 2;">
 								<textarea id="bgBase64Result" class="form-control" rows="3" readonly style="font-family: monospace; font-size: 0.8rem; resize: vertical; min-height: 60px;"></textarea>
 							</div>
@@ -1257,6 +1218,46 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '�
                 </tbody>
             </table>
         </div>
+        
+		<div id="resetPassModal" class="modal">
+			<div class="modal-content">
+				<span class="close" id="closeResetPass" onclick="closeResetPass()">&times;</span>
+				<form id="passwordChangeForm" onsubmit="resetPassword(event)">
+					<h3 style="color: #09639f;">Change Password</h3>
+					<div class="section">
+						<div class="form-control">
+							<label for="newPassword">New Password</label>
+							<div class="password-wrapper">
+								<input type="password" id="newPassword" name="newPassword" required>
+								<span class="material-symbols-rounded toggle-password">
+									visibility_off
+								</span>
+							</div>
+						</div>
+						<div class="form-control">
+							<label for="confirmPassword">Confirm Password</label>
+							<div class="password-wrapper">
+								<input type="password" id="confirmPassword" name="confirmPassword" required>
+								<span class="material-symbols-rounded toggle-password">
+									visibility_off
+								</span>
+							</div>
+						</div>
+					</div>
+					<div id="passwordError" class="password-error"></div>
+					<button id="changePasswordBtn" type="submit" class="button">Change Password</button>
+				</form>
+			</div>
+		</div>
+		<div id="qrModal" class="modalQR">
+			<div class="modal-content" class="modal-content">
+				<div class="modal-header">
+					<span id="closeQR" class="close" onclick="closeQR()">&times;</span>
+					<span id="qrcodeTitle" class="qr-title"></span>
+				</div>
+				<div id="qrcode-container"></div>
+			</div>
+		</div>
         
 		<div class="footer-container">
 			<div class="footer">
