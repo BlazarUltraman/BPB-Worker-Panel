@@ -9,6 +9,187 @@ import { VlOverWSHandler } from "@vless";
 import { TrOverWSHandler } from "@trojan";
 import JSZip from "jszip";
 import { HttpStatus, respond } from "@common";
+// 在 handlers.ts 顶部导入必要的依赖
+import { getCloudflareConfig, saveCloudflareConfig } from './kv';
+
+// 默认限制常量
+const CLOUDFLARE_REQUESTS_LIMIT = 100000;
+const KV_READ_LIMIT = 100000;
+const KV_WRITE_LIMIT = 1000;
+
+async function getCloudflareUsage(env: Env): Promise<Response> {
+    const config = await getCloudflareConfig(env);
+    const { accountId, apiToken, email, globalApiKey } = config;
+
+    if (!accountId || (!apiToken && (!email || !globalApiKey))) {
+        return respond(false, HttpStatus.BAD_REQUEST, 'Missing Cloudflare credentials', {
+            pages: 0, workers: 0, total: 0, percentage: 0, limit: CLOUDFLARE_REQUESTS_LIMIT
+        });
+    }
+
+    try {
+        const API = 'https://api.cloudflare.com/client/v4';
+        const headers: HeadersInit = { 'Content-Type': 'application/json' };
+        if (apiToken) {
+            headers['Authorization'] = `Bearer ${apiToken}`;
+        } else {
+            headers['X-AUTH-EMAIL'] = email;
+            headers['X-AUTH-KEY'] = globalApiKey;
+        }
+
+        const now = new Date();
+        now.setUTCHours(0, 0, 0, 0);
+        const query = {
+            query: `query getBillingMetrics($AccountID: String!, $filter: AccountWorkersInvocationsAdaptiveFilter_InputObject) {
+                viewer { accounts(filter: {accountTag: $AccountID}) {
+                    pagesFunctionsInvocationsAdaptiveGroups(limit: 1000, filter: $filter) { sum { requests } }
+                    workersInvocationsAdaptive(limit: 10000, filter: $filter) { sum { requests } }
+                } }
+            }`,
+            variables: { AccountID: accountId, filter: { datetime_geq: now.toISOString(), datetime_leq: new Date().toISOString() } }
+        };
+
+        const res = await fetch(`${API}/graphql`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(query)
+        });
+
+        if (!res.ok) throw new Error(`GraphQL request failed: ${res.status}`);
+        const result = await res.json();
+        if (result.errors?.length) throw new Error(result.errors[0].message);
+
+        const acc = result?.data?.viewer?.accounts?.[0];
+        if (!acc) throw new Error('No account data');
+
+        const pages = acc.pagesFunctionsInvocationsAdaptiveGroups?.reduce((s: number, g: any) => s + (g.sum?.requests || 0), 0) || 0;
+        const workers = acc.workersInvocationsAdaptive?.reduce((s: number, g: any) => s + (g.sum?.requests || 0), 0) || 0;
+        const total = pages + workers;
+        const percentage = Math.min((total / CLOUDFLARE_REQUESTS_LIMIT) * 100, 100);
+
+        return respond(true, HttpStatus.OK, '', { pages, workers, total, percentage: percentage.toFixed(2), limit: CLOUDFLARE_REQUESTS_LIMIT });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return respond(false, HttpStatus.INTERNAL_SERVER_ERROR, message, { pages: 0, workers: 0, total: 0, percentage: 0, limit: CLOUDFLARE_REQUESTS_LIMIT });
+    }
+}
+
+async function getKvUsage(env: Env): Promise<Response> {
+    const config = await getCloudflareConfig(env);
+    const { accountId, apiToken, email, globalApiKey } = config;
+
+    if (!accountId || (!apiToken && (!email || !globalApiKey))) {
+        return respond(false, HttpStatus.BAD_REQUEST, 'Missing Cloudflare credentials', {
+            readTotal: 0, writeTotal: 0, readPercentage: 0, writePercentage: 0, details: []
+        });
+    }
+
+    try {
+        const API = 'https://api.cloudflare.com/client/v4';
+        const headers: HeadersInit = { 'Content-Type': 'application/json' };
+        if (apiToken) {
+            headers['Authorization'] = `Bearer ${apiToken}`;
+        } else {
+            headers['X-AUTH-EMAIL'] = email;
+            headers['X-AUTH-KEY'] = globalApiKey;
+        }
+
+        // 获取所有 KV 命名空间
+        const nsRes = await fetch(`${API}/accounts/${accountId}/storage/kv/namespaces?per_page=100`, { headers });
+        if (!nsRes.ok) throw new Error(`Failed to list KV namespaces: ${nsRes.status}`);
+        const nsData = await nsRes.json();
+        const namespaceMap: Record<string, string> = {};
+        nsData.result?.forEach((ns: any) => { namespaceMap[ns.id] = ns.title; });
+
+        const today = new Date().toISOString().split('T')[0];
+        const query = {
+            query: `query GetKVUsage($accountTag: String!, $start: Date!, $end: Date!) {
+                viewer { accounts(filter: { accountTag: $accountTag }) {
+                    kvOperationsAdaptiveGroups(limit: 1000, filter: { date_geq: $start, date_leq: $end }) {
+                        dimensions { namespaceId actionType }
+                        sum { requests }
+                    }
+                } }
+            }`,
+            variables: { accountTag: accountId, start: today, end: today }
+        };
+
+        const res = await fetch(`${API}/graphql`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(query)
+        });
+
+        if (!res.ok) throw new Error(`GraphQL KV request failed: ${res.status}`);
+        const result = await res.json();
+        if (result.errors?.length) throw new Error(result.errors[0].message);
+
+        const rawData = result?.data?.viewer?.accounts?.[0]?.kvOperationsAdaptiveGroups || [];
+        let readTotal = 0, writeTotal = 0;
+        const detailsMap = new Map<string, { namespaceId: string; namespaceName: string; read: number; write: number; delete: number; list: number }>();
+
+        // 初始化所有命名空间
+        Object.keys(namespaceMap).forEach(id => {
+            detailsMap.set(id, { namespaceId: id, namespaceName: namespaceMap[id], read: 0, write: 0, delete: 0, list: 0 });
+        });
+
+        for (const item of rawData) {
+            const action = item.dimensions?.actionType;
+            const count = Number(item.sum?.requests) || 0;
+            const nsId = item.dimensions?.namespaceId;
+            if (!detailsMap.has(nsId)) {
+                detailsMap.set(nsId, { namespaceId: nsId, namespaceName: nsId, read: 0, write: 0, delete: 0, list: 0 });
+            }
+            const entry = detailsMap.get(nsId)!;
+            if (action === 'read') { readTotal += count; entry.read += count; }
+            else if (action === 'write') { writeTotal += count; entry.write += count; }
+            else if (action === 'delete') entry.delete += count;
+            else if (action === 'list') entry.list += count;
+        }
+
+        const readPercentage = Math.min((readTotal / KV_READ_LIMIT) * 100, 100);
+        const writePercentage = Math.min((writeTotal / KV_WRITE_LIMIT) * 100, 100);
+
+        return respond(true, HttpStatus.OK, '', {
+            readTotal,
+            writeTotal,
+            readPercentage: Number(readPercentage.toFixed(2)),
+            writePercentage: Number(writePercentage.toFixed(2)),
+            readLimit: KV_READ_LIMIT,
+            writeLimit: KV_WRITE_LIMIT,
+            details: Array.from(detailsMap.values())
+        });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return respond(false, HttpStatus.INTERNAL_SERVER_ERROR, message, {
+            readTotal: 0, writeTotal: 0, readPercentage: 0, writePercentage: 0, details: []
+        });
+    }
+}
+
+async function getCloudflareConfigHandler(env: Env): Promise<Response> {
+    const config = await getCloudflareConfig(env);
+    return respond(true, HttpStatus.OK, '', config);
+}
+
+async function updateCloudflareConfig(request: Request, env: Env): Promise<Response> {
+    const auth = await Authenticate(request, env);
+    if (!auth) return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
+
+    const config = await request.json();
+    // 只检查是否为字符串，允许空字符串（用于清除配置）
+    if (typeof config.accountId !== 'string') {
+		return respond(false, HttpStatus.BAD_REQUEST, 'Invalid accountId');
+	}
+    // 允许配置为空（清除）
+    await saveCloudflareConfig(env, {
+        accountId: config.accountId || '',
+        apiToken: config.apiToken || '',
+        email: config.email || '',
+        globalApiKey: config.globalApiKey || ''
+    });
+    return respond(true, HttpStatus.OK, 'Cloudflare config updated');
+}
 
 interface BackgroundConfig {
     image: string;
@@ -89,6 +270,27 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
 			} else {
 				return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
 			}
+			
+		// 添加路由处理
+		case '/panel/cloudflare-usage':
+			if (request.method === 'GET') {
+				return await getCloudflareUsage(env);
+			}
+			return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
+
+		case '/panel/kv-usage':
+			if (request.method === 'GET') {
+				return await getKvUsage(env);
+			}
+			return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
+
+		case '/panel/cloudflare-config':
+			if (request.method === 'GET') {
+				return await getCloudflareConfigHandler(env);
+			} else if (request.method === 'POST') {
+				return await updateCloudflareConfig(request, env);
+			}
+			return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
 
         default:
             return await fallback(request);
