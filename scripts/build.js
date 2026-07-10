@@ -3,18 +3,8 @@ import { join, dirname as pathDirname } from 'path';
 import { fileURLToPath } from 'url';
 import { build } from 'esbuild';
 import { globSync } from 'glob';
-import { minify as jsMinify } from 'terser';
-import { minify as htmlMinify } from 'html-minifier';
 import JSZip from "jszip";
-import obfs from 'javascript-obfuscator';
 import pkg from '../package.json' with { type: 'json' };
-import { gzipSync } from 'zlib';
-
-// 环境变量：是否跳过所有压缩/混淆/Base64 编码（原始构建模式）
-const skipMinify = process.env.SKIP_MINIFY === 'true';
-// 原有的 mangle 模式（仅在非 skip 时有效）
-const env = process.env.NODE_ENV || 'mangle';
-const mangleMode = env === 'mangle';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = pathDirname(__filename);
@@ -43,68 +33,31 @@ async function processHtmlPages() {
 
         if (dir !== 'error') {
             const styleCode = readFileSync(base('style.css'), 'utf8');
-            let scriptCode = readFileSync(base('script.js'), 'utf8');
+            const scriptCode = readFileSync(base('script.js'), 'utf8');
 
-            // 如果不跳过压缩，则压缩 script；否则保持原始
-            if (!skipMinify) {
-                const minified = await jsMinify(scriptCode);
-                scriptCode = minified.code;
-            }
-
+            // 直接原样嵌入，不压缩、不混淆
             finalHtml = finalHtml
                 .replaceAll('__STYLE__', `<style>${styleCode}</style>`)
                 .replaceAll('__SCRIPT__', scriptCode);
         }
 
-        // ---------- 关键修改：根据 skipMinify 决定如何嵌入 HTML ----------
-        if (skipMinify) {
-            // 原始构建模式：直接嵌入原始 HTML 字符串（JSON 转义保证合法）
-            result[dir] = JSON.stringify(finalHtml);
-            console.log(`  ${dir} → raw HTML string (no compression, no base64)`);
-        } else {
-            // 正常构建模式：压缩 + gzip + base64
-            const minifiedHtml = htmlMinify(finalHtml, {
-                collapseWhitespace: true,
-                removeAttributeQuotes: true,
-                minifyCSS: true
-            });
-            const compressed = gzipSync(minifiedHtml);
-            const htmlBase64 = compressed.toString('base64');
-            result[dir] = JSON.stringify(htmlBase64);
-        }
+        // 直接存储原始 HTML 字符串（JSON 转义保证合法）
+        result[dir] = JSON.stringify(finalHtml);
+        console.log(`  ${dir} → raw HTML string`);
     }
 
     console.log(`${success} Assets processed.`);
     return result;
 }
 
-function generateJunkCode() {
-    // 只在非 skip 且 mangleMode 时使用，保留原样
-    const minVars = 50, maxVars = 500;
-    const minFuncs = 50, maxFuncs = 500;
-
-    const varCount = Math.floor(Math.random() * (maxVars - minVars + 1)) + minVars;
-    const funcCount = Math.floor(Math.random() * (maxFuncs - minFuncs + 1)) + minFuncs;
-
-    const junkVars = Array.from({ length: varCount }, (_, i) => {
-        const varName = `__junk_${Math.random().toString(36).substring(2, 10)}_${i}`;
-        const value = Math.floor(Math.random() * 100000);
-        return `let ${varName} = ${value};`;
-    }).join('\n');
-
-    const junkFuncs = Array.from({ length: funcCount }, (_, i) => {
-        const funcName = `__junkFunc_${Math.random().toString(36).substring(2, 10)}_${i}`;
-        return `function ${funcName}() { return ${Math.floor(Math.random() * 1000)}; }`;
-    }).join('\n');
-
-    return `${junkVars}\n${junkFuncs}\n`;
-}
-
 async function buildWorker() {
     const htmls = await processHtmlPages();
-    const faviconBuffer = readFileSync('./src/assets/favicon.ico');
-    const faviconBase64 = faviconBuffer.toString('base64'); // favicon 保持 base64（未要求改变）
 
+    // favicon 保留 base64（因为它是二进制图片数据）
+    const faviconBuffer = readFileSync('./src/assets/favicon.ico');
+    const faviconBase64 = faviconBuffer.toString('base64');
+
+    // esbuild 打包
     const code = await build({
         entryPoints: [join(__dirname, '../src/worker.ts')],
         bundle: true,
@@ -126,53 +79,21 @@ async function buildWorker() {
 
     console.log(`${success} Worker built successfully!`);
 
-    let finalCode;
-
-    if (skipMinify) {
-        // ---------- 原始构建：直接使用 esbuild 输出，不做任何后续处理 ----------
-        finalCode = code.outputFiles[0].text;
-        console.log(`${success} Skipped minification, obfuscation, and base64 encoding for HTML.`);
-    } else if (mangleMode) {
-        const junkCode = generateJunkCode();
-        const minifiedCode = await jsMinify(junkCode + code.outputFiles[0].text, {
-            module: true,
-            output: { comments: false },
-            compress: { dead_code: false, unused: false }
-        });
-        finalCode = minifiedCode.code;
-        console.log(`${success} Worker minified with junk code.`);
-    } else {
-        const minifiedCode = await jsMinify(code.outputFiles[0].text, {
-            module: true,
-            output: { comments: false },
-            compress: { dead_code: false, unused: false }
-        });
-        const obfuscationResult = obfs.obfuscate(minifiedCode.code, {
-            stringArrayThreshold: 1,
-            stringArrayEncoding: ["rc4"],
-            numbersToExpressions: true,
-            transformObjectKeys: true,
-            renameGlobals: true,
-            deadCodeInjection: true,
-            deadCodeInjectionThreshold: 0.2,
-            target: "browser"
-        });
-        finalCode = obfuscationResult.getObfuscatedCode();
-        console.log(`${success} Worker obfuscated.`);
-    }
+    // 直接使用 esbuild 的输出，不做任何后续处理
+    const finalCode = code.outputFiles[0].text;
 
     const buildTimestamp = new Date().toISOString();
-    const buildInfo = `// Build: ${buildTimestamp}\n`;
-    const worker = `${buildInfo}// @ts-nocheck\n${finalCode}`;
+    const worker = `// Build: ${buildTimestamp}\n// @ts-nocheck\n${finalCode}`;
 
     mkdirSync(DIST_PATH, { recursive: true });
     writeFileSync('./dist/worker.js', worker, 'utf8');
 
+    // 生成 zip（同样不压缩内容）
     const zip = new JSZip();
     zip.file('_worker.js', worker);
     zip.generateAsync({
         type: 'nodebuffer',
-        compression: 'DEFLATE'
+        compression: 'DEFLATE'   // zip 内部压缩可以保留，为了减小传输体积，但代码本身未压缩
     }).then(nodebuffer => writeFileSync('./dist/worker.zip', nodebuffer));
 
     console.log(`${success} Done!`);
