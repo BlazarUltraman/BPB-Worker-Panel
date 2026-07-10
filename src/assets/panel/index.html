@@ -22,11 +22,11 @@
 			</span>
 		</h2>
         <details>
-			<summary><h3><span class="material-symbols-rounded">settings</span> Settings</h3></summary>
+			<summary><h3 style="color: #0000cf;"><span class="material-symbols-rounded">settings</span> Settings</h3></summary>
 			<form id="configForm" class="configForm" onsubmit="updateSettings(event)">
 				<details>
 					<summary>
-						<h4>Common
+						<h3>Common
 							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/configuration/common/"
 								target="_blank" title="Help">
 								<span class="material-symbols-rounded">info</span>
@@ -89,7 +89,7 @@
 				</details>
 				<details class="details">
 					<summary>
-						<h4>VLESS - Trojan
+						<h3>VLESS - Trojan
 							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/configuration/vless-trojan/"
 								target="_blank" title="Help">
 								<span class="material-symbols-rounded">info</span>
@@ -184,7 +184,7 @@
 						</div>
 						<div class="container">
 							<div class="section">
-								<h4><span class="material-symbols-rounded">tune</span> Proxy IP</h4>
+								<h3><span class="material-symbols-rounded">tune</span> Proxy IP</h4>
 								<div class="form-control">
 									<label for="proxyIPMode">🎚️ Mode</label>
 									<div>
@@ -224,7 +224,7 @@
 						</div>
 						<div class="container">
 							<div class="section">
-								<h4><span class="material-symbols-rounded">tune</span> Custom CDN</h4>
+								<h3><span class="material-symbols-rounded">tune</span> Custom CDN</h4>
 								<div class="form-control">
 									<label for="customCdnAddrs">💀 Addresses</label>
 									<div>
@@ -249,7 +249,7 @@
 				</details>
 				<details>
 					<summary>
-						<h4>Xray Fragment
+						<h3>Xray Fragment
 							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/configuration/fragment/"
 								target="_blank" title="Help">
 								<span class="material-symbols-rounded">info</span>
@@ -311,7 +311,7 @@
 				</details>
 				<details>
 					<summary>
-						<h4>Warp General
+						<h3>Warp General
 							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/configuration/warp/" target="_blank"
 								title="Help">
 								<span class="material-symbols-rounded">info</span>
@@ -355,7 +355,7 @@
 				</details>
 				<details>
 					<summary>
-						<h4>Warp PRO
+						<h3>Warp PRO
 							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/configuration/warp-pro/"
 								target="_blank" title="Help">
 								<span class="material-symbols-rounded">info</span>
@@ -365,7 +365,7 @@
 					<div class="section">
 						<div class="container">
 							<div class="section">
-								<h4><span class="material-symbols-rounded">tune</span> MahsaNG Noise</h4>
+								<h3><span class="material-symbols-rounded">tune</span> MahsaNG Noise</h4>
 								<div class="form-control">
 									<label for="knockerNoiseMode">😵‍💫 Mode</label>
 									<div>
@@ -402,7 +402,7 @@
 						</div>
 						<div class="container">
 							<div class="section">
-								<h4><span class="material-symbols-rounded">tune</span> Clash - Amnezia Noise</h4>
+								<h3><span class="material-symbols-rounded">tune</span> Clash - Amnezia Noise</h4>
 								<div class="form-control">
 									<label for="amneziaNoiseCount">🎚️ Count</label>
 									<div>
@@ -424,7 +424,7 @@
 						</div>
 						<div id="udp-noise-container" class="container">
 							<div class="header-container">
-								<h4><span class="material-symbols-rounded">tune</span> v2rayNG - v2rayN Noise</h4>
+								<h3><span class="material-symbols-rounded">tune</span> v2rayNG - v2rayN Noise</h4>
 								<button type="button" class="add-noise" onclick="addUdpNoise(true)">
 									<span class="material-symbols-rounded">add_circle</span>
 								</button>
@@ -435,7 +435,7 @@
 				</details>
 				<details>
 					<summary>
-						<h4>Routing Rules
+						<h3>Routing Rules
 							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/configuration/routing-rules/"
 								target="_blank" title="Help">
 								<span class="material-symbols-rounded">info</span>
@@ -444,7 +444,7 @@
 					</summary>
 					<div class="section">
 						<div class="container">
-							<h4><span class="material-symbols-rounded">tune</span> Preset Rules</h4>
+							<h3><span class="material-symbols-rounded">tune</span> Preset Rules</h4>
 							<div class="form-control">
 								<label for="bypass-rules">🟩 Bypass rules</label>
 								<div>
@@ -497,7 +497,7 @@
 							</div>
 						</div>
 						<div class="container">
-							<h4><span class="material-symbols-rounded">tune</span> Custom Rules</h4>
+							<h3><span class="material-symbols-rounded">tune</span> Custom Rules</h4>
 							<div class="form-control">
 								<label for="customBypassRules">🟩 Bypass IPs / Domains</label>
 								<div>
@@ -513,7 +513,7 @@
 							</div>
 						</div>
 						<div class="container">
-							<h4><span class="material-symbols-rounded">tune</span> Sanction Rules</h4>
+							<h3><span class="material-symbols-rounded">tune</span> Sanction Rules</h4>
 							<div class="form-control">
 								<label for="bypass-sanction-rules">🟩 Bypass rules</label>
 								<div>
@@ -603,511 +603,515 @@
 			</form>
 		</details>
         <details>
-		<summary><h3><span class="material-symbols-rounded">share</span> Subscriptions</h3></summary>
-			<details>
-				<summary>
-					<h4>Normal
-						<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/normal/" target="_blank"
-							title="Help">
-							<span class="material-symbols-rounded">info</span>
-						</a>
-					</h4>
-				</summary>
-				<div class="table-container">
-					<table id="full-normal-configs-table">
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>MahsaNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN-PRO</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Streisand</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('normal', 'xray', 'Normal', 'Normal Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('normal', 'xray', 'Normal')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('normal', 'xray')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>sing-box</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN (sing-box)</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('normal', 'sing-box', 'Normal', 'Normal Subscription', true)">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('normal', 'sing-box', 'Normal')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('normal', 'sing-box')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Clash Meta</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Clash Verge</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>FlClash</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Stash</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN (mihomo)</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('normal', 'clash', 'Normal', 'Normal Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('normal', 'clash', 'Normal')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('normal', 'clash')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</details>
-			<details>
-				<summary>
-					<h4>Fragment
-						<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/fragment/" target="_blank"
-							title="Help">
-							<span class="material-symbols-rounded">info</span>
-						</a>
-					</h4>
-				</summary>
-				<div class="table-container">
-					<table id="frag-sub-table">
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>MahsaNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN-PRO</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Streisand</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('fragment', 'xray', 'Fragment', 'Fragment Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('fragment', 'xray', 'Fragment')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('fragment', 'xray')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>sing-box</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN (sing-box)</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('fragment', 'sing-box', 'Fragment', 'Fragment Subscription', true)">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('fragment', 'sing-box', 'Fragment')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('fragment', 'sing-box')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</details>
-			<details>
-				<summary>
-					<h4>Warp
-						<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/warp/" target="_blank"
-							title="Help">
-							<span class="material-symbols-rounded">info</span>
-						</a>
-					</h4>
-				</summary>
-				<div class="table-container">
-					<table id="warp-configs-table">
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Streisand</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('warp', 'xray', 'Warp', 'Warp Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('warp', 'xray', 'Warp')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('warp', 'xray')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>sing-box</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN (sing-box)</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('warp', 'sing-box', 'Warp', 'Warp Subscription', true)">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('warp', 'sing-box', 'Warp')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('warp', 'sing-box')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Clash Meta</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Clash Verge</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>FlClash</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Stash</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN (mihomo)</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('warp', 'clash', 'Warp', 'Warp Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('warp', 'clash', 'Warp')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('warp', 'clash')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Wireguard</span>
-								</div>
-							</td>
-							<td>
-								<button title="Download configs zip" id="dlConfigsBtn" type="button"
-									onclick="downloadWarpConfigs(false)">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</details>
-			<details>
-				<summary>
-					<h4>Warp PRO
-						<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/warp-pro/" target="_blank"
-							title="Help">
-							<span class="material-symbols-rounded">info</span>
-						</a>
-					</h4>
-				</summary>
-				<div class="table-container">
-					<table id="warp-pro-configs-table">
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Streisand</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('warp-pro', 'xray', 'Warp Pro', 'Warp Pro Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('warp-pro', 'xray', 'Warp Pro')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('warp-pro', 'xray')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>MahsaNG</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN-PRO</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('warp-pro', 'xray-knocker', 'Warp Pro', 'Warp Pro Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL"
-									onclick="subURL('warp-pro', 'xray-knocker', 'Warp Pro')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('warp-pro', 'xray-knocker')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Clash Meta</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Clash Verge</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>FlClash</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Stash</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>v2rayN (mihomo)</span>
-								</div>
-							</td>
-							<td>
-								<button title="Display QR code"
-									onclick="openQR('warp-pro', 'clash', 'Warp Pro', 'Warp Pro Subscription')">
-									<span class="material-symbols-rounded">qr_code</span>
-								</button>
-								<button title="Copy subscription URL" onclick="subURL('warp-pro', 'clash', 'Warp Pro')">
-									<span class="material-symbols-rounded">content_copy</span>
-								</button>
-								<button title="Download config" onclick="dlURL('warp-pro', 'clash')">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>Amnezia</span>
-								</div>
-								<div>
-									<span class="material-symbols-rounded">verified</span>
-									<span>WG Tunnel</span>
-								</div>
-							</td>
-							<td>
-								<button title="Download configs zip" id="dlAmneziaConfigsBtn" type="button"
-									onclick="downloadWarpConfigs(true)">
-									<span class="material-symbols-rounded">download</span>
-								</button>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</details>
-			<div id="resetPassModal" class="modal">
-				<div class="modal-content">
-					<span class="close" id="closeResetPass" onclick="closeResetPass()">&times;</span>
-					<form id="passwordChangeForm" onsubmit="resetPassword(event)">
-						<h3>Change Password</h3>
-						<div class="section">
-							<div class="form-control">
-								<label for="newPassword">New Password</label>
-								<div class="password-wrapper">
-									<input type="password" id="newPassword" name="newPassword" required>
-									<span class="material-symbols-rounded toggle-password">
-										visibility_off
-									</span>
-								</div>
-							</div>
-							<div class="form-control">
-								<label for="confirmPassword">Confirm Password</label>
-								<div class="password-wrapper">
-									<input type="password" id="confirmPassword" name="confirmPassword" required>
-									<span class="material-symbols-rounded toggle-password">
-										visibility_off
-									</span>
-								</div>
-							</div>
-						</div>
-						<div id="passwordError" class="password-error"></div>
-						<button id="changePasswordBtn" type="submit" class="button">Change Password</button>
-					</form>
-				</div>
-			</div>
-			<div id="qrModal" class="modalQR">
-				<div class="modal-content" class="modal-content">
-					<div class="modal-header">
-						<span id="closeQR" class="close" onclick="closeQR()">&times;</span>
-						<span id="qrcodeTitle" class="qr-title"></span>
+		<summary><h3 style="color: #0000cf;"><span class="material-symbols-rounded">share</span> Subscriptions</h3></summary>
+			<form class="configForm">
+				<details>
+					<summary>
+						<h3>Normal
+							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/normal/" target="_blank"
+								title="Help">
+								<span class="material-symbols-rounded">info</span>
+							</a>
+						</h4>
+					</summary>
+					<div class="table-container">
+						<table id="full-normal-configs-table">
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>MahsaNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN-PRO</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Streisand</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('normal', 'xray', 'Normal', 'Normal Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('normal', 'xray', 'Normal')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('normal', 'xray')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>sing-box</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN (sing-box)</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('normal', 'sing-box', 'Normal', 'Normal Subscription', true)">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('normal', 'sing-box', 'Normal')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('normal', 'sing-box')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Clash Meta</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Clash Verge</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>FlClash</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Stash</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN (mihomo)</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('normal', 'clash', 'Normal', 'Normal Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('normal', 'clash', 'Normal')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('normal', 'clash')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+						</table>
 					</div>
-					<div id="qrcode-container"></div>
+				</details>
+				<details>
+					<summary>
+						<h3>Fragment
+							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/fragment/" target="_blank"
+								title="Help">
+								<span class="material-symbols-rounded">info</span>
+							</a>
+						</h4>
+					</summary>
+					<div class="table-container">
+						<table id="frag-sub-table">
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>MahsaNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN-PRO</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Streisand</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('fragment', 'xray', 'Fragment', 'Fragment Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('fragment', 'xray', 'Fragment')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('fragment', 'xray')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>sing-box</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN (sing-box)</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('fragment', 'sing-box', 'Fragment', 'Fragment Subscription', true)">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('fragment', 'sing-box', 'Fragment')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('fragment', 'sing-box')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</details>
+				<details>
+					<summary>
+						<h3>Warp
+							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/warp/" target="_blank"
+								title="Help">
+								<span class="material-symbols-rounded">info</span>
+							</a>
+						</h4>
+					</summary>
+					<div class="table-container">
+						<table id="warp-configs-table">
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Streisand</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('warp', 'xray', 'Warp', 'Warp Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('warp', 'xray', 'Warp')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('warp', 'xray')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>sing-box</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN (sing-box)</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('warp', 'sing-box', 'Warp', 'Warp Subscription', true)">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('warp', 'sing-box', 'Warp')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('warp', 'sing-box')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Clash Meta</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Clash Verge</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>FlClash</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Stash</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN (mihomo)</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('warp', 'clash', 'Warp', 'Warp Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('warp', 'clash', 'Warp')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('warp', 'clash')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Wireguard</span>
+									</div>
+								</td>
+								<td>
+									<button title="Download configs zip" id="dlConfigsBtn" type="button"
+										onclick="downloadWarpConfigs(false)">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</details>
+				<details>
+					<summary>
+						<h3>Warp PRO
+							<a href="https://bia-pain-bache.github.io/BPB-Worker-Panel/usage/warp-pro/" target="_blank"
+								title="Help">
+								<span class="material-symbols-rounded">info</span>
+							</a>
+						</h4>
+					</summary>
+					<div class="table-container">
+						<table id="warp-pro-configs-table">
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Streisand</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('warp-pro', 'xray', 'Warp Pro', 'Warp Pro Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('warp-pro', 'xray', 'Warp Pro')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('warp-pro', 'xray')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>MahsaNG</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN-PRO</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('warp-pro', 'xray-knocker', 'Warp Pro', 'Warp Pro Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL"
+										onclick="subURL('warp-pro', 'xray-knocker', 'Warp Pro')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('warp-pro', 'xray-knocker')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Clash Meta</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Clash Verge</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>FlClash</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Stash</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>v2rayN (mihomo)</span>
+									</div>
+								</td>
+								<td>
+									<button title="Display QR code"
+										onclick="openQR('warp-pro', 'clash', 'Warp Pro', 'Warp Pro Subscription')">
+										<span class="material-symbols-rounded">qr_code</span>
+									</button>
+									<button title="Copy subscription URL" onclick="subURL('warp-pro', 'clash', 'Warp Pro')">
+										<span class="material-symbols-rounded">content_copy</span>
+									</button>
+									<button title="Download config" onclick="dlURL('warp-pro', 'clash')">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>Amnezia</span>
+									</div>
+									<div>
+										<span class="material-symbols-rounded">verified</span>
+										<span>WG Tunnel</span>
+									</div>
+								</td>
+								<td>
+									<button title="Download configs zip" id="dlAmneziaConfigsBtn" type="button"
+										onclick="downloadWarpConfigs(true)">
+										<span class="material-symbols-rounded">download</span>
+									</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</details>
+				<div id="resetPassModal" class="modal">
+					<div class="modal-content">
+						<span class="close" id="closeResetPass" onclick="closeResetPass()">&times;</span>
+						<form id="passwordChangeForm" onsubmit="resetPassword(event)">
+							<h3 style="color: #0000cf;">Change Password</h3>
+							<div class="section">
+								<div class="form-control">
+									<label for="newPassword">New Password</label>
+									<div class="password-wrapper">
+										<input type="password" id="newPassword" name="newPassword" required>
+										<span class="material-symbols-rounded toggle-password">
+											visibility_off
+										</span>
+									</div>
+								</div>
+								<div class="form-control">
+									<label for="confirmPassword">Confirm Password</label>
+									<div class="password-wrapper">
+										<input type="password" id="confirmPassword" name="confirmPassword" required>
+										<span class="material-symbols-rounded toggle-password">
+											visibility_off
+										</span>
+									</div>
+								</div>
+							</div>
+							<div id="passwordError" class="password-error"></div>
+							<button id="changePasswordBtn" type="submit" class="button">Change Password</button>
+						</form>
+					</div>
 				</div>
-			</div>
-		</details>
+				<div id="qrModal" class="modalQR">
+					<div class="modal-content" class="modal-content">
+						<div class="modal-header">
+							<span id="closeQR" class="close" onclick="closeQR()">&times;</span>
+							<span id="qrcodeTitle" class="qr-title"></span>
+						</div>
+						<div id="qrcode-container"></div>
+					</div>
+				</div>
+			</details>
+		</form>
         
         <!-- ====== 背景设置（独立章节） ====== -->
         <details>
-		<summary><h3><span class="material-symbols-rounded">🎨</span> Background</h3></summary>
-			<details id="bgDetails">
-				<summary>
-					<h4>SetBackground</h4>
-				</summary>
-				<div style="padding: 15px 10px 5px 10px; display: flex; flex-direction: column; gap: 15px;">
-					<div class="form-control">
-						<label style="flex: 1; text-align: left;">背景图 URL / Base64</label>
-						<div style="flex: 2;">
-							<input type="text" id="bgImageInput" class="form-control" style="width: 100%;" placeholder="输入图片链接或Base64">
+		<summary><h3 style="color: #0000cf;"><span class="material-symbols-rounded">🎨</span> Background</h3></summary>
+			<form class="configForm">
+				<details id="bgDetails">
+					<summary>
+						<h3>SetBackground</h4>
+					</summary>
+					<div style="padding: 15px 10px 5px 10px; display: flex; flex-direction: column; gap: 15px;">
+						<div class="form-control">
+							<label style="flex: 1; text-align: left;">背景图 URL / Base64</label>
+							<div style="flex: 2;">
+								<input type="text" id="bgImageInput" class="form-control" style="width: 100%;" placeholder="输入图片链接或Base64">
+							</div>
+						</div>
+						<div class="form-control">
+							<label style="flex: 1; text-align: left;">对齐方式</label>
+							<div style="flex: 2;">
+								<select id="bgPositionSelect" class="form-control" style="width: 100%;">
+									<option value="left">左对齐</option>
+									<option value="center">居中</option>
+									<option value="right">右对齐</option>
+									<option value="top">顶部</option>
+									<option value="bottom">底部</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-control">
+							<label style="flex: 1; text-align: left;">透明度 (0 ~ 1)</label>
+							<div style="flex: 2;">
+								<input type="number" id="bgOpacityInput" class="form-control" style="width: 100%;" min="0" max="1" step="0.01" value="0.9">
+							</div>
+						</div>
+						<div style="display: flex; gap: 10px; justify-content: center; margin-top: 5px;">
+							<button type="button" class="button" onclick="saveBackground()" style="background: #667eea; flex: 1;">保存</button>
+							<button type="button" class="button" onclick="resetBackground()" style="background: #e53e3e; flex: 1;">重置默认</button>
 						</div>
 					</div>
-					<div class="form-control">
-						<label style="flex: 1; text-align: left;">对齐方式</label>
-						<div style="flex: 2;">
-							<select id="bgPositionSelect" class="form-control" style="width: 100%;">
-								<option value="left">左对齐</option>
-								<option value="center">居中</option>
-								<option value="right">右对齐</option>
-								<option value="top">顶部</option>
-								<option value="bottom">底部</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-control">
-						<label style="flex: 1; text-align: left;">透明度 (0 ~ 1)</label>
-						<div style="flex: 2;">
-							<input type="number" id="bgOpacityInput" class="form-control" style="width: 100%;" min="0" max="1" step="0.01" value="0.9">
-						</div>
-					</div>
-					<div style="display: flex; gap: 10px; justify-content: center; margin-top: 5px;">
-						<button type="button" class="button" onclick="saveBackground()" style="background: #667eea; flex: 1;">保存</button>
-						<button type="button" class="button" onclick="resetBackground()" style="background: #e53e3e; flex: 1;">重置默认</button>
-					</div>
-				</div>
-			</details>
+				</details>
+			</form>
 		</details>
 
         <div class="header-container">
-            <h3><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
+            <h3 style="color: #0000cf;"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
             <button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
                 <i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
             </button>
