@@ -10,7 +10,28 @@ import { TrOverWSHandler } from "@trojan";
 import JSZip from "jszip";
 import { HttpStatus, respond } from "@common";
 // 在 handlers.ts 顶部导入必要的依赖
-import { getCloudflareConfig, saveCloudflareConfig } from './kv';
+import { getCloudflareConfig, saveCloudflareConfig, type CloudflareConfig } from 'kv';
+
+// 添加接口定义
+interface GraphQLResponse {
+    data?: {
+        viewer?: {
+            accounts?: Array<{
+                pagesFunctionsInvocationsAdaptiveGroups?: Array<{ sum?: { requests?: number } }>;
+                workersInvocationsAdaptive?: Array<{ sum?: { requests?: number } }>;
+                kvOperationsAdaptiveGroups?: Array<{
+                    dimensions?: { namespaceId?: string; actionType?: string };
+                    sum?: { requests?: number };
+                }>;
+            }>;
+        };
+    };
+    errors?: Array<{ message: string }>;
+}
+
+interface KVNamespacesResponse {
+    result?: Array<{ id: string; title: string }>;
+}
 
 // 默认限制常量
 const CLOUDFLARE_REQUESTS_LIMIT = 100000;
@@ -56,7 +77,7 @@ async function getCloudflareUsage(env: Env): Promise<Response> {
         });
 
         if (!res.ok) throw new Error(`GraphQL request failed: ${res.status}`);
-        const result = await res.json();
+        const result = await res.json() as GraphQLResponse;
         if (result.errors?.length) throw new Error(result.errors[0].message);
 
         const acc = result?.data?.viewer?.accounts?.[0];
@@ -97,7 +118,7 @@ async function getKvUsage(env: Env): Promise<Response> {
         // 获取所有 KV 命名空间
         const nsRes = await fetch(`${API}/accounts/${accountId}/storage/kv/namespaces?per_page=100`, { headers });
         if (!nsRes.ok) throw new Error(`Failed to list KV namespaces: ${nsRes.status}`);
-        const nsData = await nsRes.json();
+        const nsData = await nsRes.json() as KVNamespacesResponse;
         const namespaceMap: Record<string, string> = {};
         nsData.result?.forEach((ns: any) => { namespaceMap[ns.id] = ns.title; });
 
@@ -121,7 +142,7 @@ async function getKvUsage(env: Env): Promise<Response> {
         });
 
         if (!res.ok) throw new Error(`GraphQL KV request failed: ${res.status}`);
-        const result = await res.json();
+        const result = await res.json() as GraphQLResponse;
         if (result.errors?.length) throw new Error(result.errors[0].message);
 
         const rawData = result?.data?.viewer?.accounts?.[0]?.kvOperationsAdaptiveGroups || [];
@@ -176,7 +197,7 @@ async function updateCloudflareConfig(request: Request, env: Env): Promise<Respo
     const auth = await Authenticate(request, env);
     if (!auth) return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
 
-    const config = await request.json();
+    const config = await request.json() as CloudflareConfig;
     // 只检查是否为字符串，允许空字符串（用于清除配置）
     if (typeof config.accountId !== 'string') {
 		return respond(false, HttpStatus.BAD_REQUEST, 'Invalid accountId');
