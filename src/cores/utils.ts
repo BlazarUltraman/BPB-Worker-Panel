@@ -86,6 +86,13 @@ function getCleanIPRemark(address: string): string | null {
 // 在模块顶部维护一个 Map（每次生成配置前需重置）
 const remarkCounter = new Map<string, number>();
 
+// 添加国旗转换辅助函数
+function getFlagEmoji(countryCode: string): string {
+    if (!countryCode || countryCode.length !== 2) return '';
+    const codePoints = countryCode.toUpperCase().split('').map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
+    return String.fromCodePoint(...codePoints);
+}
+
 export function generateRemark(
     index: number,
     port: number,
@@ -98,16 +105,31 @@ export function generateRemark(
     const protoSign = protocol === _VL_ ? _VL_CAP_ : _TR_CAP_;
     const prefix = isChain ? '🔗 ' : '';
     const remark = getCleanIPRemark(address);
+
+    let prefixSymbol = '☁ ';
+    let displayName = 'Clean';
+    let count = index;
+
     if (remark) {
-        const count = (remarkCounter.get(remark) || 0) + 1;
+        count = (remarkCounter.get(remark) || 0) + 1;
         remarkCounter.set(remark, count);
-        // return `${remark}-${prefix}${protoSign}-${port} ${count}`; // 有端口
-        return `${remark}-${prefix}${protoSign} ${count}`;
+
+        if (/^[A-Z]{2}$/.test(remark)) {
+            const flag = getFlagEmoji(remark);
+            prefixSymbol = flag + ' ';
+            displayName = remark;
+        } else {
+            prefixSymbol = '☁ ';
+            displayName = remark;
+        }
     } else {
-        // 无备注仍用全局 index
-        // return `☁ Clean-${prefix}${protoSign}-${port} ${index}`; // 有端口
-        return `☁ Clean-${prefix}${protoSign} ${index}`;
+        // 无备注，使用全局索引
+        count = index;
+        prefixSymbol = '☁ ';
+        displayName = 'Clean';
     }
+
+    return `${prefixSymbol}${displayName}-${prefix}${protoSign} ${count}`;
 }
 
 export function randomUpperCase(str: string): string {
