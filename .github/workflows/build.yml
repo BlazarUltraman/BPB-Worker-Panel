@@ -4,62 +4,52 @@ permissions:
   contents: write
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:          # 手动触发
   schedule:
-    - cron: '0 */1 * * *'
+    - cron: '0 */1 * * *'     # 每小时自动运行（仅在默认分支）
 
 jobs:
   build:
-    if: |
-      github.event_name == 'workflow_dispatch' || 
-      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get release version
-        id: get_version
+      - name: Get version from package.json
+        id: version
         run: echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
-      - name: Check release version
-        run: echo "Release version is ${{ steps.get_version.outputs.version }}"
-
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "latest"
+          node-version: latest
 
       - name: Install dependencies
-        run: npm install --production
+        run: npm ci --production   # 更稳定，建议用 ci
 
-      - name: Type check
-        run: npm run check
-        
-      - name: Build project
-        run: npm run build
-
-      - name: Read release note
-        id: read_release
-        shell: bash
+      - name: Type check & Build
         run: |
-          r=$(cat RELEASE.md)         
-          r="${r//'%'/'%25'}"                               
-          r="${r//$'\n'/'%0A'}"                             
-          r="${r//$'\r'/'%0D'}"                             
-          echo "RELEASE_BODY=$r" >> $GITHUB_OUTPUT          
+          npm run check
+          npm run build
 
-      - name: Upload Release Assets
+      - name: Read release notes
+        id: release_note
+        run: |
+          # 使用 heredoc 方式安全传递多行内容
+          echo 'body<<EOF' >> $GITHUB_OUTPUT
+          cat RELEASE.md >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Create Release and Upload Assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dist/*
-          tag: v${{ steps.get_version.outputs.version }}
-          release_name: Release v${{ steps.get_version.outputs.version }}
+          tag: v${{ steps.version.outputs.version }}
+          release_name: Release v${{ steps.version.outputs.version }}
           overwrite: true
           file_glob: true
-          prerelease: ${{ github.ref != 'refs/heads/main' }}
-          promote: ${{ github.ref == 'refs/heads/main' }}
-          make_latest: ${{ github.ref == 'refs/heads/main' }}
-          body: ${{ steps.read_release.outputs.RELEASE_BODY }}
+          body: ${{ steps.release_note.outputs.body }}
+          # 去除了 prerelease, promote, make_latest 等容易混淆的参数，
+          # 默认行为：如果 tag 已存在则覆盖，release 为最新（latest）
