@@ -1317,10 +1317,7 @@ function openBgModal() {
         });
 }
 
-function closeBgModal() {
-    document.getElementById('bgModal').style.display = 'none';
-}
-
+// ============ 背景 ============
 function saveBackground() {
     const image = document.getElementById('bgImageInput').value.trim();
     const position = document.getElementById('bgPositionSelect').value;
@@ -1415,4 +1412,101 @@ function loadBackgroundOnInit() {
             }
         })
         .catch(err => console.error('加载背景配置失败:', err));
+}
+
+// ============ Base64 图片转换 ============
+function convertBgImageToBase64() {
+    const fileInput = document.getElementById('bgImageFile');
+    const file = fileInput.files[0];
+    if (!file) {
+        alert('请先选择一张图片');
+        return;
+    }
+    if (!file.type.match('image.*')) {
+        alert('请选择图片文件');
+        fileInput.value = '';
+        return;
+    }
+    // 文件大小限制（建议 700KB）
+    if (file.size > 0.7 * 1024 * 1024) {
+        alert('图片文件大小不能超过 700KB');
+        fileInput.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result;
+        // 预览
+        document.getElementById('bgPreviewImg').src = base64;
+        document.getElementById('bgImagePreview').style.display = 'block';
+        // 显示 Base64
+        document.getElementById('bgBase64Result').value = base64;
+        showToast('图片已成功转换为 Base64 编码');
+    };
+    reader.onerror = function() {
+        alert('图片读取失败，请重试');
+    };
+    reader.readAsDataURL(file);
+}
+
+function copyBgBase64() {
+    const result = document.getElementById('bgBase64Result');
+    if (!result.value) {
+        alert('没有可复制的 Base64 编码');
+        return;
+    }
+    navigator.clipboard.writeText(result.value)
+        .then(() => showToast('Base64 编码已复制到剪贴板'))
+        .catch(() => {
+            result.select();
+            document.execCommand('copy');
+            showToast('Base64 编码已复制到剪贴板');
+        });
+}
+
+function applyBgBase64AsBackground() {
+    const result = document.getElementById('bgBase64Result');
+    if (!result.value) {
+        alert('请先转换一张图片生成 Base64');
+        return;
+    }
+    // 将 Base64 填入背景图 URL 输入框
+    document.getElementById('bgImageInput').value = result.value;
+    // 可选：自动保存背景设置（调用 saveBackground）
+    if (confirm('是否立即保存背景设置？')) {
+        saveBackground();
+    } else {
+        showToast('已将 Base64 填入背景图输入框，点击“保存”按钮应用');
+    }
+}
+
+function clearBgBase64() {
+    document.getElementById('bgImageFile').value = '';
+    document.getElementById('bgImagePreview').style.display = 'none';
+    document.getElementById('bgBase64Result').value = '';
+    showToast('已清除');
+}
+
+// 简单的 Toast 提示（如果页面未定义 showToast，则实现一个简易版）
+if (typeof showToast !== 'function') {
+    function showToast(message) {
+        const existing = document.querySelector('.toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<div style="background:#48bb78; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">✓</div>
+                           <div style="color:#2d3748; font-size:14px; font-weight:500; margin-left:8px;">${message}</div>`;
+        toast.style.cssText = `position:fixed; top:20px; right:20px; background:white; border-left:4px solid #48bb78; border-radius:8px; padding:12px 16px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; gap:10px; z-index:1000; opacity:0; transform:translateX(100%); transition:all 0.3s ease; max-width:300px;`;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        });
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
 }

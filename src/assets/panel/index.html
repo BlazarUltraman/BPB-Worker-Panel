@@ -1107,6 +1107,37 @@
 						</div>
 					</div>
 				</details>
+				<details>
+					<summary>
+						<h3>BASE64 Pic</h3>
+					</summary>
+					<div style="padding: 10px 0; display: flex; flex-direction: column; gap: 12px;">
+						<div class="form-control">
+							<label style="flex: 1; text-align: left;">选择图片文件</label>
+							<div style="flex: 2;">
+								<input type="file" id="bgImageFile" accept="image/*" class="form-control" style="padding: 6px;">
+							</div>
+						</div>
+						<div id="bgImagePreview" style="display: none; text-align: center;">
+							<img id="bgPreviewImg" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--border-color);">
+						</div>
+						<div class="form-control">
+							<label style="flex: 1; text-align: left;">Base64 编码结果</label>
+							<div style="flex: 2;">
+								<textarea id="bgBase64Result" class="form-control" rows="3" readonly style="font-family: monospace; font-size: 0.8rem; resize: vertical; min-height: 60px;"></textarea>
+							</div>
+						</div>
+						<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+							<button type="button" class="button" onclick="convertBgImageToBase64()" style="background: #667eea; flex: 1; min-width: 80px;">转换</button>
+							<button type="button" class="button" onclick="copyBgBase64()" style="background: #4facfe; flex: 1; min-width: 80px;">复制 Base64</button>
+							<button type="button" class="button" onclick="applyBgBase64AsBackground()" style="background: #38a169; flex: 1; min-width: 80px;">设为背景</button>
+							<button type="button" class="button" onclick="clearBgBase64()" style="background: #e53e3e; flex: 1; min-width: 80px;">清除</button>
+						</div>
+						<div style="font-size: 0.8rem; color: var(--hr-text-color); padding: 6px 10px; background: var(--table-active-color); border-radius: 6px;">
+							💡 支持 JPG、PNG、GIF 等常见格式，文件大小建议 &lt; 700KB（受 KV 限制）。
+						</div>
+					</div>
+				</details>
 			</form>
 		</details>
 
