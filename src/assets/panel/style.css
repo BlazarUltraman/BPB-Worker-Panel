@@ -791,14 +791,27 @@ summary h3 {
 }
 
 /* 移动端容器铺满 */
-@media only screen and (max-width: 576px) {
+/* 移动端完全铺满 */
+@media only screen and (max-width: 600px) {
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden; /* 防止水平滚动条 */
+    }
+
     .container {
+        position: static;           /* 移除绝对定位，让容器自然流动 */
+        top: auto;
+        left: auto;
+        transform: none;
         width: 100%;
         max-width: 100%;
-        border-radius: 0;
+        min-height: 100vh;          /* 铺满视口高度 */
         margin: 0;
+        border-radius: 0;
         border-left: none;
         border-right: none;
         box-shadow: none;
+        box-sizing: border-box;     /* 确保 padding 不撑大宽度 */
     }
 }
