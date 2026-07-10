@@ -600,6 +600,48 @@
 							onchange="uploadSettings(event)" />
 					</button>
 				</div>
+				<details>
+					<summary>
+						<h3>Cloudflare API
+							<a href="https://developers.cloudflare.com/fundamentals/api/get-started/" target="_blank" title="Help">
+								<span class="material-symbols-rounded">info</span>
+							</a>
+						</h3>
+					</summary>
+					<div class="section">
+						<div class="form-control">
+							<label for="cfAccountId">Account ID</label>
+							<div>
+								<input type="text" id="cfAccountId" name="cfAccountId" placeholder="在 Workers 和 Pages 的 Account Details 中">
+							</div>
+						</div>
+						<div class="form-control">
+							<label for="cfApiToken">API Token</label>
+							<div>
+								<input type="password" id="cfApiToken" name="cfApiToken" placeholder="使用 '阅读分析数据和日志' 模板">
+							</div>
+						</div>
+						<div style="text-align: center; color: #64748b; margin: 5px 0;">— 或 —</div>
+						<div class="form-control">
+							<label for="cfEmail">Email</label>
+							<div>
+								<input type="email" id="cfEmail" name="cfEmail" placeholder="user@example.com">
+							</div>
+						</div>
+						<div class="form-control">
+							<label for="cfGlobalApiKey">Global API Key</label>
+							<div>
+								<input type="password" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '配置文件' 的 'API 令牌' 中">
+							</div>
+						</div>
+						<div class="form-control">
+							<div style="display: flex; gap: 10px; justify-content: center;">
+								<button type="button" class="button" onclick="clearCloudflareConfig()" style="background: #e53e3e;">清除配置</button>
+								<button type="button" class="button" onclick="saveCloudflareConfig()" style="background: #667eea;">保存配置</button>
+							</div>
+						</div>
+					</div>
+				</details>
 			</form>
 		</details>
         <details>
@@ -1129,7 +1171,7 @@
 						</div>
 						<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 							<button type="button" class="button" onclick="clearBgBase64()" style="background: #e53e3e; flex: 1; min-width: 80px;">清除</button>
-							<button type="button" class="button" onclick="copyBgBase64()" style="background: #4facfe; flex: 1; min-width: 80px;">复制 Base64</button>
+							<button type="button" class="button" onclick="copyBgBase64()" style="background: #4facfe; flex: 1; min-width: 80px;">复制</button>
 							<button type="button" class="button" onclick="applyBgBase64AsBackground()" style="background: #38a169; flex: 1; min-width: 80px;">设为背景</button>
 						</div>
 						<div style="font-size: 0.8rem; color: var(--hr-text-color); padding: 6px 10px; background: var(--table-active-color); border-radius: 6px;">
@@ -1177,6 +1219,45 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- ====== Cloudflare USE ====== -->
+		<h3><span class="material-symbols-rounded">cloud</span> Cloudflare USE</h3>
+		<div class="header-container">
+			<h3 style="color: #09639f;">用量统计</h3>
+			<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
+				<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+			</button>
+		</div>
+		<div class="my-ip">
+			<table id="cf-usage-table" class="my-ip">
+				<thead>
+					<th>Type</th>
+					<th>Use level</th>
+					<th>Proportion</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Request</td>
+						<td id="cf-request-used">--</td>
+						<td id="cf-request-percent">--</td>
+					</tr>
+					<tr>
+						<td>KV read</td>
+						<td id="cf-kv-read-used">--</td>
+						<td id="cf-kv-read-percent">--</td>
+					</tr>
+					<tr>
+						<td>KV write</td>
+						<td id="cf-kv-write-used">--</td>
+						<td id="cf-kv-write-percent">--</td>
+					</tr>
+					<tr>
+						<td>各空间详情</td>
+						<td colspan="2" id="cf-kv-details">--</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
         
 		<div class="footer-container">
 			<div class="footer">

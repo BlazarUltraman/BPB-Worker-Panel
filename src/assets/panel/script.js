@@ -78,6 +78,8 @@ function initiatePanel(proxySettings) {
     fetchIPInfo();
     // 最后添加
     loadBackgroundOnInit();
+    loadCloudflareConfig();
+    fetchcloudflareInfo();
 }
 
 function populatePanel(proxySettings) {
@@ -1516,4 +1518,140 @@ if (typeof showToast !== 'function') {
             setTimeout(() => toast.remove(), 300);
         }, 2000);
     }
+}
+
+// ============ Cloudflare 用量查询 ============
+async function fetchcloudflareInfo() {
+    const refreshBtn = document.getElementById('refresh-cloudflare');
+    const icon = refreshBtn?.querySelector('i');
+    if (icon) icon.classList.add('fa-spin');
+
+    try {
+        // 获取 Request 和 KV 用量
+        const [usageRes, kvRes] = await Promise.all([
+            fetch('/panel/cloudflare-usage'),
+            fetch('/panel/kv-usage')
+        ]);
+        const usageData = await usageRes.json();
+        const kvData = await kvRes.json();
+
+        // 更新 Request 行
+        if (usageData.success) {
+            const total = usageData.pages + usageData.workers;
+            document.getElementById('cf-request-used').textContent = total.toLocaleString();
+            document.getElementById('cf-request-percent').textContent = usageData.percentage + '%';
+        } else {
+            document.getElementById('cf-request-used').textContent = '--';
+            document.getElementById('cf-request-percent').textContent = '--';
+        }
+
+        // 更新 KV 行
+        if (kvData.success) {
+            document.getElementById('cf-kv-read-used').textContent = kvData.readTotal.toLocaleString();
+            document.getElementById('cf-kv-read-percent').textContent = kvData.readPercentage + '%';
+            document.getElementById('cf-kv-write-used').textContent = kvData.writeTotal.toLocaleString();
+            document.getElementById('cf-kv-write-percent').textContent = kvData.writePercentage + '%';
+
+            // 各空间详情
+            let detailsHtml = '';
+            if (kvData.details && kvData.details.length) {
+                detailsHtml = kvData.details.map(ns =>
+                    `<div><strong>${ns.namespaceName}</strong> 读:${ns.read} 写:${ns.write} 删:${ns.delete} 列:${ns.list}</div>`
+                ).join('');
+            } else {
+                detailsHtml = '暂无数据';
+            }
+            document.getElementById('cf-kv-details').innerHTML = detailsHtml;
+        } else {
+            document.getElementById('cf-kv-read-used').textContent = '--';
+            document.getElementById('cf-kv-read-percent').textContent = '--';
+            document.getElementById('cf-kv-write-used').textContent = '--';
+            document.getElementById('cf-kv-write-percent').textContent = '--';
+            document.getElementById('cf-kv-details').textContent = '获取失败';
+        }
+    } catch (err) {
+        console.error('获取 Cloudflare 用量失败:', err);
+        // 清空所有显示
+        document.querySelectorAll('#cf-usage-table td:not(:first-child)').forEach(td => td.textContent = '--');
+        document.getElementById('cf-kv-details').textContent = '加载失败';
+    } finally {
+        if (icon) icon.classList.remove('fa-spin');
+    }
+}
+
+// 加载 Cloudflare 配置到表单
+async function loadCloudflareConfig() {
+    try {
+        const res = await fetch('/panel/cloudflare-config');
+        const data = await res.json();
+        if (data.success && data.body) {
+            document.getElementById('cfAccountId').value = data.body.accountId || '';
+            document.getElementById('cfApiToken').value = data.body.apiToken || '';
+            document.getElementById('cfEmail').value = data.body.email || '';
+            document.getElementById('cfGlobalApiKey').value = data.body.globalApiKey || '';
+        }
+    } catch (err) {
+        console.error('加载 Cloudflare 配置失败:', err);
+    }
+}
+
+// 保存 Cloudflare 配置
+function saveCloudflareConfig() {
+    const config = {
+        accountId: document.getElementById('cfAccountId').value.trim(),
+        apiToken: document.getElementById('cfApiToken').value.trim(),
+        email: document.getElementById('cfEmail').value.trim(),
+        globalApiKey: document.getElementById('cfGlobalApiKey').value.trim()
+    };
+
+    // 至少要有 Account ID + (Token 或 Email+GlobalKey)
+    if (!config.accountId) {
+        alert('请填写 Account ID');
+        return;
+    }
+    if (!config.apiToken && (!config.email || !config.globalApiKey)) {
+        alert('请填写 API Token 或 (Email + Global API Key)');
+        return;
+    }
+
+    fetch('/panel/cloudflare-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Cloudflare 配置已保存');
+        } else {
+            alert('保存失败: ' + data.message);
+        }
+    })
+    .catch(err => {
+        alert('保存请求失败: ' + err.message);
+    });
+}
+
+// 清除 Cloudflare 配置
+function clearCloudflareConfig() {
+    if (!confirm('确定清除 Cloudflare 配置吗？')) return;
+    const empty = { accountId: '', apiToken: '', email: '', globalApiKey: '' };
+    fetch('/panel/cloudflare-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(empty)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('cfAccountId').value = '';
+            document.getElementById('cfApiToken').value = '';
+            document.getElementById('cfEmail').value = '';
+            document.getElementById('cfGlobalApiKey').value = '';
+            alert('✅ 配置已清除');
+        } else {
+            alert('清除失败: ' + data.message);
+        }
+    })
+    .catch(err => alert('请求失败: ' + err.message));
 }
