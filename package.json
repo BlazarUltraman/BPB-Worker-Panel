@@ -1,7 +1,7 @@
 {
 	"name": "bpb-panel",
-	"version": "4.0.1",
-	"homepage": "https://github.com/bia-pain-bache/BPB-Worker-Panel",
+	"version": "26.07.10",
+	"homepage": "https://github.com/BlazarUltraman/BPB-Worker-Panel",
 	"license": "GPL-3.0",
 	"private": true,
 	"type": "module",
