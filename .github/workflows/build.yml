@@ -4,9 +4,9 @@ permissions:
   contents: write
 
 on:
-  workflow_dispatch:          # 手动触发
+  workflow_dispatch:
   schedule:
-    - cron: '0 */1 * * *'     # 每小时自动运行（仅在默认分支）
+    - cron: '0 */1 * * *'
 
 jobs:
   build:
@@ -25,8 +25,8 @@ jobs:
         with:
           node-version: latest
 
-      - name: Install dependencies
-        run: npm ci --production   # 更稳定，建议用 ci
+      - name: Install all dependencies (including dev)
+        run: npm install   # 或 npm ci（如果项目有 package-lock.json）
 
       - name: Type check & Build
         run: |
@@ -36,7 +36,6 @@ jobs:
       - name: Read release notes
         id: release_note
         run: |
-          # 使用 heredoc 方式安全传递多行内容
           echo 'body<<EOF' >> $GITHUB_OUTPUT
           cat RELEASE.md >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
@@ -51,5 +50,3 @@ jobs:
           overwrite: true
           file_glob: true
           body: ${{ steps.release_note.outputs.body }}
-          # 去除了 prerelease, promote, make_latest 等容易混淆的参数，
-          # 默认行为：如果 tag 已存在则覆盖，release 为最新（latest）
