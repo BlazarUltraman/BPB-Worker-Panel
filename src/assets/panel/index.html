@@ -23,19 +23,21 @@
 		<div class="my-ip">
 			<table id="cf-usage-table" class="my-ip">
 				<thead>
-					<th class="header-container">
-						<h3 style="color: #09639f;">Cloudflare Use</h3>
-						<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
-								<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-						</button>
-					</th>
-				</thead>
-				<thead>
-					<th>Type</th>
-					<th>Use Level</th>
-					<th>Proportion</th>
+					<tr>
+						<th colspan="3" class="header-container">
+							<h3 style="color: #09639f;">Cloudflare Use</h3>
+							<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
+									<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+							</button>
+						</th>
+					</tr>
 				</thead>
 				<tbody>
+					<tr>
+						<td>Type</td>
+						<td>Use Level</td>
+						<td>Proportion</td>
+					</tr>
 					<tr>
 						<td>Request</td>
 						<td id="cf-request-used">--</td>
@@ -1183,20 +1185,24 @@ min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="åœ¨ 'é
 			</form>
 		</details>
 
-        <div class="header-container">
-            <h3 style="color: #09639f;"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
-            <button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
-                <i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-            </button>
-        </div>
         <div class="my-ip">
             <table id="ips" class="my-ip">
                 <thead>
-                    <th>Information</th>
-                    <th>Cloudflare targets</th>
-                    <th>Other targets</th>
+					<tr>
+						<th colspan="3" class="header-container">
+							<h3 style="color: #09639f;"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
+							<button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
+								<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+							</button>
+						</div>
+					</tr>
                 </thead>
                 <tbody>
+					<tr>
+						<th>Information</th>
+						<th>Cloudflare targets</th>
+						<th>Other targets</th>
+					</tr>
                     <tr>
                         <td>IP</td>
                         <td id="cf-ip"></td>
