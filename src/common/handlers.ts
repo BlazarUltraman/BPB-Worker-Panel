@@ -644,20 +644,17 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
         }
     }
 
-    // 获取背景配置
     let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
-	if (!bgConfig || typeof bgConfig !== 'object' || !bgConfig.image) {
-		bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
-	}
+    if (!bgConfig || typeof bgConfig !== 'object' || !bgConfig.image) {
+        bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
+    }
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
-    
-    // 注入背景样式到 <body>
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
-    const modifiedHtml = html.replace(
-        /<body[^>]*>/,
-        `<body style="${bodyStyle}"`
-    );
+
+    const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
+        return `<body${attrs} style="${bodyStyle}">`;
+    });
 
     return new Response(modifiedHtml, {
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -671,21 +668,17 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         return Response.redirect(`${urlOrigin}/panel`, 302);
     }
 
-    // 获取背景配置
     let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
-	if (!bgConfig || typeof bgConfig !== 'object' || !bgConfig.image) {
-		bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
-	}
+    if (!bgConfig || typeof bgConfig !== 'object' || !bgConfig.image) {
+        bgConfig = { image: 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads', position: 'left', opacity: 0.85 };
+    }
 
-    // ✅ 使用登录页的 HTML 内容
     const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
-    
-    // 注入背景样式到 <body>
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
-    const modifiedHtml = html.replace(
-        /<body[^>]*>/,
-        `<body style="${bodyStyle}"`
-    );
+
+    const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
+        return `<body${attrs} style="${bodyStyle}">`;
+    });
 
     return new Response(modifiedHtml, {
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
