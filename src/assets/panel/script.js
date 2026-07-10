@@ -1551,15 +1551,16 @@ async function fetchcloudflareInfo() {
             document.getElementById('cf-kv-write-used').textContent = kvData.body.writeTotal.toLocaleString();
             document.getElementById('cf-kv-write-percent').textContent = kvData.body.writePercentage + '%';
 
-            let detailsHtml = '';
-            if (kvData.body.details && kvData.body.details.length) {
-                detailsHtml = kvData.body.details.map(ns =>
-                    `<div><strong>${ns.namespaceName}</strong> 读:${ns.read} 写:${ns.write} 删:${ns.delete} 列:${ns.list}</div>`
-                ).join('');
-            } else {
-                detailsHtml = '暂无数据';
-            }
-            document.getElementById('cf-kv-details').innerHTML = detailsHtml;
+            // 各空间详情
+			let detailsHtml = '';
+			if (kvData.body.details && kvData.body.details.length) {
+				detailsHtml = kvData.body.details.map(ns =>
+					`<div><strong>${ns.namespaceName}</strong><br>读:${ns.read} 写:${ns.write} 删:${ns.delete} 列:${ns.list}</div>`
+				).join('');
+			} else {
+				detailsHtml = '暂无数据';
+			}
+			document.getElementById('cf-kv-details').innerHTML = detailsHtml;
         } else {
             document.getElementById('cf-kv-read-used').textContent = '--';
             document.getElementById('cf-kv-read-percent').textContent = '--';

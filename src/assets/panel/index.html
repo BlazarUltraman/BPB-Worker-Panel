@@ -21,6 +21,43 @@
 				v__VERSION__
 			</span>
 		</h1>
+		
+        <!-- ====== Cloudflare USE ====== -->
+		<h3 style="color: #09639f;">Cloudflare USE</h3>
+		<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
+				<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+		</button>
+		<div class="my-ip">
+			<table id="cf-usage-table" class="my-ip">
+				<thead>
+					<th>Type</th>
+					<th>Use level</th>
+					<th>Proportion</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Request</td>
+						<td id="cf-request-used">--</td>
+						<td id="cf-request-percent">--</td>
+					</tr>
+					<tr>
+						<td>KV read</td>
+						<td id="cf-kv-read-used">--</td>
+						<td id="cf-kv-read-percent">--</td>
+					</tr>
+					<tr>
+						<td>KV write</td>
+						<td id="cf-kv-write-used">--</td>
+						<td id="cf-kv-write-percent">--</td>
+					</tr>
+					<tr>
+						<td>KV info</td>
+						<td colspan="2" id="cf-kv-details">--</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+        
         <details>
 			<summary><h3 style="color: #09639f;">设置</h3></summary>
 			<form id="configForm" class="configForm" onsubmit="updateSettings(event)">
@@ -583,23 +620,6 @@
 						</div>
 					</div>
 				</details>
-				<div id="apply" class="form-control apply">
-					<button type="submit" id="applyButton" class="button disabled apply-settings" form="configForm">
-						Apply <span class="material-symbols-rounded">check_circle</span>
-					</button>
-					<button type="button" class="panel-settings" title="Reset panel settings to default"
-						onclick="resetSettings()">
-						<i id="refresh-btn" class="fa fa-refresh fa-2x" aria-hidden="true"></i>
-					</button>
-					<button type="button" class="panel-settings" title="Export panel settings" onclick="exportSettings()">
-						<i class="fa fa-cloud-download fa-2x" aria-hidden="true"></i>
-					</button>
-					<button type="button" class="panel-settings" title="Import panel settings" onclick="importSettings()">
-						<i class="fa fa-cloud-upload fa-2x" aria-hidden="true"></i>
-						<input type="file" id="fileInput" accept=".dat" style="display: none;"
-							onchange="uploadSettings(event)" />
-					</button>
-				</div>
 				<details>
 					<summary>
 						<h3>Cloudflare API
@@ -618,20 +638,22 @@
 						<div class="form-control">
 							<label for="cfApiToken">API Token</label>
 							<div>
-								<input type="password" id="cfApiToken" name="cfApiToken" placeholder="使用 '阅读分析数据和日志' 模板">
+								<input type="password" style="
+min-width: 330px;" id="cfApiToken" name="cfApiToken" placeholder="使用 '阅读分析数据和日志' 模板">
 							</div>
 						</div>
 						<div style="text-align: center; color: #64748b; margin: 5px 0;">— 或 —</div>
 						<div class="form-control">
 							<label for="cfEmail">Email</label>
 							<div>
-								<input type="email" id="cfEmail" name="cfEmail" placeholder="user@example.com">
+								<input type="text" id="cfEmail" name="cfEmail" placeholder="user@example.com">
 							</div>
 						</div>
 						<div class="form-control">
 							<label for="cfGlobalApiKey">Global API Key</label>
 							<div>
-								<input type="password" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '配置文件' 的 'API 令牌' 中">
+								<input type="password" style="
+min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '配置文件' 的 'API 令牌' 中">
 							</div>
 						</div>
 						<div class="form-control">
@@ -642,6 +664,23 @@
 						</div>
 					</div>
 				</details>
+				<div id="apply" class="form-control apply">
+					<button type="submit" id="applyButton" class="button disabled apply-settings" form="configForm">
+						Apply <span class="material-symbols-rounded">check_circle</span>
+					</button>
+					<button type="button" class="panel-settings" title="Reset panel settings to default"
+						onclick="resetSettings()">
+						<i id="refresh-btn" class="fa fa-refresh fa-2x" aria-hidden="true"></i>
+					</button>
+					<button type="button" class="panel-settings" title="Export panel settings" onclick="exportSettings()">
+						<i class="fa fa-cloud-download fa-2x" aria-hidden="true"></i>
+					</button>
+					<button type="button" class="panel-settings" title="Import panel settings" onclick="importSettings()">
+						<i class="fa fa-cloud-upload fa-2x" aria-hidden="true"></i>
+						<input type="file" id="fileInput" accept=".dat" style="display: none;"
+							onchange="uploadSettings(event)" />
+					</button>
+				</div>
 			</form>
 		</details>
         <details>
@@ -1219,45 +1258,6 @@
                 </tbody>
             </table>
         </div>
-        
-        <!-- ====== Cloudflare USE ====== -->
-		<h3><span class="material-symbols-rounded">cloud</span> Cloudflare USE</h3>
-		<div class="header-container">
-			<h3 style="color: #09639f;">用量统计</h3>
-			<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
-				<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-			</button>
-		</div>
-		<div class="my-ip">
-			<table id="cf-usage-table" class="my-ip">
-				<thead>
-					<th>Type</th>
-					<th>Use level</th>
-					<th>Proportion</th>
-				</thead>
-				<tbody>
-					<tr>
-						<td>Request</td>
-						<td id="cf-request-used">--</td>
-						<td id="cf-request-percent">--</td>
-					</tr>
-					<tr>
-						<td>KV read</td>
-						<td id="cf-kv-read-used">--</td>
-						<td id="cf-kv-read-percent">--</td>
-					</tr>
-					<tr>
-						<td>KV write</td>
-						<td id="cf-kv-write-used">--</td>
-						<td id="cf-kv-write-percent">--</td>
-					</tr>
-					<tr>
-						<td>各空间详情</td>
-						<td colspan="2" id="cf-kv-details">--</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
         
 		<div class="footer-container">
 			<div class="footer">
