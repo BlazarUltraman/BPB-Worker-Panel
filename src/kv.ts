@@ -168,6 +168,36 @@ async function getDnsParams(dns: string): Promise<DnsHost> {
     return dohHost;
 }
 
+// 添加配置读写函数
+export interface CloudflareConfig {
+    accountId: string;
+    apiToken: string;
+    email: string;
+    globalApiKey: string;
+}
+
+export async function getCloudflareConfig(env: Env): Promise<CloudflareConfig> {
+    const defaultConfig: CloudflareConfig = { accountId: '', apiToken: '', email: '', globalApiKey: '' };
+    try {
+        const stored = await env.kv.get('cfConfig', 'json');
+        if (stored && typeof stored === 'object') {
+            return {
+                accountId: stored.accountId || '',
+                apiToken: stored.apiToken || '',
+                email: stored.email || '',
+                globalApiKey: stored.globalApiKey || ''
+            };
+        }
+        return defaultConfig;
+    } catch {
+        return defaultConfig;
+    }
+}
+
+export async function saveCloudflareConfig(env: Env, config: CloudflareConfig): Promise<void> {
+    await env.kv.put('cfConfig', JSON.stringify(config));
+}
+
 function extractProxyParams(chainProxy: string) {
     if (!chainProxy) return {};
     
