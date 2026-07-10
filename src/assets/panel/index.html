@@ -23,10 +23,12 @@
 		</h1>
 		
         <!-- ====== Cloudflare USE ====== -->
-		<h3 style="color: #09639f;">Cloudflare USE</h3>
-		<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
-				<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-		</button>
+        <div class="header-container">
+			<h3 style="color: #09639f;">Cloudflare USE</h3>
+			<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
+					<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
+			</button>
+		</div>
 		<div class="my-ip">
 			<table id="cf-usage-table" class="my-ip">
 				<thead>
@@ -630,13 +632,13 @@
 					</summary>
 					<div class="section">
 						<div class="form-control">
-							<label for="cfAccountId">Account ID</label>
+							<label for="cfAccountId">👤 Account ID</label>
 							<div>
 								<input type="text" id="cfAccountId" name="cfAccountId" placeholder="在 Workers 和 Pages 的 Account Details 中">
 							</div>
 						</div>
 						<div class="form-control">
-							<label for="cfApiToken">API Token</label>
+							<label for="cfApiToken">🔑 API Token</label>
 							<div>
 								<input type="password" style="
 min-width: 330px;" id="cfApiToken" name="cfApiToken" placeholder="使用 '阅读分析数据和日志' 模板">
@@ -644,22 +646,22 @@ min-width: 330px;" id="cfApiToken" name="cfApiToken" placeholder="使用 '阅读
 						</div>
 						<div style="text-align: center; color: #64748b; margin: 5px 0;">— 或 —</div>
 						<div class="form-control">
-							<label for="cfEmail">Email</label>
+							<label for="cfEmail">📪 Email</label>
 							<div>
 								<input type="text" id="cfEmail" name="cfEmail" placeholder="user@example.com">
 							</div>
 						</div>
 						<div class="form-control">
-							<label for="cfGlobalApiKey">Global API Key</label>
+							<label for="cfGlobalApiKey">🔑 Global API Key</label>
 							<div>
 								<input type="password" style="
 min-width: 330px;" id="cfGlobalApiKey" name="cfGlobalApiKey" placeholder="在 '配置文件' 的 'API 令牌' 中">
 							</div>
 						</div>
 						<div class="form-control">
-							<div style="display: flex; gap: 10px; justify-content: center;">
-								<button type="button" class="button" onclick="clearCloudflareConfig()" style="background: #e53e3e;">清除配置</button>
-								<button type="button" class="button" onclick="saveCloudflareConfig()" style="background: #667eea;">保存配置</button>
+							<div style="display:flex;gap:10px;justify-content:center;margin-top:5px">
+								<button type="button" class="button" onclick="clearCloudflareConfig()" style="background: #e53e3e; flex:1;">清除配置</button>
+								<button type="button" class="button" onclick="saveCloudflareConfig()" style="background: #667eea; flex:1;">保存配置</button>
 							</div>
 						</div>
 					</div>
