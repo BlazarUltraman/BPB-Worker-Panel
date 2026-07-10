@@ -652,11 +652,16 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
 
+    // 保留原有 body 属性，仅设置 style
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
         return `<body${attrs} style="${bodyStyle}">`;
     });
 
-    return new Response(modifiedHtml, {
+    // 插入容器透明度样式
+    const styleTag = `<style>.container { opacity: ${bgConfig.opacity} !important; }</style>`;
+    const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
+
+    return new Response(finalHtml, {
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
 }
@@ -680,7 +685,10 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         return `<body${attrs} style="${bodyStyle}">`;
     });
 
-    return new Response(modifiedHtml, {
+    const styleTag = `<style>.container { opacity: ${bgConfig.opacity} !important; }</style>`;
+    const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
+
+    return new Response(finalHtml, {
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
 }
