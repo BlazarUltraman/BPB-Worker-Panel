@@ -5,21 +5,24 @@ async function loadBackground() {
     try {
         const response = await fetch('/panel/background-config');
         const data = await response.json();
-        if (data.success && data.body) {
+        if (data.success && data.body && data.body.image) {
             const { image, position, opacity } = data.body;
-            if (image) {
-                document.body.style.backgroundImage = `url(${image})`;
-                document.body.style.backgroundPosition = position || 'left';
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundAttachment = 'fixed';
-            }
+            document.body.style.backgroundImage = `url(${image})`;
+            document.body.style.backgroundPosition = position || 'left';
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundAttachment = 'fixed';
             if (opacity !== undefined) {
                 const container = document.querySelector('.container');
                 if (container) container.style.opacity = opacity;
             }
+        } else {
+            // 如果后端无数据，使用默认背景
+            document.body.style.backgroundImage = `url('https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads')`;
         }
     } catch (error) {
         console.error('加载背景配置失败:', error);
+        // 出错时也设置默认背景
+        document.body.style.backgroundImage = `url('https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads')`;
     }
 }
 // ====== 结束 ======
@@ -56,3 +59,6 @@ document.getElementById("togglePassword").addEventListener("click", function () 
     passwordInput.type = isPassword ? "text" : "password";
     this.textContent = isPassword ? "visibility_off" : "visibility";
 });
+
+// 页面加载完成后加载背景
+document.addEventListener('DOMContentLoaded', loadBackground);
