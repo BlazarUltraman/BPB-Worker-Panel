@@ -179,7 +179,7 @@ export interface CloudflareConfig {
 export async function getCloudflareConfig(env: Env): Promise<CloudflareConfig> {
     const defaultConfig: CloudflareConfig = { accountId: '', apiToken: '', email: '', globalApiKey: '' };
     try {
-        const stored = await env.kv.get('cfConfig', 'json');
+        const stored = await env.kv.get('cfConfig', 'json') as CloudflareConfig | null;
         if (stored && typeof stored === 'object') {
             return {
                 accountId: stored.accountId || '',
