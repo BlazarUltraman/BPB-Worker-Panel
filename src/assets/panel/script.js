@@ -130,6 +130,13 @@ function initiateForm() {
         });
     }
     // ----- 新增代码结束 -----
+    
+    // ----- Base64图片自动转换 -----
+    const bgFileInput = document.getElementById('bgImageFile');
+    if (bgFileInput) {
+        bgFileInput.addEventListener('change', convertBgImageToBase64);
+    }
+    // ----- 结束 -----
 
     handleFragmentMode();
 }

@@ -1102,8 +1102,8 @@
 							</div>
 						</div>
 						<div style="display: flex; gap: 10px; justify-content: center; margin-top: 5px;">
-							<button type="button" class="button" onclick="saveBackground()" style="background: #667eea; flex: 1;">保存</button>
 							<button type="button" class="button" onclick="resetBackground()" style="background: #e53e3e; flex: 1;">重置默认</button>
+							<button type="button" class="button" onclick="saveBackground()" style="background: #667eea; flex: 1;">保存</button>
 						</div>
 					</div>
 				</details>
@@ -1128,10 +1128,9 @@
 							</div>
 						</div>
 						<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-							<button type="button" class="button" onclick="convertBgImageToBase64()" style="background: #667eea; flex: 1; min-width: 80px;">转换</button>
+							<button type="button" class="button" onclick="clearBgBase64()" style="background: #e53e3e; flex: 1; min-width: 80px;">清除</button>
 							<button type="button" class="button" onclick="copyBgBase64()" style="background: #4facfe; flex: 1; min-width: 80px;">复制 Base64</button>
 							<button type="button" class="button" onclick="applyBgBase64AsBackground()" style="background: #38a169; flex: 1; min-width: 80px;">设为背景</button>
-							<button type="button" class="button" onclick="clearBgBase64()" style="background: #e53e3e; flex: 1; min-width: 80px;">清除</button>
 						</div>
 						<div style="font-size: 0.8rem; color: var(--hr-text-color); padding: 6px 10px; background: var(--table-active-color); border-radius: 6px;">
 							💡 支持 JPG、PNG、GIF 等常见格式，文件大小建议 &lt; 700KB（受 KV 限制）。
