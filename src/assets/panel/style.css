@@ -294,7 +294,7 @@ button.reverse {
     gap: 16px;
     display: flex;
     flex-direction: row;
-    width: 100%;
+    max-width: 40vw !important;
     flex-wrap: wrap;
 }
 
@@ -832,24 +832,4 @@ summary h3 {
 		margin: auto;
 		zoom: 1;
 	}
-}
-
-/* 防止折叠面板内容撑大宽度 */
-details .container {
-    max-width: 100% !important;
-    overflow-x: hidden;
-    word-break: break-word; /* 长文本自动换行 */
-}
-
-/* 确保表格和列表不超出 */
-.my-ip table,
-.table-container table {
-    table-layout: fixed; /* 固定表格布局，防止列宽被内容撑开 */
-    width: 100%;
-}
-
-/* 针对 Routing Rules 内部的行内元素 */
-.rules .routing {
-    max-width: 100%;
-    white-space: normal; /* 允许文本换行，避免 nowrap 溢出 */
 }
