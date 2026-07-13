@@ -658,7 +658,7 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     });
 
     // 插入容器透明度样式
-    const styleTag = `<style>.container { opacity: ${bgConfig.opacity} !important; }</style>`;
+    const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
     const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
     return new Response(finalHtml, {
@@ -685,7 +685,7 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         return `<body${attrs} style="${bodyStyle}">`;
     });
 
-    const styleTag = `<style>.container { opacity: ${bgConfig.opacity} !important; }</style>`;
+    const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
     const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
     return new Response(finalHtml, {
