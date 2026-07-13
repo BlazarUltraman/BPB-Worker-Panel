@@ -67,9 +67,16 @@ h1 {
     vertical-align: middle;
     height: 3rem;
 }
-
-.container-2 {
-	position: static;           /* 移除绝对定位，让容器自然流动 */
+   
+.container {
+    display: flex;
+    flex-direction: column;
+    /* border: 1px solid var(--border-color); */
+    /* border-radius: var(--container-border-radius); */
+    padding: var(--container-padding);
+    /* box-shadow: var(--container-box-shadow); */
+    opacity: 0.90; /* 添加透明度 */
+    osition: static;           /* 移除绝对定位，让容器自然流动 */
 	top: auto;
 	left: auto;
 	transform: none;
@@ -82,17 +89,6 @@ h1 {
 	border-right: none;
 	box-shadow: none;
 	box-sizing: border-box;     /* 确保 padding 不撑大宽度 */
-    }
-
-.container-2,    
-.container {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border-color);
-    border-radius: var(--container-border-radius);
-    padding: var(--container-padding);
-    box-shadow: var(--container-box-shadow);
-    opacity: 0.90; /* 添加透明度 */
 }
 
 .section .container {
@@ -113,18 +109,14 @@ h1 {
     padding: var(--inner-container-padding);
 }
 
-.form-container-2 {
-	min-width: 100%;
-    margin: 0;
-    background: var(--form-background-color);
-    margin-bottom: 0;
-}
-
 .form-container {
-    max-width: 95%;
-    margin: 0 auto;
+    /* max-width: 95%; */
+    /* margin: 0 auto; */
     background: var(--form-background-color);
-    margin-bottom: 30px;
+    /* margin-bottom: 30px; */
+    min-width: 100%;
+    margin: 0;
+    margin-bottom: 0;
 }
 
 .configForm {
