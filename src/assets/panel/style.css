@@ -92,9 +92,9 @@ h1 {
 }
 
 .card-container {
-	min-width: 55vw;
+	min-width: 100%;
 	margin: auto;
-	padding: 15px;
+	padding: 10px;
 }
 
 .section .container {
@@ -815,8 +815,7 @@ summary h3 {
     }
     
     .card-container {
-		min-width: 100%;
-		width: 100%;
+		min-width: 95vw;
 		margin: auto;
 		padding: 10px;
 	}
@@ -825,5 +824,10 @@ summary h3 {
 @media only screen and (min-width: 1024px) {
     .form-container {
         /* max-width: 768px; */
-    }
+    }    
+    .card-container {
+		min-width: 65vw;
+		margin: auto;
+		padding: 15px;
+	}
 }
