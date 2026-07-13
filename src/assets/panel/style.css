@@ -294,7 +294,7 @@ button.reverse {
     gap: 16px;
     display: flex;
     flex-direction: row;
-    max-width: 40vw !important;
+    width: 100%;
     flex-wrap: wrap;
 }
 
@@ -815,11 +815,13 @@ summary h3 {
     .form-container {
         max-width: calc(768px * 0.95);
     }
-    
     .card-container {
 		min-width: 95vw;
 		margin: auto;
 		zoom: 0.85;
+	}
+	.rules {
+		max-width: 40vw !important;
 	}
 }
 
@@ -831,5 +833,8 @@ summary h3 {
 		min-width: 55vw;
 		margin: auto;
 		zoom: 1;
+	}
+	.rules {
+		max-width: 40vw !important;
 	}
 }
