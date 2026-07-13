@@ -802,6 +802,7 @@ summary h3 {
     .card-container {
 		min-width: 100%;
 		margin: auto;
+		zoom: 0.85;
 	}
 }
 
@@ -813,23 +814,17 @@ summary h3 {
     .card-container {
 		min-width: 95vw;
 		margin: auto;
+		zoom: 0.85;
 	}
 }
 
 @media only screen and (min-width: 1024px) {
-    html {
-		zoom: 1;
-	}
-	
     .form-container {
         /* max-width: 768px; */
     }    
     .card-container {
 		min-width: 65vw;
 		margin: auto;
+		zoom: 1;
 	}
-}
-
-html {
-	zoom: 0.85;
 }
