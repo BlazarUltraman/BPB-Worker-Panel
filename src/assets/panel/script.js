@@ -1399,7 +1399,7 @@ function applyBackgroundToPage(image, position, opacity) {
     document.body.style.setProperty('background-position', position, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
-    document.querySelectorAll('.container').forEach(el => {
+    document.querySelectorAll('.container-big').forEach(el => {
         el.style.setProperty('opacity', opacity, 'important');
     });
 }
