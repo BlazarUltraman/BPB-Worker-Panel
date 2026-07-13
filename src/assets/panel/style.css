@@ -67,7 +67,8 @@ h1 {
     vertical-align: middle;
     height: 3rem;
 }
-   
+
+.container-big,   
 .container {
     display: flex;
     flex-direction: column;
@@ -82,13 +83,16 @@ h1 {
 	transform: none;
 	width: 100%;
 	max-width: 100%;
-	min-height: 100vh;          /* 铺满视口高度 */
 	margin: 0;
 	border-radius: 0;
 	border-left: none;
 	border-right: none;
 	box-shadow: none;
 	box-sizing: border-box;     /* 确保 padding 不撑大宽度 */
+}
+
+.container-big {
+	min-height: 100vh;          /* 铺满视口高度 */
 }
 
 .card-container {
