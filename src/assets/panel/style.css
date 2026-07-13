@@ -93,10 +93,7 @@ h1 {
 
 .card-container {
 	min-width: 100%;
-	margin: auto;
-	padding: 0;
-	border-left: 3px solid #6ed8c9;
-    border-right: 3px solid #6ed8c9;
+	padding: 8px;
 }
 
 .section .container {
