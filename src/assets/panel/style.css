@@ -74,7 +74,6 @@ h1 {
     flex-direction: column;
     /* border: 1px solid var(--border-color); */
     /* border-radius: var(--container-border-radius); */
-    /* padding: var(--container-padding); */
     /* box-shadow: var(--container-box-shadow); */
     opacity: 0.90; /* 添加透明度 */
     osition: static;           /* 移除绝对定位，让容器自然流动 */
@@ -93,6 +92,7 @@ h1 {
 
 .container-big {
 	min-height: 100vh;          /* 铺满视口高度 */
+	padding: var(--container-padding);
 }
 
 .card-container {
