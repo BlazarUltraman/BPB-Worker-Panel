@@ -93,6 +93,7 @@ h1 {
 
 .card-container {
 	min-width: 100%;
+	zoom: 0.7;
 }
 
 .section .container {
