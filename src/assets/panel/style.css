@@ -74,7 +74,7 @@ h1 {
     flex-direction: column;
     /* border: 1px solid var(--border-color); */
     /* border-radius: var(--container-border-radius); */
-    padding: var(--container-padding);
+    /* padding: var(--container-padding); */
     /* box-shadow: var(--container-box-shadow); */
     opacity: 0.90; /* 添加透明度 */
     osition: static;           /* 移除绝对定位，让容器自然流动 */
@@ -138,7 +138,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: var(--container-gap);
-    margin: var(--container-gap) 0;
+    margin: 0 0 var(--container-gap) 0;
 }
 
 .form-control {
