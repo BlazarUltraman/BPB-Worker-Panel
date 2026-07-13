@@ -796,6 +796,10 @@ summary h3 {
 }
 
 @media only screen and (min-width: 600px) {
+    html {
+		zoom: 0.85;
+	}
+	
     .form-control {
         flex-direction: row;
     }
@@ -806,6 +810,10 @@ summary h3 {
 }
 
 @media only screen and (min-width: 768px) {
+    html {
+		zoom: 0.85;
+	}
+	
     .form-container {
         max-width: calc(768px * 0.95);
     }
@@ -817,6 +825,10 @@ summary h3 {
 }
 
 @media only screen and (min-width: 1024px) {
+    html {
+		zoom: 1;
+	}
+	
     .form-container {
         /* max-width: 768px; */
     }    
