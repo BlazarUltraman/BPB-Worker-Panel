@@ -93,7 +93,7 @@ h1 {
 
 .card-container {
 	min-width: 100%;
-	zoom: 0.7;
+	zoom: 0.85;
 }
 
 .section .container {
@@ -803,7 +803,7 @@ summary h3 {
     .card-container {
 		min-width: 100%;
 		margin: auto;
-		zoom: 0.5;
+		zoom: 0.7;
 	}
 }
 
@@ -815,7 +815,7 @@ summary h3 {
     .card-container {
 		min-width: 95vw;
 		margin: auto;
-		zoom: 0.7;
+		zoom: 0.85;
 	}
 }
 
@@ -824,7 +824,7 @@ summary h3 {
         /* max-width: 768px; */
     }    
     .card-container {
-		min-width: 65vw;
+		min-width: 55vw;
 		margin: auto;
 		zoom: 1;
 	}
