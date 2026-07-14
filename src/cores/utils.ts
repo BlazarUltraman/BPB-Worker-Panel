@@ -56,7 +56,13 @@ export async function getConfigAddresses(isFragment: boolean, useLink: boolean =
     } = globalThis;
 
     const ipList = useLink ? linkIPs : cleanIPs;
-    const cleanAddresses = ipList.map(item => item.split('#')[0].trim()).filter(Boolean);
+    
+	const cleanAddresses = ipList.map(item => {
+		const addr = item.split('#')[0].trim();
+		if (!addr) return null;
+		const { host } = parseHostPort(addr, true);  // brackets: true 保留 IPv6 的 []
+		return host;
+	}).filter(Boolean);
 
     const { ipv4, ipv6 } = await resolveDNS(hostName, !enableIPv6); // ← 必须保留
     const addrs = [
