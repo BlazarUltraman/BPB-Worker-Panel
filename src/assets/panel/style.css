@@ -847,7 +847,7 @@ textarea::-webkit-scrollbar {
 		zoom: 0.85;
 	}
 	.rules {
-		max-width: 40vw !important;
+		max-width: 45vw !important;
 	}
 	.modal-content {
 		min-width: 50vw;
@@ -865,7 +865,7 @@ textarea::-webkit-scrollbar {
 		zoom: 1;
 	}
 	.rules {
-		max-width: 40vw !important;
+		max-width: 45vw !important;
 	}
 	.modal-content {
 		min-width: 50vw;
