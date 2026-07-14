@@ -203,6 +203,17 @@
 									</div>
 								</div>
 								<div class="form-control">
+									<label for="remoteNodeLink">
+										🔗 Remote Node Link
+										<a href="https://example.com" target="_blank" title="Help">
+											<span class="material-symbols-rounded">info</span>
+										</a>
+									</label>
+									<div>
+										<input type="url" id="remoteNodeLink" name="remoteNodeLink" placeholder="https://example.com/sub?token=xxx">
+									</div>
+								</div>
+								<div class="form-control">
 									<label for="VLConfigs">⚙️ Protocols</label>
 									<div>
 										<div class="protocols inner-container">
@@ -722,13 +733,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('normal', 'xray', 'Normal', 'Normal Subscription')">
+												onclick="openQRWithChoice('normal', 'xray', 'Normal', 'Normal Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('normal', 'xray', 'Normal')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('normal', 'xray', 'Normal')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('normal', 'xray')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('normal', 'xray')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -746,13 +757,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('normal', 'sing-box', 'Normal', 'Normal Subscription', true)">
+												onclick="openQRWithChoice('normal', 'sing-box', 'Normal', 'Normal Subscription', true)">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('normal', 'sing-box', 'Normal')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('normal', 'sing-box', 'Normal')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('normal', 'sing-box')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('normal', 'sing-box')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -782,13 +793,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('normal', 'clash', 'Normal', 'Normal Subscription')">
+												onclick="openQRWithChoice('normal', 'clash', 'Normal', 'Normal Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('normal', 'clash', 'Normal')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('normal', 'clash', 'Normal')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('normal', 'clash')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('normal', 'clash')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -832,13 +843,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('fragment', 'xray', 'Fragment', 'Fragment Subscription')">
+												onclick="openQRWithChoice('fragment', 'xray', 'Fragment', 'Fragment Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('fragment', 'xray', 'Fragment')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('fragment', 'xray', 'Fragment')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('fragment', 'xray')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('fragment', 'xray')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -856,13 +867,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('fragment', 'sing-box', 'Fragment', 'Fragment Subscription', true)">
+												onclick="openQRWithChoice('fragment', 'sing-box', 'Fragment', 'Fragment Subscription', true)">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('fragment', 'sing-box', 'Fragment')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('fragment', 'sing-box', 'Fragment')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('fragment', 'sing-box')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('fragment', 'sing-box')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -898,13 +909,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('warp', 'xray', 'Warp', 'Warp Subscription')">
+												onclick="openQRWithChoice('warp', 'xray', 'Warp', 'Warp Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('warp', 'xray', 'Warp')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('warp', 'xray', 'Warp')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('warp', 'xray')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('warp', 'xray')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -922,13 +933,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('warp', 'sing-box', 'Warp', 'Warp Subscription', true)">
+												onclick="openQRWithChoice('warp', 'sing-box', 'Warp', 'Warp Subscription', true)">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('warp', 'sing-box', 'Warp')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('warp', 'sing-box', 'Warp')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('warp', 'sing-box')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('warp', 'sing-box')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -958,13 +969,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('warp', 'clash', 'Warp', 'Warp Subscription')">
+												onclick="openQRWithChoice('warp', 'clash', 'Warp', 'Warp Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('warp', 'clash', 'Warp')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('warp', 'clash', 'Warp')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('warp', 'clash')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('warp', 'clash')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -1014,13 +1025,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('warp-pro', 'xray', 'Warp Pro', 'Warp Pro Subscription')">
+												onclick="openQRWithChoice('warp-pro', 'xray', 'Warp Pro', 'Warp Pro Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('warp-pro', 'xray', 'Warp Pro')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('warp-pro', 'xray', 'Warp Pro')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('warp-pro', 'xray')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('warp-pro', 'xray')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -1038,14 +1049,14 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('warp-pro', 'xray-knocker', 'Warp Pro', 'Warp Pro Subscription')">
+												onclick="openQRWithChoice('warp-pro', 'xray-knocker', 'Warp Pro', 'Warp Pro Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
 											<button type="button" title="Copy subscription URL"
-												onclick="subURL('warp-pro', 'xray-knocker', 'Warp Pro')">
+												onclick="subURLWithChoice('warp-pro', 'xray-knocker', 'Warp Pro')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('warp-pro', 'xray-knocker')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('warp-pro', 'xray-knocker')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>
@@ -1075,13 +1086,13 @@
 										</td>
 										<td>
 											<button type="button" title="Display QR code"
-												onclick="openQR('warp-pro', 'clash', 'Warp Pro', 'Warp Pro Subscription')">
+												onclick="openQRWithChoice('warp-pro', 'clash', 'Warp Pro', 'Warp Pro Subscription')">
 												<span class="material-symbols-rounded">qr_code</span>
 											</button>
-											<button type="button" title="Copy subscription URL" onclick="subURL('warp-pro', 'clash', 'Warp Pro')">
+											<button type="button" title="Copy subscription URL" onclick="subURLWithChoice('warp-pro', 'clash', 'Warp Pro')">
 												<span class="material-symbols-rounded">content_copy</span>
 											</button>
-											<button type="button" title="Download config" onclick="dlURL('warp-pro', 'clash')">
+											<button type="button" title="Download config" onclick="dlURLWithChoice('warp-pro', 'clash')">
 												<span class="material-symbols-rounded">download</span>
 											</button>
 										</td>

@@ -254,11 +254,12 @@ async function addWorkerlessConfigs(configs: Config[]) {
     configs.push(cfDnsConfig, googleDnsConfig);
 }
 
-export async function getXrCustomConfigs(isFragment: boolean): Promise<Response> {
+export async function getXrCustomConfigs(isFragment: boolean, isLink: boolean): Promise<Response> {
     const { outProxy, ports } = globalThis.settings;
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
+    
 
-    const Addresses = await getConfigAddresses(isFragment);
+    const Addresses = await getConfigAddresses(isFragment, isLink);
     const totalPorts = ports.filter(port => !isFragment || isHttps(port));
     const protocols = getProtocols();
 
@@ -318,7 +319,8 @@ export async function getXrWarpConfigs(
     request: Request,
     env: Env,
     isPro: boolean,
-    isKnocker: boolean
+    isKnocker: boolean,
+    isLink?: boolean
 ): Promise<Response> {
     const { warpEndpoints } = globalThis.settings;
     const { warpAccounts } = await getDataset(request, env);

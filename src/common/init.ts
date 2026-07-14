@@ -28,6 +28,7 @@ globalThis.settings = {
         ipv4: [],
         ipv6: []
     },
+    remoteNodeLink: "",
     proxyIPMode: "proxyip",
     proxyIPs: [],
     prefixes: [],

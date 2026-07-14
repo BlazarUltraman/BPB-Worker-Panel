@@ -249,27 +249,28 @@ function downloadWarpConfigs(isAmnezia) {
     window.location.href = "/panel/get-warp-configs" + client;
 }
 
-function generateSubUrl(path, app, tag, singboxType) {
+function generateSubUrl(path, app, tag, singboxType, isLink = false) {
     const url = new URL(window.location.href);
     url.pathname = `/sub/${path}/${globalThis.subPath}`;
     app && url.searchParams.append('app', app);
-
+    if (isLink) {
+        url.searchParams.append('link', 'true');
+    }
     if (tag) {
         url.hash = `💦 BPB ${tag}`;
     }
-
     return singboxType
         ? `sing-box://import-remote-profile?url=${url.href}`
         : url.href;
 }
 
-function subURL(path, app, tag, singboxType) {
-    const url = generateSubUrl(path, app, tag, singboxType);
+function subURL(path, app, tag, singboxType, isLink = false) {
+    const url = generateSubUrl(path, app, tag, singboxType, isLink);
     copyToClipboard(url);
 }
 
-async function dlURL(path, app) {
-    const url = generateSubUrl(path, app);
+async function dlURL(path, app, isLink = false) {
+    const url = generateSubUrl(path, app, undefined, undefined, isLink);
 
     try {
         const response = await fetch(url);
@@ -323,10 +324,11 @@ async function uploadSettings(event) {
     }
 }
 
-function openQR(path, app, tag, title, singboxType) {
+function openQR(path, app, tag, title, singboxType, isLink = false) {
+    // 生成订阅 URL 时，根据 isLink 决定是否附加 ?link
+    const url = generateSubUrl(path, app, tag, singboxType, isLink);
     const qrModal = document.getElementById('qrModal');
     const qrcodeContainer = document.getElementById('qrcode-container');
-    const url = generateSubUrl(path, app, tag, singboxType);
     let qrcodeTitle = document.getElementById("qrcodeTitle");
     qrcodeTitle.textContent = title;
     qrModal.style.display = "block";
@@ -1651,4 +1653,20 @@ function clearCloudflareConfig() {
         }
     })
     .catch(err => alert('请求失败: ' + err.message));
+}
+
+// 添加三个新函数，弹出确认对话框让用户选择订阅链接
+function openQRWithChoice(path, app, tag, title, singboxType) {
+    const isLink = confirm('是否使用「链接订阅」（即 ?link）？');
+    openQR(path, app, tag, title, singboxType, isLink);
+}
+
+function subURLWithChoice(path, app, tag, singboxType) {
+    const isLink = confirm('是否使用「链接订阅」（即 ?link）？');
+    subURL(path, app, tag, singboxType, isLink);
+}
+
+function dlURLWithChoice(path, app) {
+    const isLink = confirm('是否使用「链接订阅」（即 ?link）？');
+    dlURL(path, app, isLink);
 }
