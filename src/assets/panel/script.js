@@ -135,21 +135,6 @@ function initiateForm() {
             }
         });
     }
-    const linkUrlInput = document.getElementById('linkUrl');
-	if (linkUrlInput) {
-		linkUrlInput.addEventListener('blur', function() {
-			let value = this.value;
-			if (value.includes(',') || value.includes('，')) {
-				value = value.replace(/[,，]/g, '\n');
-				value = value.split('\n')
-					.map(line => line.trim())
-					.filter(Boolean)
-					.join('\n');
-				this.value = value;
-				this.dispatchEvent(new Event('input', { bubbles: true }));
-			}
-		});
-	}
     // ----- 新增代码结束 -----
     
     // ----- Base64图片自动转换 -----
