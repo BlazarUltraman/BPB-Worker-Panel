@@ -1072,10 +1072,17 @@ function validateSettings() {
     });
 
     textareaElements.forEach(elm => {
-        const key = elm.id;
-        const value = form[key];
-        form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
-    });
+		const key = elm.id;
+		// 跳过 linkUrl（它不应被拆分为数组）
+		if (key === 'linkUrl') return;
+		const value = form[key];
+		form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
+	});
+	// 单独处理 linkUrl（textarea 保留为字符串）
+	const linkUrlEl = document.getElementById('linkUrl');
+	if (linkUrlEl) {
+		form.linkUrl = linkUrlEl.value.trim();
+	}
 
     return form;
 }
