@@ -18,6 +18,27 @@ async function fetchLinkIPs(url: string): Promise<string[]> {
     }
 }
 
+// kv.ts 中新增
+async function fetchMultipleLinkIPs(input: string): Promise<string[]> {
+    if (!input) return [];
+    // 按逗号、换行分割，去除空串
+    const urls = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    if (urls.length === 0) return [];
+
+    const allIPs: string[] = [];
+    for (const url of urls) {
+        try {
+            const ips = await fetchLinkIPs(url);
+            allIPs.push(...ips);
+        } catch (e) {
+            console.error(`Failed to fetch from ${url}:`, e);
+            // 继续尝试其他链接
+        }
+    }
+    // 去重
+    return [...new Set(allIPs)];
+}
+
 export async function getDataset(
     request: Request,
     env: Env
@@ -165,7 +186,7 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
     // 处理 linkUrl -> linkIPs
 	const linkUrl = newSettings?.linkUrl ?? currentSettings?.linkUrl ?? settings.linkUrl;
 	if (linkUrl) {
-		const ipList = await fetchLinkIPs(linkUrl);
+		const ipList = await fetchMultipleLinkIPs(linkUrl);
 		updatedSettings.linkIPs = ipList;
 	} else {
 		updatedSettings.linkIPs = [];
