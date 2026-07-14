@@ -5,7 +5,7 @@
     --header-color: #09639f;
     --background-color: #fff;
     --form-background-color: #f9f9f9;
-    --table-active-color: #f2f2f2;
+    --table-active-color: #f2f2f200;
     --hr-text-color: #3b3b3b;
     --border-color: #ddd;
     --button-color: #09639f;
@@ -19,6 +19,8 @@
     --container-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     --inner-container-padding: 14px;
     --inner-container-gap: 14px;
+	--use-count-color: #0369a1;
+	--use-proportion-color: #8b5cf6;
 }
 
 body {
@@ -56,6 +58,8 @@ body.dark-mode {
     --input-background-color: #252525;
     --header-shadow: 2px 2px 4px rgba(255, 255, 255, 0.25);
     --container-box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+    --use-count-color: #50aaff;
+    --use-proportion-color: #a57ffc;
 }
 
 h1 {
