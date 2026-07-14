@@ -843,15 +843,13 @@ textarea::-webkit-scrollbar {
     }
     .card-container {
 		min-width: 95vw;
+		max-width: 95vw;
 		margin: auto;
 		zoom: 0.85;
 	}
-	.rules {
-		max-width: 45vw !important;
-	}
 	.modal-content {
-		min-width: 50vw;
-		max-width: 55vw;
+		min-width: 70vw;
+		max-width: 70vw;
 	}
 }
 
@@ -861,14 +859,12 @@ textarea::-webkit-scrollbar {
     }    
     .card-container {
 		min-width: 55vw;
+		max-width: 55vw;
 		margin: auto;
 		zoom: 1;
 	}
-	.rules {
-		max-width: 45vw !important;
-	}
 	.modal-content {
 		min-width: 50vw;
-		max-width: 55vw;
+		max-width: 50vw;
 	}
 }
