@@ -44,7 +44,7 @@ body {
 
 body.dark-mode {
     --color: white;
-    --primary-color: #09639F;
+    --primary-color: #3498DB;
     --secondary-color: #3498DB;
     --header-color: #3498DB;
     --background-color: #121212;

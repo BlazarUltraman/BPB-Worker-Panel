@@ -22,7 +22,7 @@
 			<!-- ====== Cloudflare USE ====== -->
 			<div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius);">
 				<div class="header-container" style="background: var(--table-active-color); border: 1px solid var(--border-color);">
-					<h3 style="color: #09639f;">Cloudflare Use</h3>
+					<h3 style="color: var(--primary-color);">Cloudflare Use</h3>
 					<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
 							<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
 					</button>
@@ -59,7 +59,7 @@
 			
 			<div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius:var(--inner-container-border-radius); padding:0 20px;">
 				<details>
-					<summary><h3 style="color: #09639f;">设置</h3></summary>
+					<summary><h3 style="color: var(--primary-color);">设置</h3></summary>
 					<form id="configForm" class="configForm" onsubmit="updateSettings(event)">
 						<details>
 							<summary>
@@ -684,7 +684,7 @@
 					</form>
 				</details>
 				<details>
-				<summary><h3 style="color: #09639f;">订阅</h3></summary>
+				<summary><h3 style="color: var(--primary-color);">订阅</h3></summary>
 					<form class="configForm">
 						<details>
 							<summary>
@@ -1112,7 +1112,7 @@
 				
 				<!-- ====== 背景设置（独立章节） ====== -->
 				<details>
-				<summary><h3 style="color: #09639f;">背景</h3></summary>
+				<summary><h3 style="color: var(--primary-color);">背景</h3></summary>
 					<form class="configForm">
 						<details id="bgDetails">
 							<summary>
@@ -1185,7 +1185,7 @@
 
 		   <div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius);">
 				<div class="header-container" style="background: var(--table-active-color); border: 1px solid var(--border-color);">
-					<h3 style="color: #09639f;"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
+					<h3 style="color: var(--primary-color);"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
 					<button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
 						<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
 					</button>
@@ -1225,7 +1225,7 @@
 				<div class="modal-content">
 					<span class="close" id="closeResetPass" onclick="closeResetPass()">&times;</span>
 					<form id="passwordChangeForm" onsubmit="resetPassword(event)">
-						<h3 style="color: #09639f;">Change Password</h3>
+						<h3 style="color: var(--primary-color);">Change Password</h3>
 						<div class="section">
 							<div class="form-control">
 								<label for="newPassword">New Password</label>
