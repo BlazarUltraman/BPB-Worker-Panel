@@ -660,6 +660,7 @@ table button:active {
 
 .modal-content {
     width: fit-content;
+    min-width: 85vw;
     text-align: center;
     background-color: var(--form-background-color);
     margin: auto;
@@ -827,6 +828,9 @@ summary h3 {
 	.rules {
 		max-width: 40vw !important;
 	}
+	.modal-content {
+		min-width: 50vw;
+	}
 }
 
 @media only screen and (min-width: 1024px) {
@@ -840,5 +844,8 @@ summary h3 {
 	}
 	.rules {
 		max-width: 40vw !important;
+	}
+	.modal-content {
+		min-width: 50vw;
 	}
 }
