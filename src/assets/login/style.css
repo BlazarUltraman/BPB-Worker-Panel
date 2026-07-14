@@ -172,18 +172,18 @@ button {
 
 @media only screen and (min-width: 576px) {
     .container {
-        width: 70%;
+        width: 80%;
     }
 }
 
 @media only screen and (min-width: 768px) {
     .container {
-        width: 50%;
+        width: 60%;
     }
 }
 
 @media only screen and (min-width: 992px) {
     .container {
-        width: 30%;
+        width: 40%;
     }
 }
