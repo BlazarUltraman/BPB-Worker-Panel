@@ -92,17 +92,17 @@ h1 {
 	border-right: none;
 	box-shadow: none;
 	box-sizing: border-box;     /* 确保 padding 不撑大容器 */
-}
-
-.container-big {
-	min-height: 100vh;          /* 铺满视口高度 */
-	padding: var(--container-padding);
 	overflow-y: auto; /* 自动显示滚动条 */
 	&::-webkit-scrollbar {
 		display: none; /* 隐藏滚动条 - WebKit浏览器 Chrome, Safari, Edge */
 	}
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE/Edge 旧版 */
+}
+
+.container-big {
+	min-height: 100vh;          /* 铺满视口高度 */
+	padding: var(--container-padding);
 }
 
 .card-container {
