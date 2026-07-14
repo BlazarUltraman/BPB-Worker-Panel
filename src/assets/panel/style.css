@@ -91,12 +91,18 @@ h1 {
 	border-left: none;
 	border-right: none;
 	box-shadow: none;
-	box-sizing: border-box;     /* 确保 padding 不撑大宽度 */
+	box-sizing: border-box;     /* 确保 padding 不撑大容器 */
 }
 
 .container-big {
 	min-height: 100vh;          /* 铺满视口高度 */
 	padding: var(--container-padding);
+	overflow-y: auto; /* 自动显示滚动条 */
+	&::-webkit-scrollbar {
+		display: none; /* 隐藏滚动条 - WebKit浏览器 Chrome, Safari, Edge */
+	}
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE/Edge 旧版 */
 }
 
 .card-container {
@@ -806,6 +812,44 @@ details h3 {
 summary h3 {
     display: inline-flex;
     align-items: center;
+}
+
+/* ===== 针对 textarea ===== */
+#cleanIPs {
+    /* 确保滚动条在内容溢出时出现 */
+    overflow-y: auto;
+    
+    /* ===== Firefox 滚动条样式 ===== */
+    scrollbar-width: thin;                /* 细滚动条 */
+    scrollbar-color: #888 transparent;    /* 滑块颜色 轨道透明 */
+}
+
+/* ===== WebKit 浏览器 (Chrome, Edge, Safari) ===== */
+#cleanIPs::-webkit-scrollbar {
+    width: 6px;                          /* 滚动条宽度 */
+    height: 6px;                         /* 横向滚动条高度（若需要） */
+}
+
+/* 轨道透明 */
+#cleanIPs::-webkit-scrollbar-track {
+    background: transparent;             /* 完全透明 */
+    border-radius: 0;
+}
+
+/* 滑块样式 */
+#cleanIPs::-webkit-scrollbar-thumb {
+    background: #888;                    /* 滑块颜色（灰色） */
+    border-radius: 3px;                  /* 圆角 */
+}
+
+/* 滑块 hover 效果（可选） */
+#cleanIPs::-webkit-scrollbar-thumb:hover {
+    background: #555;                    /* 深灰色 */
+}
+
+/* 滚动条角落（可选） */
+#cleanIPs::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 @media only screen and (min-width: 600px) {
