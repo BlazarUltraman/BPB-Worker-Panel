@@ -70,12 +70,12 @@ export async function getConfigAddresses(isFragment: boolean, useLink: boolean =
     return addrs.concatIf(!isFragment, customCdnAddrs);
 }
 
-function getCleanIPRemark(address: string): string | null {
-    const cleanIPs = globalThis.settings.cleanIPs;
+// 通用备注查找函数
+function getRemarkFromList(address: string, ipList: string[]): string | null {
     const normalizeAddr = (addr: string) => addr.replace(/^\[|\]$/g, '');
     const normalizedTarget = normalizeAddr(address);
 
-    for (const item of cleanIPs) {
+    for (const item of ipList) {
         const parts = item.split('#');
         const addr = normalizeAddr(parts[0].trim());
         if (addr === normalizedTarget && parts.length > 1) {
@@ -95,18 +95,24 @@ function getFlagEmoji(countryCode: string): string {
     return String.fromCodePoint(...codePoints);
 }
 
+// 修改 generateRemark 签名，增加 useLink 参数
 export function generateRemark(
     index: number,
     port: number,
     address: string,
     protocol: string,
     isFragment: boolean,
-    isChain: boolean
+    isChain: boolean,
+    useLink: boolean = false  // 新增
 ): string {
     const { _VL_, _VL_CAP_, _TR_CAP_ } = globalThis.dict;
     const protoSign = protocol === _VL_ ? _VL_CAP_ : _TR_CAP_;
     const prefix = isChain ? '🔗 ' : '';
-    const remark = getCleanIPRemark(address);
+
+    // 根据 useLink 选择 IP 列表
+    const { cleanIPs, linkIPs } = globalThis.settings;
+    const ipList = useLink ? linkIPs : cleanIPs;
+    const remark = getRemarkFromList(address, ipList);
 
     let prefixSymbol = '☁ ';
     let displayName = 'Clean';
@@ -125,7 +131,6 @@ export function generateRemark(
             displayName = remark;
         }
     } else {
-        // 无备注，使用全局索引
         count = index;
         prefixSymbol = '☁ ';
         displayName = 'Clean';
