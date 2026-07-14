@@ -83,7 +83,10 @@ function getRemarkFromList(address: string, ipList: string[]): string | null {
 
     for (const item of ipList) {
         const parts = item.split('#');
-        const addr = normalizeAddr(parts[0].trim());
+        const rawAddr = parts[0].trim();
+        // 使用 parseHostPort 提取 host（去掉端口）
+        const { host } = parseHostPort(rawAddr, true);
+        const addr = normalizeAddr(host);
         if (addr === normalizedTarget && parts.length > 1) {
             return parts.slice(1).join('#').trim();
         }
