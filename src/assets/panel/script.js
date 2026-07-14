@@ -268,11 +268,11 @@ function generateSubUrl(path, app, tag, singboxType, useLink = false) {
 
 // 新增两个包装函数
 function chooseSubURL(path, app, tag, singboxType) {
-    const useLink = confirm('选择订阅类型：\n「确定」Link 订阅\n「取消」普通订阅');
+    const useLink = confirm('选择订阅类型：\n「确定」使用 Link IPs 节点\n「取消」使用 Clean IPs 节点');
     subURL(path, app, tag, singboxType, useLink);
 }
 function chooseDLURL(path, app, singboxType) {
-    const useLink = confirm('选择订阅类型：\n「确定」Link 订阅\n「取消」普通订阅');
+    const useLink = confirm('选择订阅类型：\n「确定」使用 Link IPs 节点\n「取消」使用 Clean IPs 节点');
     dlURL(path, app, singboxType, useLink);
 }
 
@@ -336,7 +336,7 @@ async function uploadSettings(event) {
 }
 
 function chooseAndOpenQR(path, app, tag, title, singboxType) {
-    const useLink = confirm('选择订阅类型：\n点击「确定」使用 Link 订阅\n点击「取消」使用普通订阅');
+    const useLink = confirm('选择订阅类型：\n点击「确定」使用 Link IPs 节点\n点击「取消」使用Clean IPs 节点');
     const url = generateSubUrl(path, app, tag, singboxType, useLink);
     
     const qrModal = document.getElementById('qrModal');
@@ -523,18 +523,17 @@ function updateSettings(event, data) {
         headers: { 'Content-Type': 'application/json' }
     })
         .then(response => response.json())
-        .then(({ success, status, message }) => {
-
+        .then(({ success, status, message, body }) => {  // ← 解构出 body
             if (status === 401) {
                 alert('⚠️ Session expired! Please login again.');
                 window.location.href = '/login';
+                return;
             }
-
             if (!success) {
                 throw new Error(`status ${status} - ${message}`);
             }
-
-            initiatePanel(form);
+            // ← 使用服务器返回的完整设置（body）重新初始化
+            initiatePanel(body);
             alert('✅ Settings applied successfully!\n💡 Please update your subscriptions.');
         })
         .catch(error => console.error("Update settings error:", error.message || error))
