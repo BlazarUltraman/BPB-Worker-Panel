@@ -95,10 +95,15 @@ function populatePanel(proxySettings) {
         if (rowsCount) element.rows = rowsCount;
         element.value = value;
         // 显示 linkIPs
-		const linkIPsDisplay = document.getElementById('linkIPsDisplay');
-		const linkIPs = proxySettings.linkIPs || [];
-		linkIPsDisplay.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
+        const linkIPsDisplay = document.getElementById('linkIPsDisplay');
+        const linkIPs = proxySettings.linkIPs || [];
+        linkIPsDisplay.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
     });
+    // ===== 新增：单独设置 linkUrl（textarea）=====
+    const linkUrlInput = document.getElementById('linkUrl');
+    if (linkUrlInput) {
+        linkUrlInput.value = proxySettings.linkUrl || '';
+    }
 }
 
 function initiateForm() {
