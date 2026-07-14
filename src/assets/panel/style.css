@@ -815,41 +815,15 @@ summary h3 {
 }
 
 /* ===== 针对 textarea ===== */
-#cleanIPs {
-    /* 确保滚动条在内容溢出时出现 */
-    overflow-y: auto;
-    
-    /* ===== Firefox 滚动条样式 ===== */
-    scrollbar-width: thin;                /* 细滚动条 */
-    scrollbar-color: #888 transparent;    /* 滑块颜色 轨道透明 */
-}
-
 /* ===== WebKit 浏览器 (Chrome, Edge, Safari) ===== */
+#cleanIPs {
+    overflow-y: auto;               /* 内容溢出时出现滚动 */
+    scrollbar-width: none;          /* Firefox 隐藏 */
+    -ms-overflow-style: none;       /* IE/旧Edge 隐藏 */
+}
+
 #cleanIPs::-webkit-scrollbar {
-    width: 6px;                          /* 滚动条宽度 */
-    height: 6px;                         /* 横向滚动条高度（若需要） */
-}
-
-/* 轨道透明 */
-#cleanIPs::-webkit-scrollbar-track {
-    background: transparent;             /* 完全透明 */
-    border-radius: 0;
-}
-
-/* 滑块样式 */
-#cleanIPs::-webkit-scrollbar-thumb {
-    background: #888;                    /* 滑块颜色（灰色） */
-    border-radius: 3px;                  /* 圆角 */
-}
-
-/* 滑块 hover 效果（可选） */
-#cleanIPs::-webkit-scrollbar-thumb:hover {
-    background: #555;                    /* 深灰色 */
-}
-
-/* 滚动条角落（可选） */
-#cleanIPs::-webkit-scrollbar-corner {
-    background: transparent;
+    display: none;                  /* Chrome/Safari/Edge 隐藏 */
 }
 
 @media only screen and (min-width: 600px) {
