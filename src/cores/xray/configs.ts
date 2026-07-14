@@ -278,12 +278,12 @@ export async function getXrCustomConfigs(isFragment: boolean, useLink: boolean =
                 const proxy = modifyOutbound(outbound, `proxy-${index}`);
                 proxies.push(proxy);
 
-                const remark = generateRemark(protocolIndex, port, addr, protocol, isFragment, false);
+                const remark = generateRemark(protocolIndex, port, addr, protocol, isFragment, false, useLink);
                 const config = await buildConfig(remark, outbounds, false, false, false, false, false, [addr]);
                 configs.push(config);
 
                 if (chainProxy) {
-                    const remark = generateRemark(protocolIndex, port, addr, protocol, isFragment, true);
+                    const remark = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
                     const chainConfig = await buildConfig(remark, [chainProxy, ...outbounds], false, true, false, false, false, [addr]);
                     configs.push(chainConfig);
 

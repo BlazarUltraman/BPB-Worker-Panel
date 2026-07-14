@@ -93,7 +93,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         let protocolIndex = 1;
         totalPorts.forEach(port => {
             Addresses.forEach(addr => {
-                const tag = generateRemark(protocolIndex, port, addr, protocol, isFragment, false);
+                const tag = generateRemark(protocolIndex, port, addr, protocol, isFragment, false, useLink);
                 const outbound = buildWebsocketOutbound(protocol, tag, addr, port, isFragment);
 
                 outbounds.push(outbound);
@@ -101,7 +101,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
                 selectorTags.push(tag);
 
                 if (isChain) {
-                    const chainTag = generateRemark(protocolIndex, port, addr, protocol, isFragment, true);
+                    const chainTag = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
                     const chain = structuredClone(chainProxy);
                     chain.tag = chainTag;
                     chain.detour = tag;

@@ -91,7 +91,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
         let protocolIndex = 1;
         ports.forEach(port => {
             Addresses.forEach(addr => {
-                const tag = generateRemark(protocolIndex, port, addr, protocol, false, false);
+                const tag = generateRemark(protocolIndex, port, addr, protocol, false, false, useLink);
                 const outbound = buildWebsocketOutbound(protocol, tag, addr, port);
 
                 if (outbound) {
@@ -100,7 +100,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
                     outbounds.push(outbound);
 
                     if (isChain) {
-                        const chainTag = generateRemark(protocolIndex, port, addr, protocol, false, true);
+                        const chainTag = generateRemark(protocolIndex, port, addr, protocol, false, true, useLink);
                         let chain = structuredClone(chainProxy);
                         chain['name'] = chainTag;
                         chain['dialer-proxy'] = tag;
