@@ -659,8 +659,13 @@ table button:active {
 }
 
 .modal-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
     width: fit-content;
     min-width: 85vw;
+    max-width: 95vw;
     text-align: center;
     background-color: var(--form-background-color);
     margin: auto;
@@ -830,6 +835,7 @@ summary h3 {
 	}
 	.modal-content {
 		min-width: 50vw;
+		max-width: 55vw;
 	}
 }
 
@@ -847,5 +853,6 @@ summary h3 {
 	}
 	.modal-content {
 		min-width: 50vw;
+		max-width: 55vw;
 	}
 }
