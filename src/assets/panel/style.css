@@ -816,14 +816,14 @@ summary h3 {
 
 /* ===== 针对 textarea ===== */
 /* ===== WebKit 浏览器 (Chrome, Edge, Safari) ===== */
-#cleanIPs {
-    overflow-y: auto;               /* 内容溢出时出现滚动 */
-    scrollbar-width: none;          /* Firefox 隐藏 */
-    -ms-overflow-style: none;       /* IE/旧Edge 隐藏 */
+textarea {
+    overflow-y: auto;               /* 保留滚动功能，但隐藏滚动条 */
+    scrollbar-width: none;          /* Firefox 隐藏滚动条 */
+    -ms-overflow-style: none;       /* IE/Edge 旧版 */
 }
 
-#cleanIPs::-webkit-scrollbar {
-    display: none;                  /* Chrome/Safari/Edge 隐藏 */
+textarea::-webkit-scrollbar {
+    display: none;                  /* Chrome/Safari/Edge（WebKit）隐藏滚动条 */
 }
 
 @media only screen and (min-width: 600px) {
