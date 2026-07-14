@@ -74,7 +74,7 @@ async function buildConfig(
     return config;
 }
 
-export async function getClNormalConfig(isLink: boolean): Promise<Response> {
+export async function getClNormalConfig(useLink: boolean = false): Promise<Response> {
     const { outProxy, ports } = globalThis.settings;
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
     const isChain = !!chainProxy;
@@ -83,7 +83,7 @@ export async function getClNormalConfig(isLink: boolean): Promise<Response> {
     const chainTags: string[] = [];
     const outbounds: Outbound[] = [];
 
-    const Addresses = await getConfigAddresses(false, isLink);
+    const Addresses = await getConfigAddresses(false, useLink);
     const protocols = getProtocols();
     const selectorTags = ["💦 Best Ping 🚀"].concatIf(isChain, "💦 🔗 Best Ping 🚀");
 
@@ -136,7 +136,7 @@ export async function getClNormalConfig(isLink: boolean): Promise<Response> {
     });
 }
 
-export async function getClWarpConfig(request: Request, env: Env, isPro: boolean, isLink?: boolean): Promise<Response> {
+export async function getClWarpConfig(request: Request, env: Env, isPro: boolean): Promise<Response> {
     const { warpEndpoints } = globalThis.settings;
     const { warpAccounts } = await getDataset(request, env);
 

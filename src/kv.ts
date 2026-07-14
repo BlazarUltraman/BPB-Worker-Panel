@@ -2,6 +2,22 @@ import { fetchWarpAccounts } from '@warp';
 import { getDomain, resolveDNS } from '@utils';
 import { base64DecodeUtf8 } from '@common';
 
+// kv.ts 顶部添加
+async function fetchLinkIPs(url: string): Promise<string[]> {
+    if (!url) return [];
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text = await resp.text();
+        return text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+    } catch (e) {
+        console.error('Failed to fetch link IPs:', e);
+        return [];
+    }
+}
+
 export async function getDataset(
     request: Request,
     env: Env
@@ -131,7 +147,8 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["noiseDelayMax"],
             ["amneziaNoiseCount"],
             ["amneziaNoiseSizeMin"],
-            ["amneziaNoiseSizeMax"]
+            ["amneziaNoiseSizeMax"],
+            ["linkUrl"]
         ];
 
     const entries = await Promise.all(
@@ -144,6 +161,15 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
         ...Object.fromEntries(entries),
         panelVersion: panelVersion
     };
+    
+    // 处理 linkUrl -> linkIPs
+	const linkUrl = newSettings?.linkUrl ?? currentSettings?.linkUrl ?? settings.linkUrl;
+	if (linkUrl) {
+		const ipList = await fetchLinkIPs(linkUrl);
+		updatedSettings.linkIPs = ipList;
+	} else {
+		updatedSettings.linkIPs = [];
+	}
 
     try {
         await env.kv.put("proxySettings", JSON.stringify(updatedSettings));

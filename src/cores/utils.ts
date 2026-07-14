@@ -49,16 +49,17 @@ export function getProtocols() {
 }
 
 
-export async function getConfigAddresses(isFragment: boolean, isLink: boolean): Promise<string[]> {
+export async function getConfigAddresses(isFragment: boolean, useLink: boolean = false): Promise<string[]> {
     const {
         httpConfig: { hostName },
-        settings: { enableIPv6, customCdnAddrs, cleanIPs, remoteNodeLink }
+        settings: { enableIPv6, customCdnAddrs, cleanIPs, linkIPs }
     } = globalThis;
 
-    const { ipv4, ipv6 } = await resolveDNS(hostName, !enableIPv6);
-    const cleanAddresses = cleanIPs.map(item => item.split('#')[0].trim()).filter(Boolean);
+    const ipList = useLink ? linkIPs : cleanIPs;
+    const cleanAddresses = ipList.map(item => item.split('#')[0].trim()).filter(Boolean);
 
-    let addrs = [
+    const { ipv4, ipv6 } = await resolveDNS(hostName, !enableIPv6); // ← 必须保留
+    const addrs = [
         hostName,
         'www.speedtest.net',
         ...ipv4,
@@ -66,29 +67,7 @@ export async function getConfigAddresses(isFragment: boolean, isLink: boolean): 
         ...cleanAddresses
     ];
 
-    // 如果开启了链接订阅，则从 remoteNodeLink 获取额外地址
-    if (isLink && remoteNodeLink) {
-        try {
-            const resp = await fetch(remoteNodeLink);
-            if (resp.ok) {
-                const text = await resp.text();
-                const remoteAddrs = text.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0 && !line.startsWith('#'));
-                addrs = addrs.concat(remoteAddrs);
-            } else {
-                console.warn(`Failed to fetch remote node link: ${resp.status}`);
-            }
-        } catch (e) {
-            console.error('Error fetching remote node link:', e);
-        }
-    }
-
-    if (!isFragment) {
-        addrs = addrs.concat(customCdnAddrs);
-    }
-
-    return addrs;
+    return addrs.concatIf(!isFragment, customCdnAddrs);
 }
 
 function getCleanIPRemark(address: string): string | null {

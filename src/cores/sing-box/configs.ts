@@ -75,7 +75,7 @@ async function buildConfig(
     return config;
 }
 
-export async function getSbCustomConfig(isFragment: boolean, isLink: boolean): Promise<Response> {
+export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = false): Promise<Response> {
     const { outProxy, ports } = globalThis.settings;
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
     const isChain = !!chainProxy;
@@ -85,7 +85,7 @@ export async function getSbCustomConfig(isFragment: boolean, isLink: boolean): P
     const outbounds: Outbound[] = [];
 
     const protocols = getProtocols();
-    const Addresses = await getConfigAddresses(isFragment, isLink);
+    const Addresses = await getConfigAddresses(isFragment, useLink);
     const totalPorts = ports.filter(port => !isFragment || isHttps(port));
     const selectorTags = ["💦 Best Ping 🚀"].concatIf(isChain, "💦 🔗 Best Ping 🚀");
 
@@ -136,7 +136,7 @@ export async function getSbCustomConfig(isFragment: boolean, isLink: boolean): P
     });
 }
 
-export async function getSbWarpConfig(request: Request, env: Env, isLink?: boolean): Promise<Response> {
+export async function getSbWarpConfig(request: Request, env: Env): Promise<Response> {
     const { warpEndpoints } = globalThis.settings;
     const { warpAccounts } = await getDataset(request, env);
 

@@ -401,51 +401,61 @@ export async function handleSubscriptions(request: Request, env: Env): Promise<R
     } = globalThis;
 
     const url = new URL(request.url);
-    const isLink = url.searchParams.has('link');  // 检测 ?link
+    const useLink = url.searchParams.has('link'); // 检测 ?link
 
-    // 根据路径分发，并传递 isLink
     switch (pathName) {
         case `/sub/normal/${subPath}`:
-            switch (client) {
-                case 'xray':
-                    return await getXrCustomConfigs(false, isLink);
-                case 'sing-box':
-                    return await getSbCustomConfig(false, isLink);
-                case 'clash':
-                    return await getClNormalConfig(isLink);
+			switch (client) {
+				case 'xray':
+					return await getXrCustomConfigs(false, useLink);
+				case 'sing-box':
+					return await getSbCustomConfig(false, useLink);
+				case 'clash':
+					return await getClNormalConfig(useLink);
                 default: break;
             }
 
         case `/sub/fragment/${subPath}`:
-			switch (client) {
-				case 'xray':
-					return await getXrCustomConfigs(true, isLink);
-				case 'sing-box':
-					return await getSbCustomConfig(true, isLink);
-				default: break;
-			}
+            switch (client) {
+                case 'xray':
+                    return await getXrCustomConfigs(true);
+
+                case 'sing-box':
+                    return await getSbCustomConfig(true);
+
+                default:
+                    break;
+            }
 
         case `/sub/warp/${subPath}`:
-			switch (client) {
-				case 'xray':
-					return await getXrWarpConfigs(request, env, false, false, isLink);
-				case 'sing-box':
-					return await getSbWarpConfig(request, env, isLink);  // 需修改 getSbWarpConfig 签名
-				case 'clash':
-					return await getClWarpConfig(request, env, false, isLink); // 需修改 getClWarpConfig 签名
-				default: break;
-			}
+            switch (client) {
+                case 'xray':
+                    return await getXrWarpConfigs(request, env, false, false);
 
-		case `/sub/warp-pro/${subPath}`:
-			switch (client) {
-				case 'xray':
-					return await getXrWarpConfigs(request, env, true, false, isLink);
-				case 'xray-knocker':
-					return await getXrWarpConfigs(request, env, true, true, isLink);
-				case 'clash':
-					return await getClWarpConfig(request, env, true, isLink);
-				default: break;
-			}
+                case 'sing-box':
+                    return await getSbWarpConfig(request, env);
+
+                case 'clash':
+                    return await getClWarpConfig(request, env, false);
+
+                default:
+                    break;
+            }
+
+        case `/sub/warp-pro/${subPath}`:
+            switch (client) {
+                case 'xray':
+                    return await getXrWarpConfigs(request, env, true, false);
+
+                case 'xray-knocker':
+                    return await getXrWarpConfigs(request, env, true, true);
+
+                case 'clash':
+                    return await getClWarpConfig(request, env, true);
+
+                default:
+                    break;
+            }
 
         default:
             return await fallback(request);

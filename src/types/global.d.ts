@@ -136,7 +136,8 @@ declare global {
         amneziaNoiseSizeMin: number;
         amneziaNoiseSizeMax: number;
         panelVersion: string;
-        remoteNodeLink?: string;  // 远程节点链接（用于 ?link 订阅）
+        linkUrl: string;      // 用户输入的链接
+		linkIPs: string[];    // 从链接获取的节点列表
     }
 
     var settings: Settings;
