@@ -183,12 +183,27 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
         panelVersion: panelVersion
     };
     
-    // 处理 linkUrl -> linkIPs
+    // 处理 linkUrl -> linkIPs（带缓存比对）
 	const linkUrl = newSettings?.linkUrl ?? currentSettings?.linkUrl ?? settings.linkUrl;
+	const currentLinkIPs = currentSettings?.linkIPs ?? settings.linkIPs ?? [];
+
 	if (linkUrl) {
-		const ipList = await fetchMultipleLinkIPs(linkUrl);
-		updatedSettings.linkIPs = ipList;
+		const newIPs = await fetchMultipleLinkIPs(linkUrl);
+		// 比较是否变化（忽略顺序）
+		const sortedNew = [...newIPs].sort();
+		const sortedCurrent = [...currentLinkIPs].sort();
+		const isSame = sortedNew.length === sortedCurrent.length && sortedNew.every((v, i) => v === sortedCurrent[i]);
+		if (!isSame) {
+			updatedSettings.linkIPs = newIPs;
+			// 可选：添加日志
+			// console.log(`Link IPs updated: ${newIPs.length} nodes`);
+		} else {
+			// 内容未变化，保留原有 linkIPs
+			updatedSettings.linkIPs = currentLinkIPs;
+			// console.log('Link IPs unchanged');
+		}
 	} else {
+		// 没有 linkUrl，清空 linkIPs
 		updatedSettings.linkIPs = [];
 	}
 
