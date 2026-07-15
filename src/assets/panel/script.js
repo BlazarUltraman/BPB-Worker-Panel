@@ -1664,3 +1664,19 @@ function clearCloudflareConfig() {
     })
     .catch(err => alert('请求失败: ' + err.message));
 }
+
+// 获取最新设置并更新 linkIPsDisplay 的内容
+function refreshLinkIPs() {
+    fetch('/panel/settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.body && data.body.proxySettings) {
+                const linkIPs = data.body.proxySettings.linkIPs || [];
+                const display = document.getElementById('linkIPsDisplay');
+                if (display) {
+                    display.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
+                }
+            }
+        })
+        .catch(err => console.error('刷新链接节点失败:', err));
+}
