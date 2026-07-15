@@ -49,14 +49,22 @@ export function getProtocols() {
 }
 
 
-export async function getConfigAddresses(isFragment: boolean): Promise<string[]> {
+export async function getConfigAddresses(isFragment: boolean, useLink: boolean = false): Promise<string[]> {
     const {
-        httpConfig: { hostName },          // ← 必须保留
-        settings: { enableIPv6, customCdnAddrs, cleanIPs }
+        httpConfig: { hostName },
+        settings: { enableIPv6, customCdnAddrs, cleanIPs, linkIPs }
     } = globalThis;
 
+    const ipList = useLink ? linkIPs : cleanIPs;
+    
+	const cleanAddresses = ipList.map(item => {
+		const addr = item.split('#')[0].trim();
+		if (!addr) return null;
+		const { host } = parseHostPort(addr, true);  // brackets: true 保留 IPv6 的 []
+		return host;
+	}).filter(Boolean);
+
     const { ipv4, ipv6 } = await resolveDNS(hostName, !enableIPv6); // ← 必须保留
-    const cleanAddresses = cleanIPs.map(item => item.split('#')[0].trim()).filter(Boolean);
     const addrs = [
         hostName,
         'www.speedtest.net',
@@ -68,14 +76,17 @@ export async function getConfigAddresses(isFragment: boolean): Promise<string[]>
     return addrs.concatIf(!isFragment, customCdnAddrs);
 }
 
-function getCleanIPRemark(address: string): string | null {
-    const cleanIPs = globalThis.settings.cleanIPs;
+// 通用备注查找函数
+function getRemarkFromList(address: string, ipList: string[]): string | null {
     const normalizeAddr = (addr: string) => addr.replace(/^\[|\]$/g, '');
     const normalizedTarget = normalizeAddr(address);
 
-    for (const item of cleanIPs) {
+    for (const item of ipList) {
         const parts = item.split('#');
-        const addr = normalizeAddr(parts[0].trim());
+        const rawAddr = parts[0].trim();
+        // 使用 parseHostPort 提取 host（去掉端口）
+        const { host } = parseHostPort(rawAddr, true);
+        const addr = normalizeAddr(host);
         if (addr === normalizedTarget && parts.length > 1) {
             return parts.slice(1).join('#').trim();
         }
@@ -93,18 +104,24 @@ function getFlagEmoji(countryCode: string): string {
     return String.fromCodePoint(...codePoints);
 }
 
+// 修改 generateRemark 签名，增加 useLink 参数
 export function generateRemark(
     index: number,
     port: number,
     address: string,
     protocol: string,
     isFragment: boolean,
-    isChain: boolean
+    isChain: boolean,
+    useLink: boolean = false  // 新增
 ): string {
     const { _VL_, _VL_CAP_, _TR_CAP_ } = globalThis.dict;
     const protoSign = protocol === _VL_ ? _VL_CAP_ : _TR_CAP_;
     const prefix = isChain ? '🔗 ' : '';
-    const remark = getCleanIPRemark(address);
+
+    // 根据 useLink 选择 IP 列表
+    const { cleanIPs, linkIPs } = globalThis.settings;
+    const ipList = useLink ? linkIPs : cleanIPs;
+    const remark = getRemarkFromList(address, ipList);
 
     let prefixSymbol = '☁ ';
     let displayName = 'Clean';
@@ -123,7 +140,6 @@ export function generateRemark(
             displayName = remark;
         }
     } else {
-        // 无备注，使用全局索引
         count = index;
         prefixSymbol = '☁ ';
         displayName = 'Clean';

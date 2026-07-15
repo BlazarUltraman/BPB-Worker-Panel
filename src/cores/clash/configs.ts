@@ -74,7 +74,7 @@ async function buildConfig(
     return config;
 }
 
-export async function getClNormalConfig(): Promise<Response> {
+export async function getClNormalConfig(useLink: boolean = false): Promise<Response> {
     const { outProxy, ports } = globalThis.settings;
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
     const isChain = !!chainProxy;
@@ -83,7 +83,7 @@ export async function getClNormalConfig(): Promise<Response> {
     const chainTags: string[] = [];
     const outbounds: Outbound[] = [];
 
-    const Addresses = await getConfigAddresses(false);
+    const Addresses = await getConfigAddresses(false, useLink);
     const protocols = getProtocols();
     const selectorTags = ["💦 Best Ping 🚀"].concatIf(isChain, "💦 🔗 Best Ping 🚀");
 
@@ -91,7 +91,7 @@ export async function getClNormalConfig(): Promise<Response> {
         let protocolIndex = 1;
         ports.forEach(port => {
             Addresses.forEach(addr => {
-                const tag = generateRemark(protocolIndex, port, addr, protocol, false, false);
+                const tag = generateRemark(protocolIndex, port, addr, protocol, false, false, useLink);
                 const outbound = buildWebsocketOutbound(protocol, tag, addr, port);
 
                 if (outbound) {
@@ -100,7 +100,7 @@ export async function getClNormalConfig(): Promise<Response> {
                     outbounds.push(outbound);
 
                     if (isChain) {
-                        const chainTag = generateRemark(protocolIndex, port, addr, protocol, false, true);
+                        const chainTag = generateRemark(protocolIndex, port, addr, protocol, false, true, useLink);
                         let chain = structuredClone(chainProxy);
                         chain['name'] = chainTag;
                         chain['dialer-proxy'] = tag;

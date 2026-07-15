@@ -34,6 +34,8 @@ globalThis.settings = {
     outProxy: "",
     outProxyParams: {},
     cleanIPs: [],
+    linkUrl: "",
+	linkIPs: [],
     customCdnAddrs: [],
     customCdnHost: "",
     customCdnSni: "",

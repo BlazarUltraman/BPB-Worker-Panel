@@ -11,6 +11,7 @@ import JSZip from "jszip";
 import { HttpStatus, respond } from "@common";
 // 在 handlers.ts 顶部导入必要的依赖
 import { getCloudflareConfig, saveCloudflareConfig, type CloudflareConfig } from 'kv';
+import { fetchMultipleLinkIPs } from 'kv'; // 确保该函数已导出
 
 // 添加接口定义
 interface GraphQLResponse {
@@ -393,6 +394,7 @@ export function logout(): Response {
     });
 }
 
+// 在 handleSubscriptions 中
 export async function handleSubscriptions(request: Request, env: Env): Promise<Response> {
     await setSettings(request, env);
     const {
@@ -400,20 +402,47 @@ export async function handleSubscriptions(request: Request, env: Env): Promise<R
         httpConfig: { client, subPath }
     } = globalThis;
 
+    const url = new URL(request.url);
+    const useLink = url.searchParams.has('link'); // 检测 ?link
+
+    // ===== 新增：如果使用 Link 订阅，刷新 linkIPs =====
+    if (useLink) {
+        const settings = globalThis.settings;
+        const linkUrl = settings.linkUrl;
+        if (linkUrl) {
+            // 获取最新 IP 列表
+            const newIPs = await fetchMultipleLinkIPs(linkUrl);
+            const currentLinkIPs = settings.linkIPs || [];
+            // 比较是否变化（忽略顺序）
+            const sortedNew = [...newIPs].sort();
+            const sortedCurrent = [...currentLinkIPs].sort();
+            const isSame = sortedNew.length === sortedCurrent.length && sortedNew.every((v, i) => v === sortedCurrent[i]);
+            if (!isSame && newIPs.length > 0) {
+                // 更新 KV 中的 proxySettings
+                const updatedSettings = { ...settings, linkIPs: newIPs };
+                await env.kv.put('proxySettings', JSON.stringify(updatedSettings));
+                // 更新全局 settings
+                globalThis.settings = updatedSettings;
+                // 可选：记录日志
+                console.log(`Link IPs updated from ${currentLinkIPs.length} to ${newIPs.length} nodes`);
+            } else if (newIPs.length === 0 && linkUrl) {
+                // 如果获取失败（返回空），可选择保留原值或清空，此处保留原值
+                console.warn('Failed to fetch link IPs, keeping existing');
+            }
+        }
+    }
+    // ===== 结束 =====
+
     switch (pathName) {
         case `/sub/normal/${subPath}`:
-            switch (client) {
-                case 'xray':
-                    return await getXrCustomConfigs(false);
-
-                case 'sing-box':
-                    return await getSbCustomConfig(false);
-
-                case 'clash':
-                    return await getClNormalConfig();
-
-                default:
-                    break;
+			switch (client) {
+				case 'xray':
+					return await getXrCustomConfigs(false, useLink);
+				case 'sing-box':
+					return await getSbCustomConfig(false, useLink);
+				case 'clash':
+					return await getClNormalConfig(useLink);
+                default: break;
             }
 
         case `/sub/fragment/${subPath}`:

@@ -2,6 +2,42 @@ import { fetchWarpAccounts } from '@warp';
 import { getDomain, resolveDNS } from '@utils';
 import { base64DecodeUtf8 } from '@common';
 
+// kv.ts 顶部添加
+async function fetchLinkIPs(url: string): Promise<string[]> {
+    if (!url) return [];
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text = await resp.text();
+        return text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+    } catch (e) {
+        console.error('Failed to fetch link IPs:', e);
+        return [];
+    }
+}
+
+// 新增 fetchMultipleLinkIPs 为并发
+async function fetchMultipleLinkIPs(input: string): Promise<string[]> {
+    if (!input) return [];
+    // 按逗号、换行分割，去除空串
+    const urls = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    if (urls.length === 0) return [];
+
+    // 并发获取所有链接，单个失败不影响整体
+    const fetchPromises = urls.map(url =>
+        fetchLinkIPs(url).catch(e => {
+            console.error(`Failed to fetch from ${url}:`, e);
+            return []; // 返回空数组，不影响其他链接
+        })
+    );
+    const results = await Promise.all(fetchPromises);
+    const allIPs = results.flat();
+    // 去重
+    return [...new Set(allIPs)];
+}
+
 export async function getDataset(
     request: Request,
     env: Env
@@ -131,7 +167,8 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["noiseDelayMax"],
             ["amneziaNoiseCount"],
             ["amneziaNoiseSizeMin"],
-            ["amneziaNoiseSizeMax"]
+            ["amneziaNoiseSizeMax"],
+            ["linkUrl"]
         ];
 
     const entries = await Promise.all(
@@ -144,6 +181,30 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
         ...Object.fromEntries(entries),
         panelVersion: panelVersion
     };
+    
+    // 处理 linkUrl -> linkIPs（带缓存比对）
+	const linkUrl = newSettings?.linkUrl ?? currentSettings?.linkUrl ?? settings.linkUrl;
+	const currentLinkIPs = currentSettings?.linkIPs ?? settings.linkIPs ?? [];
+
+	if (linkUrl) {
+		const newIPs = await fetchMultipleLinkIPs(linkUrl);
+		// 比较是否变化（忽略顺序）
+		const sortedNew = [...newIPs].sort();
+		const sortedCurrent = [...currentLinkIPs].sort();
+		const isSame = sortedNew.length === sortedCurrent.length && sortedNew.every((v, i) => v === sortedCurrent[i]);
+		if (!isSame) {
+			updatedSettings.linkIPs = newIPs;
+			// 可选：添加日志
+			// console.log(`Link IPs updated: ${newIPs.length} nodes`);
+		} else {
+			// 内容未变化，保留原有 linkIPs
+			updatedSettings.linkIPs = currentLinkIPs;
+			// console.log('Link IPs unchanged');
+		}
+	} else {
+		// 没有 linkUrl，清空 linkIPs
+		updatedSettings.linkIPs = [];
+	}
 
     try {
         await env.kv.put("proxySettings", JSON.stringify(updatedSettings));
@@ -285,3 +346,5 @@ function extractProxyParams(chainProxy: string) {
             return {};
     }
 }
+
+export { fetchMultipleLinkIPs };

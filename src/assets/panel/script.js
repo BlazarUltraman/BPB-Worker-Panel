@@ -94,6 +94,10 @@ function populatePanel(proxySettings) {
         element.style.height = 'auto';
         if (rowsCount) element.rows = rowsCount;
         element.value = value;
+        // 显示 linkIPs
+        const linkIPsDisplay = document.getElementById('linkIPsDisplay');
+        const linkIPs = proxySettings.linkIPs || [];
+        linkIPsDisplay.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
     });
 }
 
@@ -249,28 +253,38 @@ function downloadWarpConfigs(isAmnezia) {
     window.location.href = "/panel/get-warp-configs" + client;
 }
 
-function generateSubUrl(path, app, tag, singboxType) {
+function generateSubUrl(path, app, tag, singboxType, useLink = false) {
     const url = new URL(window.location.href);
     url.pathname = `/sub/${path}/${globalThis.subPath}`;
-    app && url.searchParams.append('app', app);
-
+    if (app) url.searchParams.append('app', app);
+    if (useLink) url.searchParams.append('link', '');
     if (tag) {
         url.hash = `💦 BPB ${tag}`;
     }
-
     return singboxType
-        ? `sing-box://import-remote-profile?url=${url.href}`
+        ? `sing-box://import-remote-profile?url=${encodeURIComponent(url.href)}`
         : url.href;
 }
 
-function subURL(path, app, tag, singboxType) {
-    const url = generateSubUrl(path, app, tag, singboxType);
-    copyToClipboard(url);
+// 新增两个包装函数
+async function chooseSubURL(path, app, tag, singboxType) {
+    const useLink = await showSubTypeModal();
+    if (useLink === null) return; // 用户取消，不生成
+    subURL(path, app, tag, singboxType, useLink);
+}
+async function chooseDLURL(path, app, singboxType) {
+    const useLink = await showSubTypeModal();
+    if (useLink === null) return; // 用户取消，不生成
+    dlURL(path, app, singboxType, useLink);
 }
 
-async function dlURL(path, app) {
-    const url = generateSubUrl(path, app);
-
+function subURL(path, app, tag, singboxType, useLink = false) {
+    const url = generateSubUrl(path, app, tag, singboxType, useLink);
+    copyToClipboard(url);
+}
+async function dlURL(path, app, singboxType, useLink = false) {
+    const url = generateSubUrl(path, app, null, singboxType, useLink);
+    
     try {
         const response = await fetch(url);
         const data = await response.text();
@@ -323,18 +337,22 @@ async function uploadSettings(event) {
     }
 }
 
-function openQR(path, app, tag, title, singboxType) {
+async function chooseAndOpenQR(path, app, tag, title, singboxType) {
+    const useLink = await showSubTypeModal();  // true: Link, false: Clean
+    if (useLink === null) return; // 用户取消，不生成二维码
+    const url = generateSubUrl(path, app, tag, singboxType, useLink);
+    
     const qrModal = document.getElementById('qrModal');
     const qrcodeContainer = document.getElementById('qrcode-container');
-    const url = generateSubUrl(path, app, tag, singboxType);
+    // 清空旧二维码
+    qrcodeContainer.innerHTML = '';
     let qrcodeTitle = document.getElementById("qrcodeTitle");
-    qrcodeTitle.textContent = title;
+    qrcodeTitle.textContent = title + (useLink ? ' (Link)' : '');
     qrModal.style.display = "block";
     let qrcodeDiv = document.createElement("div");
     qrcodeDiv.className = "qrcode";
     qrcodeDiv.style.padding = "2px";
     qrcodeDiv.style.backgroundColor = "#ffffff";
-    /* global QRCode */
     new QRCode(qrcodeDiv, {
         text: url,
         width: 256,
@@ -343,10 +361,9 @@ function openQR(path, app, tag, title, singboxType) {
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
     });
-
     qrcodeContainer.appendChild(qrcodeDiv);
 }
-
+    
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
         .then(() => alert('✅ Copied to clipboard:\n\n' + text))
@@ -509,18 +526,17 @@ function updateSettings(event, data) {
         headers: { 'Content-Type': 'application/json' }
     })
         .then(response => response.json())
-        .then(({ success, status, message }) => {
-
+        .then(({ success, status, message, body }) => {  // ← 解构出 body
             if (status === 401) {
                 alert('⚠️ Session expired! Please login again.');
                 window.location.href = '/login';
+                return;
             }
-
             if (!success) {
                 throw new Error(`status ${status} - ${message}`);
             }
-
-            initiatePanel(form);
+            // ← 使用服务器返回的完整设置（body）重新初始化
+            initiatePanel(body);
             alert('✅ Settings applied successfully!\n💡 Please update your subscriptions.');
         })
         .catch(error => console.error("Update settings error:", error.message || error))
@@ -1054,11 +1070,10 @@ function validateSettings() {
     });
 
     textareaElements.forEach(elm => {
-        const key = elm.id;
+		const key = elm.id;
         const value = form[key];
         form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
     });
-
     return form;
 }
 
@@ -1651,4 +1666,56 @@ function clearCloudflareConfig() {
         }
     })
     .catch(err => alert('请求失败: ' + err.message));
+}
+
+// 获取最新设置并更新 linkIPsDisplay 的内容
+function refreshLinkIPs() {
+    fetch('/panel/settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.body && data.body.proxySettings) {
+                const linkIPs = data.body.proxySettings.linkIPs || [];
+                const display = document.getElementById('linkIPsDisplay');
+                if (display) {
+                    display.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
+                }
+            }
+        })
+        .catch(err => console.error('刷新链接节点失败:', err));
+}
+
+function showSubTypeModal() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('subTypeModal');
+        const linkBtn = document.getElementById('subTypeLink');
+        const cleanBtn = document.getElementById('subTypeClean');
+        const closeBtn = document.querySelector('#subTypeModal .close');
+        
+        modal.style.display = 'flex';
+
+        // 移除旧监听（直接赋值覆盖）
+        linkBtn.onclick = function() {
+            closeSubTypeModal();
+            resolve(true);   // Link IPs
+        };
+        cleanBtn.onclick = function() {
+            closeSubTypeModal();
+            resolve(false);  // Clean IPs
+        };
+        closeBtn.onclick = function() {
+            closeSubTypeModal();
+            resolve(null);   // 取消
+        };
+        // 点击背景（遮罩）→ 取消（null）
+        modal.onclick = function(event) {
+            if (event.target === modal) {
+                closeSubTypeModal();
+                resolve(null);
+            }
+        };
+    });
+}
+
+function closeSubTypeModal() {
+    document.getElementById('subTypeModal').style.display = 'none';
 }
