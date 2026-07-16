@@ -20,7 +20,7 @@
 			</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
-			<div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius); padding: 10px;">
+			<div class="cf-usage-stats" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius); padding: 10px;">
 				<div class="header-container">
 					<h3 style="color: var(--primary-color);">Cloudflare Use</h3>
 					<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
@@ -28,8 +28,8 @@
 					</button>
 				</div>
 				
-				<div class="cf-usage-stats">
-					<div class="cf-usage-stats cf-stat-inside-card" style="grid-template-columns:1fr;">
+				<div class="cf-usage-stats" style="grid-template-columns: repeat(2, 1fr);">
+					<div class="cf-usage-stats cf-stat-inside-card">
 						<!-- 请求量卡片 -->
 						<div class="cf-stat">
 							<div class="cf-stat-inside">
@@ -68,7 +68,7 @@
 					</div>
 					
 					<!-- KV 命名空间各用量 -->
-					<div class="cf-usage-stats cf-stat-inside-card" style="grid-template-columns: 1fr;">
+					<div class="cf-usage-stats cf-stat-inside-card">
 						<div id="cf-kv-details">
 							--
 						</div>

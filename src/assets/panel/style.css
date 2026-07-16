@@ -828,13 +828,13 @@ summary h3 {
 
 .cf-usage-stats {
 	display: grid;
-	grid-template-columns: repeat(2, 1fr);
+	grid-template-columns: 1fr;
 	gap: 8px;
 	text-align: center;
+	align-content: center;
 }
         
 .cf-stat {
-	background: var(--stat-bg);
 	padding: 4.1px;
 	border-radius: 6px;
 	border: 1px solid var(--stat-border);
