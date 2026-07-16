@@ -851,11 +851,24 @@ summary h3 {
 	color: var(--use-count-color);
 }
 
+.cf-stat-proportion {
+	font-size: 1rem;
+	font-weight: bold;
+	color: var(--use-proportion-color);
+}
+
 .cf-stat-label {
 	font-size: 0.6rem;
 	color: var(--subtitle-color);
 }
 
+.cf-stat-inside-card {
+	overflow-y: auto;
+	border: 1px solid var(--border-color);
+	padding: 8px;
+	border-radius:var(--inner-container-border-radius);
+	background: var(--table-active-color);
+}
 .cf-stat-inside {
 	background: transparent;
 	padding: 4.1px;

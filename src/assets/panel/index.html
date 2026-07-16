@@ -20,8 +20,8 @@
 			</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
-			<div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius);">
-				<div class="header-container" style="background: var(--table-active-color); border: 1px solid var(--border-color);">
+			<div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius); padding: 10px;">
+				<div class="header-container">
 					<h3 style="color: var(--primary-color);">Cloudflare Use</h3>
 					<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
 							<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
@@ -29,7 +29,7 @@
 				</div>
 				
 				<div class="cf-usage-stats">
-					<div class="cf-usage-stats" style="grid-template-columns: 1fr;">
+					<div class="cf-usage-stats cf-stat-inside-card" style="grid-template-columns:1fr;">
 						<!-- 请求量卡片 -->
 						<div class="cf-stat">
 							<div class="cf-stat-inside">
@@ -37,7 +37,7 @@
 								<div class="cf-stat-label">请求总数</div>
 							</div>
 							<div class="cf-stat-inside">
-								<div class="cf-stat-value" id="cf-request-percent">--</div>
+								<div class="cf-stat-proportion" id="cf-request-percent">--</div>
 								<div class="cf-stat-label">请求占比</div>
 							</div>
 						</div>
@@ -49,7 +49,7 @@
 								<div class="cf-stat-label">读取总数</div>
 							</div>
 							<div class="cf-stat-inside">
-								<div class="cf-stat-value" id="cf-kv-read-percent">--</div>
+								<div class="cf-stat-proportion" id="cf-kv-read-percent">--</div>
 								<div class="cf-stat-label">读取占比</div>
 							</div>
 						</div>
@@ -61,15 +61,15 @@
 								<div class="cf-stat-label">写入总数</div>
 							</div>
 							<div class="cf-stat-inside">
-								<div class="cf-stat-value" id="cf-kv-write-percent">--</div>
+								<div class="cf-stat-proportion" id="cf-kv-write-percent">--</div>
 								<div class="cf-stat-label">写入占比</div>
 							</div>
 						</div>
 					</div>
 					
 					<!-- KV 命名空间各用量 -->
-					<div class="cf-usage-stats" style="grid-template-columns: 1fr;">
-						<div id="cf-kv-details" class="cf-stat">
+					<div class="cf-usage-stats cf-stat-inside-card" style="grid-template-columns: 1fr;">
+						<div id="cf-kv-details">
 							--
 						</div>
 					</div>
