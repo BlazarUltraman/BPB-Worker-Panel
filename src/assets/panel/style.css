@@ -833,6 +833,10 @@ summary h3 {
 	text-align: center;
 	align-content: center;
 }
+
+.cf-usage-stats-columns {
+	grid-template-columns:repeat(2,1fr)
+}
         
 .cf-stat {
 	padding: 4.1px;
@@ -900,7 +904,7 @@ textarea::-webkit-scrollbar {
 }
 
 @media (max-width: 768px) {
-	.cf-usage-stats {
+	.cf-usage-stats-columns {
 		grid-template-columns: 1fr;
 	}
 }

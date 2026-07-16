@@ -14,21 +14,21 @@
 
 <body>
     <div class="form-container container-big">
-		<div class="card-container">
+		<div class="card-container" style="border-left:3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius); padding:10px">
 			<h1>
 				<img class="icon" src="/favicon.ico" alt="BPB Logo"> BPB Panel </span>
 			</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
 			<div class="cf-usage-stats" style="padding:10px 0">
-				<div class="header-container" style="border-left:3px solid #6ed8c9;border-right:3px solid #6ed8c9;border-radius:var(--inner-container-border-radius);padding:10px">
+				<div class="header-container">
 					<h3 style="color: var(--primary-color);">Cloudflare Use</h3>
 					<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
 							<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
 					</button>
 				</div>
 				
-				<div class="cf-usage-stats" style="grid-template-columns: repeat(2, 1fr);">
+				<div class="cf-usage-stats cf-usage-stats-columns">
 					<div class="cf-usage-stats cf-stat-inside-card">
 						<!-- 请求量卡片 -->
 						<div class="cf-stat">
