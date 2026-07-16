@@ -2,47 +2,109 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
-import { Outbound, WireguardEndpoint, Config } from 'types/sing-box';
+import { Outbound, WireguardEndpoint, Config, URLTest, Selector } from 'types/sing-box';
 import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
 import { buildMixedInbound, tun } from './inbounds';
 
-async function buildConfig(
-    outbounds: Outbound[],
-    endpoints: WireguardEndpoint[],
-    selectorTags: string[],
-    urlTestTags: string[],
-    secondUrlTestTags: string[],
-    isWarp: boolean,
-    isChain: boolean
-): Promise<Config> {
-    const { logLevel } = globalThis.settings;
+// 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
+function extractCountryCode(tag: string): string | null {
+    const match = tag.match(/^([🇦🇿-🇿🇼])\s+([A-Z]{2})-/);
+    if (match) return match[2];
+    return null;
+}
 
+export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = false): Promise<Response> {
+    const { outProxy, ports } = globalThis.settings;
+    const chainProxy = outProxy ? buildChainOutbound() : undefined;
+    const isChain = !!chainProxy;
+
+    const proxyTags: string[] = [];
+    const chainTags: string[] = [];
+    const outbounds: Outbound[] = [];
+
+    const protocols = getProtocols();
+    const Addresses = await getConfigAddresses(isFragment, useLink);
+    const totalPorts = ports.filter(port => !isFragment || isHttps(port));
+
+    // 用于聚合节点标签及其国家
+    const countryNodes: Map<string, string[]> = new Map(); // country -> tags[]
+
+    protocols.forEach(protocol => {
+        let protocolIndex = 1;
+        totalPorts.forEach(port => {
+            Addresses.forEach(addr => {
+                const tag = generateRemark(protocolIndex, port, addr, protocol, isFragment, false, useLink);
+                const outbound = buildWebsocketOutbound(protocol, tag, addr, port, isFragment);
+                outbounds.push(outbound);
+                proxyTags.push(tag);
+
+                // 提取国家
+                const country = extractCountryCode(tag);
+                if (country) {
+                    if (!countryNodes.has(country)) countryNodes.set(country, []);
+                    countryNodes.get(country)!.push(tag);
+                }
+
+                if (isChain) {
+                    const chainTag = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
+                    const chain = structuredClone(chainProxy);
+                    chain.tag = chainTag;
+                    chain.detour = tag;
+                    outbounds.push(chain);
+                    chainTags.push(chainTag);
+                }
+                protocolIndex++;
+            });
+        });
+    });
+
+    // 构建国家分组（urltest）
+    const countryGroupTags: string[] = [];
+    for (const [country, tags] of countryNodes) {
+        if (tags.length >= 2) {
+            const flag = String.fromCodePoint(...[...country].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+            const groupName = `${flag} ${country} Best`;
+            const urlTest = buildUrlTest(groupName, tags, false);
+            outbounds.push(urlTest);
+            countryGroupTags.push(groupName);
+        }
+    }
+
+    // 构建 Best Ping 分组（包含所有节点 + 国家分组）
+    const bestPingTags = [...proxyTags, ...chainTags, ...countryGroupTags];
+    const bestPingGroup = buildUrlTest('💦 Best Ping 🚀', bestPingTags, false);
+    outbounds.push(bestPingGroup);
+
+    // 构建 Selector（顶层选择器）
+    const selectorTags = ['💦 Best Ping 🚀', ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []), ...countryGroupTags];
+    const selectorGroup: Selector = {
+        type: "selector",
+        tag: "✅ Selector",
+        outbounds: selectorTags,
+        interrupt_exist_connections: false
+    };
+    outbounds.push(selectorGroup);
+
+    // 如果有链式代理，添加链式 Best Ping
+    if (isChain) {
+        const chainBestPing = buildUrlTest('💦 🔗 Best Ping 🚀', chainTags, false);
+        outbounds.push(chainBestPing);
+    }
+
+    // 构建最终配置（直接构造 Config 对象，避免 buildConfig 覆盖）
     const config: Config = {
         log: {
-            disabled: logLevel === "none",
-            level: logLevel === "none" ? undefined : logLevel === "warning" ? "warn" : logLevel,
+            disabled: globalThis.settings.logLevel === "none",
+            level: globalThis.settings.logLevel === "none" ? undefined : globalThis.settings.logLevel === "warning" ? "warn" : globalThis.settings.logLevel,
             timestamp: true
         },
-        dns: await buildDNS(isWarp, isChain),
+        dns: await buildDNS(false, isChain),
         inbounds: [
             tun,
             buildMixedInbound()
         ],
-        outbounds: [
-            ...outbounds,
-            {
-                type: "selector",
-                tag: "✅ Selector",
-                outbounds: selectorTags,
-                interrupt_exist_connections: false
-            },
-            {
-                type: "direct",
-                tag: "direct"
-            }
-        ],
-        endpoints: endpoints.omitEmpty(),
-        route: buildRoutingRules(isWarp, isChain),
+        outbounds: outbounds,
+        route: buildRoutingRules(false, isChain),
         ntp: {
             enabled: true,
             server: "time.cloudflare.com",
@@ -65,111 +127,6 @@ async function buildConfig(
             }
         }
     };
-
-    const tag = isWarp ? `💦 Warp - Best Ping 🚀` : "💦 Best Ping 🚀";
-    const mainUrlTest = buildUrlTest(tag, urlTestTags, isWarp);
-    config.outbounds.push(mainUrlTest);
-    if (isWarp) config.outbounds.push(buildUrlTest("💦 WoW - Best Ping 🚀", secondUrlTestTags, isWarp));
-    if (isChain) config.outbounds.push(buildUrlTest("💦 🔗 Best Ping 🚀", secondUrlTestTags, isWarp));
-
-    return config;
-}
-
-export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = false): Promise<Response> {
-    const { outProxy, ports } = globalThis.settings;
-    const chainProxy = outProxy ? buildChainOutbound() : undefined;
-    const isChain = !!chainProxy;
-
-    const proxyTags: string[] = [];
-    const chainTags: string[] = [];
-    const outbounds: Outbound[] = [];
-
-    const protocols = getProtocols();
-    const Addresses = await getConfigAddresses(isFragment, useLink);
-    const totalPorts = ports.filter(port => !isFragment || isHttps(port));
-    const selectorTags = ["💦 Best Ping 🚀"].concatIf(isChain, "💦 🔗 Best Ping 🚀");
-
-    protocols.forEach(protocol => {
-        let protocolIndex = 1;
-        totalPorts.forEach(port => {
-            Addresses.forEach(addr => {
-                const tag = generateRemark(protocolIndex, port, addr, protocol, isFragment, false, useLink);
-                const outbound = buildWebsocketOutbound(protocol, tag, addr, port, isFragment);
-
-                outbounds.push(outbound);
-                proxyTags.push(tag);
-                selectorTags.push(tag);
-
-                if (isChain) {
-                    const chainTag = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
-                    const chain = structuredClone(chainProxy);
-                    chain.tag = chainTag;
-                    chain.detour = tag;
-                    outbounds.push(chain);
-
-                    chainTags.push(chainTag);
-                    selectorTags.push(chainTag);
-                }
-
-                protocolIndex++;
-            });
-        });
-    });
-
-    const config = await buildConfig(
-        outbounds,
-        [],
-        selectorTags,
-        proxyTags,
-        chainTags,
-        false,
-        isChain
-    );
-
-    return new Response(JSON.stringify(config, null, 4), {
-        status: 200,
-        headers: {
-            'Content-Type': 'text/plain;charset=utf-8',
-            'Cache-Control': 'no-store',
-            'CDN-Cache-Control': 'no-store'
-        }
-    });
-}
-
-export async function getSbWarpConfig(request: Request, env: Env): Promise<Response> {
-    const { warpEndpoints } = globalThis.settings;
-    const { warpAccounts } = await getDataset(request, env);
-
-    const proxyTags: string[] = [];
-    const chainTags: string[] = [];
-    const outbounds: WireguardEndpoint[] = [];
-    const selectorTags = [
-        "💦 Warp - Best Ping 🚀",
-        "💦 WoW - Best Ping 🚀"
-    ];
-
-    warpEndpoints.forEach((endpoint, index) => {
-        const warpTag = `💦 ${index + 1} - Warp 🇮🇷`;
-        proxyTags.push(warpTag);
-
-        const wowTag = `💦 ${index + 1} - WoW 🌍`;
-        chainTags.push(wowTag);
-
-        selectorTags.push(warpTag, wowTag);
-        const warpOutbound = buildWarpOutbound(warpAccounts[0], warpTag, endpoint);
-        const wowOutbound = buildWarpOutbound(warpAccounts[1], wowTag, endpoint, warpTag);
-        outbounds.push(warpOutbound, wowOutbound);
-    });
-
-    const config = await buildConfig(
-        [],
-        outbounds,
-        selectorTags,
-        proxyTags,
-        chainTags,
-        true,
-        false
-    );
 
     return new Response(JSON.stringify(config, null, 4), {
         status: 200,

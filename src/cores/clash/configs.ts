@@ -2,10 +2,18 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
-import type { WireguardOutbound, Config, Outbound } from 'types/clash';
+import type { WireguardOutbound, Config, Outbound, URLTest, Selector } from 'types/clash';
 import { getConfigAddresses, generateRemark, getProtocols } from '@utils';
 import { sniffer, tun } from './inbounds';
 
+// 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
+function extractCountryCode(tag: string): string | null {
+    const match = tag.match(/^([🇦🇿-🇿🇼])\s+([A-Z]{2})-/);
+    if (match) return match[2];
+    return null;
+}
+
+// ==================== buildConfig 函数（保持不变） ====================
 async function buildConfig(
     outbounds: Outbound[],
     selectorTags: string[],
@@ -74,6 +82,7 @@ async function buildConfig(
     return config;
 }
 
+// ==================== 优化后的 getClNormalConfig ====================
 export async function getClNormalConfig(useLink: boolean = false): Promise<Response> {
     const { outProxy, ports } = globalThis.settings;
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
@@ -85,7 +94,9 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
 
     const Addresses = await getConfigAddresses(false, useLink);
     const protocols = getProtocols();
-    const selectorTags = ["💦 Best Ping 🚀"].concatIf(isChain, "💦 🔗 Best Ping 🚀");
+
+    // 按国家聚合节点标签
+    const countryNodes: Map<string, string[]> = new Map();
 
     protocols.forEach(protocol => {
         let protocolIndex = 1;
@@ -93,11 +104,15 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
             Addresses.forEach(addr => {
                 const tag = generateRemark(protocolIndex, port, addr, protocol, false, false, useLink);
                 const outbound = buildWebsocketOutbound(protocol, tag, addr, port);
-
                 if (outbound) {
-                    proxyTags.push(tag);
-                    selectorTags.push(tag);
                     outbounds.push(outbound);
+                    proxyTags.push(tag);
+
+                    const country = extractCountryCode(tag);
+                    if (country) {
+                        if (!countryNodes.has(country)) countryNodes.set(country, []);
+                        countryNodes.get(country)!.push(tag);
+                    }
 
                     if (isChain) {
                         const chainTag = generateRemark(protocolIndex, port, addr, protocol, false, true, useLink);
@@ -105,28 +120,60 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
                         chain['name'] = chainTag;
                         chain['dialer-proxy'] = tag;
                         outbounds.push(chain);
-
                         chainTags.push(chainTag);
-                        selectorTags.push(chainTag);
                     }
-
                     protocolIndex++;
                 }
             });
         });
     });
 
-    const config = await buildConfig(
+    // 构建国家分组（url-test）
+    const countryGroupTags: string[] = [];
+    const countryGroups: URLTest[] = [];
+    for (const [country, tags] of countryNodes) {
+        if (tags.length >= 2) {
+            const flag = String.fromCodePoint(...[...country].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+            const groupNameWithFlag = `${flag} ${country} Best`;
+            const urlTest = buildUrlTest(groupNameWithFlag, tags, false);
+            countryGroups.push(urlTest);
+            countryGroupTags.push(groupNameWithFlag);
+        }
+    }
+
+    // 构造 Best Ping 组（包含所有节点 + 国家分组）
+    const bestPingProxies = [...proxyTags, ...chainTags, ...countryGroupTags];
+    const bestPingGroup = buildUrlTest('💦 Best Ping 🚀', bestPingProxies, false);
+
+    // 构造 Selector 组
+    const selectorGroup: Selector = {
+        name: '✅ Selector',
+        type: 'select',
+        proxies: ['💦 Best Ping 🚀', ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []), ...countryGroupTags]
+    };
+
+    // 收集所有 proxy-groups
+    const proxyGroups: (Selector | URLTest)[] = [selectorGroup, bestPingGroup];
+    if (isChain) {
+        const chainBestPing = buildUrlTest('💦 🔗 Best Ping 🚀', chainTags, false);
+        proxyGroups.push(chainBestPing);
+    }
+    proxyGroups.push(...countryGroups);
+
+    // ---------- 优化点：只调用一次 buildConfig ----------
+    const builtConfig = await buildConfig(
         outbounds,
-        selectorTags,
-        proxyTags,
-        chainTags,
+        [], // selectorTags 不再使用（将被覆盖）
+        [], // proxyTags 不再使用
+        [], // chainTags 不再使用
         isChain,
         false,
         false
     );
+    // 用自定义的 proxy-groups 替换 buildConfig 生成的默认分组
+    builtConfig['proxy-groups'] = proxyGroups;
 
-    return new Response(JSON.stringify(config, null, 4), {
+    return new Response(JSON.stringify(builtConfig, null, 4), {
         status: 200,
         headers: {
             'Content-Type': 'text/plain;charset=utf-8',
@@ -136,6 +183,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
     });
 }
 
+// ==================== getClWarpConfig（保持不变） ====================
 export async function getClWarpConfig(request: Request, env: Env, isPro: boolean): Promise<Response> {
     const { warpEndpoints } = globalThis.settings;
     const { warpAccounts } = await getDataset(request, env);

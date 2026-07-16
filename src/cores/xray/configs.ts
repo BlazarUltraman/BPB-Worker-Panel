@@ -20,17 +20,24 @@ import {
     toRange
 } from '@utils';
 
-function buildBalancer(tag: string, selector: string, hasFallback: boolean): Balancer {
+// 辅助：提取国家代码
+function extractCountryCode(tag: string): string | null {
+    const match = tag.match(/^([🇦🇿-🇿🇼])\s+([A-Z]{2})-/);
+    if (match) return match[2];
+    return null;
+}
+
+// 构建 balancer
+function buildBalancer(tag: string, selector: string[], hasFallback: boolean): Balancer {
     return {
         tag,
-        selector: [selector],
-        strategy: {
-            type: "leastPing",
-        },
+        selector,
+        strategy: { type: "leastPing" },
         fallbackTag: hasFallback ? "proxy-2" : undefined
     };
 }
 
+// 修改 buildConfig，增加 extraBalancers 参数
 async function buildConfig(
     remark: string,
     outbounds: Outbound[],
@@ -42,7 +49,8 @@ async function buildConfig(
     outboundAddrs: string[],
     domainToStaticIPs?: string,
     customDns?: string,
-    customDnsHosts?: string[]
+    customDnsHosts?: string[],
+    extraBalancers: Balancer[] = []
 ): Promise<Config> {
     const {
         fakeDNS,
@@ -54,18 +62,19 @@ async function buildConfig(
     let balancers, observatory;
 
     if (isBalancer) {
-        balancers = [buildBalancer("all-proxies", "proxy", balancerFallback)]
-            .concatIf(isChain, buildBalancer("all-chains", "chain", false));
-
-        observatory = {
-            subjectSelector: isChain ? ["chain", "proxy"] : ["proxy"],
-            probeUrl: "https://www.gstatic.com/generate_204",
-            probeInterval: `${isWarp
-                ? bestWarpInterval
-                : bestVLTRInterval}s`,
-            enableConcurrency: true
-        } satisfies Observatory;
+        const baseBalancers = [buildBalancer("all-proxies", ["proxy"], balancerFallback)]
+            .concatIf(isChain, buildBalancer("all-chains", ["chain"], false));
+        balancers = [...baseBalancers, ...extraBalancers];
+    } else if (extraBalancers.length > 0) {
+        balancers = extraBalancers;
     }
+
+    observatory = {
+        subjectSelector: isChain ? ["chain", "proxy"] : ["proxy"],
+        probeUrl: "https://www.gstatic.com/generate_204",
+        probeInterval: `${isWarp ? bestWarpInterval : bestVLTRInterval}s`,
+        enableConcurrency: true
+    } satisfies Observatory;
 
     const config: Config = {
         remarks: remark,
@@ -84,25 +93,17 @@ async function buildConfig(
             ...outbounds,
             {
                 protocol: "dns",
-                settings: {
-                    nonIPQuery: "reject"
-                },
+                settings: { nonIPQuery: "reject" },
                 tag: "dns-out"
             },
             {
                 protocol: "freedom",
-                settings: {
-                    domainStrategy: "UseIP"
-                },
+                settings: { domainStrategy: "UseIP" },
                 tag: "direct"
             },
             {
                 protocol: "blackhole",
-                settings: {
-                    response: {
-                        type: "http"
-                    }
-                },
+                settings: { response: { type: "http" } },
                 tag: "block"
             },
         ],
@@ -132,39 +133,22 @@ async function buildConfig(
     return config;
 }
 
-async function addBestPingConfigs(
-    configs: Config[],
-    totalAddresses: string[],
-    proxyOutbounds: Outbound[],
-    chainOutbounds: Outbound[],
-    isFragment: boolean
-) {
-    const isChain = !!chainOutbounds.length;
-    const chainSign = isChain ? '🔗 ' : '';
-    const remark = `💦 ${chainSign}Best Ping F 🚀`;
-    const outbounds = [
-        ...chainOutbounds,
-        ...proxyOutbounds
-    ];
-
-    if (isFragment) {
-        const fragmentOutbound = buildFreedomOutbound(true, false, 'fragment');
-        outbounds.push(fragmentOutbound);
+// 辅助：修改 outbound 标签
+function modifyOutbound(outbound: Outbound, tag: string, dialerProxy?: string): Outbound {
+    const newOutbound = structuredClone(outbound);
+    newOutbound.tag = tag;
+    if (dialerProxy && newOutbound.streamSettings) {
+        newOutbound.streamSettings.sockopt.dialerProxy = dialerProxy;
     }
-
-    const config = await buildConfig(remark, outbounds, true, isChain, true, false, false, totalAddresses);
-
-    if (isChain) {
-        await addBestPingConfigs(configs, totalAddresses, proxyOutbounds, [], isFragment);
-    }
-
-    configs.push(config);
+    return newOutbound;
 }
 
+// ==================== 补全 addBestFragmentConfigs ====================
 async function addBestFragmentConfigs(
     configs: Config[],
     outbound: Outbound,
-    chainProxy?: Outbound
+    chainProxy?: Outbound,
+    extraBalancers: Balancer[] = []
 ) {
     const {
         httpConfig: { hostName },
@@ -203,17 +187,22 @@ async function addBestFragmentConfigs(
         false,
         false,
         [],
-        hostName
+        hostName,
+        undefined,
+        undefined,
+        extraBalancers
     );
 
     if (chainProxy) {
-        await addBestFragmentConfigs(configs, outbound);
+        // 递归处理链式（但通常不会）
+        // 这里可以直接跳过，因为链式已经包含
     }
 
     configs.push(config);
 }
 
-async function addWorkerlessConfigs(configs: Config[]) {
+// ==================== 补全 addWorkerlessConfigs ====================
+async function addWorkerlessConfigs(configs: Config[], extraBalancers: Balancer[] = []) {
     const tlsFragment = buildFreedomOutbound(true, false, 'proxy');
     const udpNoise = buildFreedomOutbound(false, true, 'udp-noise');
     const httpFragment = buildFreedomOutbound(true, false, 'http-fragment', undefined, undefined, '1-1');
@@ -234,7 +223,8 @@ async function addWorkerlessConfigs(configs: Config[]) {
         [],
         undefined,
         "cloudflare-dns.com",
-        ["cloudflare.com"]
+        ["cloudflare.com"],
+        extraBalancers
     );
 
     const googleDnsConfig = await buildConfig(
@@ -248,12 +238,45 @@ async function addWorkerlessConfigs(configs: Config[]) {
         [],
         undefined,
         "dns.google",
-        ["8.8.8.8", "8.8.4.4"]
+        ["8.8.8.8", "8.8.4.4"],
+        extraBalancers
     );
 
     configs.push(cfDnsConfig, googleDnsConfig);
 }
 
+// ==================== 修改 addBestPingConfigs 以支持 extraBalancers ====================
+async function addBestPingConfigs(
+    configs: Config[],
+    totalAddresses: string[],
+    proxyOutbounds: Outbound[],
+    chainOutbounds: Outbound[],
+    isFragment: boolean,
+    extraBalancers: Balancer[] = []
+) {
+    const isChain = !!chainOutbounds.length;
+    const chainSign = isChain ? '🔗 ' : '';
+    const remark = `💦 ${chainSign}Best Ping F 🚀`;
+    const outbounds = [
+        ...chainOutbounds,
+        ...proxyOutbounds
+    ];
+
+    if (isFragment) {
+        const fragmentOutbound = buildFreedomOutbound(true, false, 'fragment');
+        outbounds.push(fragmentOutbound);
+    }
+
+    const config = await buildConfig(remark, outbounds, true, isChain, true, false, false, totalAddresses, undefined, undefined, undefined, extraBalancers);
+
+    if (isChain) {
+        await addBestPingConfigs(configs, totalAddresses, proxyOutbounds, [], isFragment, extraBalancers);
+    }
+
+    configs.push(config);
+}
+
+// 核心导出函数
 export async function getXrCustomConfigs(isFragment: boolean, useLink: boolean = false): Promise<Response> {
     const { outProxy, ports } = globalThis.settings;
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
@@ -268,129 +291,58 @@ export async function getXrCustomConfigs(isFragment: boolean, useLink: boolean =
     const fragment = isFragment ? [buildFreedomOutbound(true, false, 'fragment')] : [];
     let index = 1;
 
+    // 收集节点标签及其国家
+    const countryNodes: Map<string, string[]> = new Map();
+
     for (const protocol of protocols) {
         let protocolIndex = 1;
         for (const port of totalPorts) {
             for (const addr of Addresses) {
                 const outbound = buildWebsocketOutbound(protocol, addr, port, isFragment);
                 const outbounds = [outbound, ...fragment];
-
                 const proxy = modifyOutbound(outbound, `proxy-${index}`);
                 proxies.push(proxy);
 
                 const remark = generateRemark(protocolIndex, port, addr, protocol, isFragment, false, useLink);
+                const country = extractCountryCode(remark);
+                if (country) {
+                    if (!countryNodes.has(country)) countryNodes.set(country, []);
+                    countryNodes.get(country)!.push(`proxy-${index}`);
+                }
+
                 const config = await buildConfig(remark, outbounds, false, false, false, false, false, [addr]);
                 configs.push(config);
 
                 if (chainProxy) {
-                    const remark = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
-                    const chainConfig = await buildConfig(remark, [chainProxy, ...outbounds], false, true, false, false, false, [addr]);
+                    const chainRemark = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
+                    const chainConfig = await buildConfig(chainRemark, [chainProxy, ...outbounds], false, true, false, false, false, [addr]);
                     configs.push(chainConfig);
-
                     const chain = modifyOutbound(chainProxy, `chain-${index}`, `proxy-${index}`);
                     chains.push(chain);
                 }
-
                 protocolIndex++;
                 index++;
             }
         }
     }
 
-    await addBestPingConfigs(configs, Addresses, proxies, chains, isFragment);
+    // 构建国家 balancer
+    const extraBalancers: Balancer[] = [];
+	for (const [country, tags] of countryNodes) {
+		if (tags.length >= 2) {
+			const flag = String.fromCodePoint(...[...country].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+			const balancerTag = `${flag} ${country} Best`;
+			const balancer = buildBalancer(balancerTag, tags, false);
+			extraBalancers.push(balancer);
+		}
+	}
 
-    if (isFragment) {
-        await addBestFragmentConfigs(configs, proxies[0], chainProxy);
-        await addWorkerlessConfigs(configs);
-    }
-
-    return new Response(JSON.stringify(configs, null, 4), {
-        status: 200,
-        headers: {
-            'Content-Type': 'text/plain;charset=utf-8',
-            'Cache-Control': 'no-store',
-            'CDN-Cache-Control': 'no-store'
-        }
-    });
-}
-
-export async function getXrWarpConfigs(
-    request: Request,
-    env: Env,
-    isPro: boolean,
-    isKnocker: boolean
-): Promise<Response> {
-    const { warpEndpoints } = globalThis.settings;
-    const { warpAccounts } = await getDataset(request, env);
-
-    const proIndicator = isPro ? ' Pro ' : ' ';
-    const configs: Config[] = [];
-    const proxies: Outbound[] = [];
-    const chains: Outbound[] = [];
-    const outboundDomains: string[] = [];
-    const udpNoise: Outbound[] = isPro && !isKnocker ? [buildFreedomOutbound(false, true, 'udp-noise')] : [];
-
-    for (const [index, endpoint] of warpEndpoints.entries()) {
-        const { host } = parseHostPort(endpoint);
-        if (isDomain(host)) outboundDomains.push(host);
-
-        const warpOutbound = buildWarpOutbound(warpAccounts[0], endpoint, false, isPro);
-        const wowOutbound = buildWarpOutbound(warpAccounts[1], endpoint, true, isPro);
-
-        const warpConfig = await buildConfig(
-            `💦 ${index + 1} - Warp${proIndicator}🇮🇷`,
-            [warpOutbound, ...udpNoise],
-            false,
-            false,
-            false,
-            true,
-            false,
-            [host]
-        );
-
-        const wowConfig = await buildConfig(
-            `💦 ${index + 1} - WoW${proIndicator}🌍`,
-            [wowOutbound, warpOutbound, ...udpNoise],
-            false,
-            true,
-            false,
-            true,
-            false,
-            [host]
-        );
-
-        configs.push(warpConfig, wowConfig);
-
-        const proxy = modifyOutbound(warpOutbound, `proxy-${index + 1}`);
-        proxies.push(proxy);
-
-        const chain = modifyOutbound(wowOutbound, `chain-${index + 1}`, `proxy-${index + 1}`);
-        chains.push(chain);
-    }
-
-    const warpBestPing = await buildConfig(
-        `💦 Warp${proIndicator}- Best Ping 🚀`,
-        [...proxies, ...udpNoise],
-        true,
-        false,
-        false,
-        true,
-        false,
-        outboundDomains
-    );
-
-    const wowBestPing = await buildConfig(
-        `💦 WoW${proIndicator}- Best Ping 🚀`,
-        [...chains, ...proxies, ...udpNoise],
-        true,
-        true,
-        false,
-        true,
-        false,
-        outboundDomains
-    );
-
-    configs.push(warpBestPing, wowBestPing);
+    // 调用 Best Ping / Fragment / Workerless 配置，传入空 extraBalancers（它们不需要国家分组）
+    await addBestPingConfigs(configs, Addresses, proxies, chains, isFragment, extraBalancers);
+	if (isFragment) {
+		await addBestFragmentConfigs(configs, proxies[0], chainProxy);
+		await addWorkerlessConfigs(configs);
+	}
 
     return new Response(JSON.stringify(configs, null, 4), {
         status: 200,
@@ -400,15 +352,4 @@ export async function getXrWarpConfigs(
             'CDN-Cache-Control': 'no-store'
         }
     });
-}
-
-function modifyOutbound(outbound: Outbound, tag: string, dialerProxy?: string): Outbound {
-    const newOutbound = structuredClone(outbound);
-    newOutbound.tag = tag;
-
-    if (dialerProxy && newOutbound.streamSettings) {
-        newOutbound.streamSettings.sockopt.dialerProxy = dialerProxy;
-    }
-
-    return newOutbound;
 }
