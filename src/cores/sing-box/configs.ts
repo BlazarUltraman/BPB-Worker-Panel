@@ -60,7 +60,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
     for (const [country, tags] of countryNodes) {
         if (tags.length >= 2) {
             const flag = String.fromCodePoint(...[...country].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-            const groupName = `${flag} ${country} Best`;
+            const groupName = `${flag} ${country} Best 🚀`;
             const urlTest = buildUrlTest(groupName, tags, false);
             outbounds.push(urlTest);
             countryGroupTags.push(groupName);

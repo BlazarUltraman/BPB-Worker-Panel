@@ -133,7 +133,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
     for (const [country, tags] of countryNodes) {
         if (tags.length >= 2) {
             const flag = String.fromCodePoint(...[...country].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-            const groupNameWithFlag = `${flag} ${country} Best`;
+            const groupNameWithFlag = `${flag} ${country} Best 🚀`;
             const urlTest = buildUrlTest(groupNameWithFlag, tags, false);
             countryGroups.push(urlTest);
             countryGroupTags.push(groupNameWithFlag);
