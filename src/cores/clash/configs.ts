@@ -140,15 +140,22 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
         }
     }
 
-    // 构造 Best Ping 组（包含所有节点 + 国家分组）
-    const bestPingProxies = [...proxyTags, ...chainTags, ...countryGroupTags];
+    // 构造 Best Ping 组（只包含原始节点和链式节点，不包含国家分组）
+    const bestPingProxies = [...proxyTags, ...chainTags];
     const bestPingGroup = buildUrlTest('💦 Best Ping 🚀', bestPingProxies, false);
 
-    // 构造 Selector 组
+    // 构造 Selector 组：顺序 Best Ping、国家分组、原始节点（及链式节点）
+    const selectorProxies: string[] = [
+        '💦 Best Ping 🚀',
+        ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
+        ...countryGroupTags,
+        ...proxyTags,
+        ...(isChain ? [...chainTags] : [])
+    ];
     const selectorGroup: Selector = {
         name: '✅ Selector',
         type: 'select',
-        proxies: ['💦 Best Ping 🚀', ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []), ...countryGroupTags]
+        proxies: selectorProxies
     };
 
     // 收集所有 proxy-groups
@@ -159,7 +166,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
     }
     proxyGroups.push(...countryGroups);
 
-    // ---------- 优化点：只调用一次 buildConfig ----------
+    // 只调用一次 buildConfig，然后覆盖 proxy-groups
     const builtConfig = await buildConfig(
         outbounds,
         [], // selectorTags 不再使用（将被覆盖）
@@ -169,7 +176,6 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
         false,
         false
     );
-    // 用自定义的 proxy-groups 替换 buildConfig 生成的默认分组
     builtConfig['proxy-groups'] = proxyGroups;
 
     return new Response(JSON.stringify(builtConfig, null, 4), {

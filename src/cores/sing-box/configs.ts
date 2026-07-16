@@ -25,8 +25,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
     const Addresses = await getConfigAddresses(isFragment, useLink);
     const totalPorts = ports.filter(port => !isFragment || isHttps(port));
 
-    // 用于聚合节点标签及其国家
-    const countryNodes: Map<string, string[]> = new Map(); // country -> tags[]
+    const countryNodes: Map<string, string[]> = new Map();
 
     protocols.forEach(protocol => {
         let protocolIndex = 1;
@@ -37,7 +36,6 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
                 outbounds.push(outbound);
                 proxyTags.push(tag);
 
-                // 提取国家
                 const country = extractCountryCode(tag);
                 if (country) {
                     if (!countryNodes.has(country)) countryNodes.set(country, []);
@@ -69,13 +67,19 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         }
     }
 
-    // 构建 Best Ping 分组（包含所有节点 + 国家分组）
-    const bestPingTags = [...proxyTags, ...chainTags, ...countryGroupTags];
+    // 构建 Best Ping 分组（只包含原始节点和链式节点，不包含国家分组）
+    const bestPingTags = [...proxyTags, ...chainTags];
     const bestPingGroup = buildUrlTest('💦 Best Ping 🚀', bestPingTags, false);
     outbounds.push(bestPingGroup);
 
-    // 构建 Selector（顶层选择器）
-    const selectorTags = ['💦 Best Ping 🚀', ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []), ...countryGroupTags];
+    // 构建 Selector（顶层选择器）：顺序 Best Ping、国家分组、原始节点、链式节点
+    const selectorTags = [
+        '💦 Best Ping 🚀',
+        ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
+        ...countryGroupTags,
+        ...proxyTags,
+        ...(isChain ? [...chainTags] : [])
+    ];
     const selectorGroup: Selector = {
         type: "selector",
         tag: "✅ Selector",
@@ -90,7 +94,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         outbounds.push(chainBestPing);
     }
 
-    // 构建最终配置（直接构造 Config 对象，避免 buildConfig 覆盖）
+    // 构建最终配置
     const config: Config = {
         log: {
             disabled: globalThis.settings.logLevel === "none",
