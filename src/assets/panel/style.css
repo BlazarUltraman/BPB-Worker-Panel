@@ -859,7 +859,7 @@ summary h3 {
 
 .cf-stat-label {
 	font-size: 0.6rem;
-	color: var(--subtitle-color);
+	color: var(--hr-text-color);
 }
 
 .cf-stat-inside-card {
@@ -899,7 +899,13 @@ textarea::-webkit-scrollbar {
 	}
 }
 
-@media only screen and (min-width: 768px) {
+@media (max-width: 768px) {
+	.cf-usage-stats {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media only screen and (min-width: 769px) {
     .form-container {
         max-width: calc(768px * 0.95);
     }

@@ -20,8 +20,8 @@
 			</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
-			<div class="cf-usage-stats" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius); padding: 10px;">
-				<div class="header-container">
+			<div class="cf-usage-stats" style="padding:10px 0">
+				<div class="header-container" style="border-left:3px solid #6ed8c9;border-right:3px solid #6ed8c9;border-radius:var(--inner-container-border-radius);padding:10px">
 					<h3 style="color: var(--primary-color);">Cloudflare Use</h3>
 					<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
 							<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
@@ -76,7 +76,7 @@
 				</div>
 			</div>
 			
-			<div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius:var(--inner-container-border-radius); padding:0 20px;">
+			<div class="cf-usage-stats cf-stat-inside-card" style="padding:0 20px">
 				<details>
 					<summary><h3 style="color: var(--primary-color);">设置</h3></summary>
 					<form id="configForm" class="configForm" onsubmit="updateSettings(event)">
@@ -1224,9 +1224,12 @@
 					</form>
 				</details>
 		   </div>
+		   
+		   <!-- 间隔 -->
+		   <div style="margin:10px 0;">
 
-		   <div class="my-ip" style="border-left: 3px solid #6ed8c9; border-right: 3px solid #6ed8c9; border-radius: var(--inner-container-border-radius);">
-				<div class="header-container" style="background: var(--table-active-color); border: 1px solid var(--border-color);">
+		   <div class="cf-usage-stats cf-stat-inside-card" style="padding: 0;>
+				<div class="header-container">
 					<h3 style="color: var(--primary-color);"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
 					<button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
 						<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
