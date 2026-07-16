@@ -4,9 +4,9 @@
     "target": "esnext",
     "module": "esnext",
     "types": ["@cloudflare/workers-types"],
-    "moduleResolution": "node",           // 保持不变
-    "baseUrl": "src",                     // 保持不变
-    "ignoreDeprecations": "6.0",          // ← 新增，屏蔽弃用警告
+    "moduleResolution": "node",
+    "baseUrl": "src",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
