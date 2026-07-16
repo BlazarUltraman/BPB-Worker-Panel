@@ -27,31 +27,51 @@
 							<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
 					</button>
 				</div>
+				
+				<div class="cf-usage-stats">
+				<!-- 请求量卡片 -->
+				<div class="cf-stat">
+					<div class="cf-stat-inside">
+						<div class="cf-stat-value" id="cf-request-used">--</div>
+						<div class="cf-stat-label">请求总数</div>
+					</div>
+					<div class="cf-stat-inside">
+						<div class="cf-stat-value" id="cf-request-percent">--</div>
+						<div class="cf-stat-label">请求占比</div>
+					</div>
+				</div>
+
+				<!-- KV 读取卡片 -->
+				<div class="cf-stat">
+					<div class="cf-stat-inside">
+						<div class="cf-stat-value" id="cf-kv-read-used">--</div>
+						<div class="cf-stat-label">读取总数</div>
+					</div>
+					<div class="cf-stat-inside">
+						<div class="cf-stat-value" id="cf-kv-read-percent">--</div>
+						<div class="cf-stat-label">读取占比</div>
+					</div>
+				</div>
+
+				<!-- KV 写入卡片 -->
+				<div class="cf-stat">
+					<div class="cf-stat-inside">
+						<div class="cf-stat-value" id="cf-kv-write-used">--</div>
+						<div class="cf-stat-label">写入总数</div>
+					</div>
+					<div class="cf-stat-inside">
+						<div class="cf-stat-value" id="cf-kv-write-percent">--</div>
+						<div class="cf-stat-label">写入占比</div>
+					</div>
+				</div>
+				
 				<table id="cf-usage-table" class="my-ip">
 					<thead>
-						<th>Type</th>
-						<th>Use Level</th>
-						<th>Proportion</th>
+						<th>KV Info</th>
 					</thead>
 					<tbody>
 						<tr>
-							<td>Request</td>
-							<td id="cf-request-used" style="color: var(--use-count-color); font-weight: 600;">--</td>
-							<td id="cf-request-percent" style="color: var(--use-proportion-color); font-weight: 600;">--</td>
-						</tr>
-						<tr>
-							<td>KV Read</td>
-							<td id="cf-kv-read-used" style="color: var(--use-count-color); font-weight: 600;">--</td>
-							<td id="cf-kv-read-percent" style="color: var(--use-proportion-color); font-weight: 600;">--</td>
-						</tr>
-						<tr>
-							<td>KV Write</td>
-							<td id="cf-kv-write-used" style="color: var(--use-count-color); font-weight: 600;">--</td>
-							<td id="cf-kv-write-percent" style="color: var(--use-proportion-color); font-weight: 600;">--</td>
-						</tr>
-						<tr>
-							<td>KV Info</td>
-							<td colspan="2" id="cf-kv-details">--</td>
+							<td colspan="1" id="cf-kv-details">--</td>
 						</tr>
 					</tbody>
 				</table>

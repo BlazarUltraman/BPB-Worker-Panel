@@ -826,6 +826,43 @@ summary h3 {
     flex-direction: row-reverse;
 }
 
+.cf-usage-stats {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+	text-align: center;
+}
+        
+.cf-stat {
+	background: var(--stat-bg);
+	padding: 4.1px;
+	border-radius: 6px;
+	border: 1px solid var(--stat-border);
+	gap: 4px;
+	display: flex;
+	flex-direction: row;      /* 水平排列 */
+	width: 100%;           	/* 或 max-width: 100% */
+	box-sizing: border-box;
+}
+
+.cf-stat-value {
+	font-size: 1rem;
+	font-weight: bold;
+	color: var(--use-count-color);
+}
+
+.cf-stat-label {
+	font-size: 0.6rem;
+	color: var(--subtitle-color);
+}
+
+.cf-stat-inside {
+	background: transparent;
+	padding: 4.1px;
+	flex: 1;                  /* 两个子框等宽 */
+	text-align: center;
+}
+
 /* ===== 针对 textarea ===== */
 /* ===== WebKit 浏览器 (Chrome, Edge, Safari) ===== */
 textarea {
