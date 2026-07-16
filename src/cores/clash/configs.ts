@@ -8,9 +8,8 @@ import { sniffer, tun } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
-    const match = tag.match(/^([🇦🇿-🇿🇼])\s+([A-Z]{2})-/);
-    if (match) return match[2];
-    return null;
+    const match = tag.match(/\s([A-Z]{2})-/);
+    return match ? match[1] : null;
 }
 
 // ==================== buildConfig 函数（保持不变） ====================

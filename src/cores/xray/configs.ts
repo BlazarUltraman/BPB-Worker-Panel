@@ -22,9 +22,8 @@ import {
 
 // 辅助：提取国家代码
 function extractCountryCode(tag: string): string | null {
-    const match = tag.match(/^([🇦🇿-🇿🇼])\s+([A-Z]{2})-/);
-    if (match) return match[2];
-    return null;
+    const match = tag.match(/\s([A-Z]{2})-/);
+    return match ? match[1] : null;
 }
 
 // 构建 balancer
@@ -343,6 +342,94 @@ export async function getXrCustomConfigs(isFragment: boolean, useLink: boolean =
 		await addBestFragmentConfigs(configs, proxies[0], chainProxy);
 		await addWorkerlessConfigs(configs);
 	}
+
+    return new Response(JSON.stringify(configs, null, 4), {
+        status: 200,
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+            'Cache-Control': 'no-store',
+            'CDN-Cache-Control': 'no-store'
+        }
+    });
+}
+
+export async function getXrWarpConfigs(
+    request: Request,
+    env: Env,
+    isPro: boolean,
+    isKnocker: boolean
+): Promise<Response> {
+    const { warpEndpoints } = globalThis.settings;
+    const { warpAccounts } = await getDataset(request, env);
+
+    const proIndicator = isPro ? ' Pro ' : ' ';
+    const configs: Config[] = [];
+    const proxies: Outbound[] = [];
+    const chains: Outbound[] = [];
+    const outboundDomains: string[] = [];
+    const udpNoise: Outbound[] = isPro && !isKnocker ? [buildFreedomOutbound(false, true, 'udp-noise')] : [];
+
+    for (const [index, endpoint] of warpEndpoints.entries()) {
+        const { host } = parseHostPort(endpoint);
+        if (isDomain(host)) outboundDomains.push(host);
+
+        const warpOutbound = buildWarpOutbound(warpAccounts[0], endpoint, false, isPro);
+        const wowOutbound = buildWarpOutbound(warpAccounts[1], endpoint, true, isPro);
+
+        const warpConfig = await buildConfig(
+            `💦 ${index + 1} - Warp${proIndicator}🇮🇷`,
+            [warpOutbound, ...udpNoise],
+            false,
+            false,
+            false,
+            true,
+            false,
+            [host]
+        );
+
+        const wowConfig = await buildConfig(
+            `💦 ${index + 1} - WoW${proIndicator}🌍`,
+            [wowOutbound, warpOutbound, ...udpNoise],
+            false,
+            true,
+            false,
+            true,
+            false,
+            [host]
+        );
+
+        configs.push(warpConfig, wowConfig);
+
+        const proxy = modifyOutbound(warpOutbound, `proxy-${index + 1}`);
+        proxies.push(proxy);
+
+        const chain = modifyOutbound(wowOutbound, `chain-${index + 1}`, `proxy-${index + 1}`);
+        chains.push(chain);
+    }
+
+    const warpBestPing = await buildConfig(
+        `💦 Warp${proIndicator}- Best Ping 🚀`,
+        [...proxies, ...udpNoise],
+        true,
+        false,
+        false,
+        true,
+        false,
+        outboundDomains
+    );
+
+    const wowBestPing = await buildConfig(
+        `💦 WoW${proIndicator}- Best Ping 🚀`,
+        [...chains, ...proxies, ...udpNoise],
+        true,
+        true,
+        false,
+        true,
+        false,
+        outboundDomains
+    );
+
+    configs.push(warpBestPing, wowBestPing);
 
     return new Response(JSON.stringify(configs, null, 4), {
         status: 200,

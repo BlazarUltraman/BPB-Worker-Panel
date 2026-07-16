@@ -8,9 +8,8 @@ import { buildMixedInbound, tun } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
-    const match = tag.match(/^([🇦🇿-🇿🇼])\s+([A-Z]{2})-/);
-    if (match) return match[2];
-    return null;
+    const match = tag.match(/\s([A-Z]{2})-/);
+    return match ? match[1] : null;
 }
 
 export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = false): Promise<Response> {
@@ -105,6 +104,94 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         ],
         outbounds: outbounds,
         route: buildRoutingRules(false, isChain),
+        ntp: {
+            enabled: true,
+            server: "time.cloudflare.com",
+            server_port: 123,
+            domain_resolver: "dns-direct",
+            interval: "30m",
+            write_to_system: false
+        },
+        experimental: {
+            cache_file: {
+                enabled: true,
+                store_fakeip: true
+            },
+            clash_api: {
+                external_controller: "127.0.0.1:9090",
+                external_ui: "ui",
+                default_mode: "Rule",
+                external_ui_download_url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+                external_ui_download_detour: "direct"
+            }
+        }
+    };
+
+    return new Response(JSON.stringify(config, null, 4), {
+        status: 200,
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+            'Cache-Control': 'no-store',
+            'CDN-Cache-Control': 'no-store'
+        }
+    });
+}
+
+export async function getSbWarpConfig(request: Request, env: Env): Promise<Response> {
+    const { warpEndpoints } = globalThis.settings;
+    const { warpAccounts } = await getDataset(request, env);
+
+    const proxyTags: string[] = [];
+    const chainTags: string[] = [];
+    const endpoints: WireguardEndpoint[] = [];  // ← 改为 endpoints
+    const selectorTags = [
+        "💦 Warp - Best Ping 🚀",
+        "💦 WoW - Best Ping 🚀"
+    ];
+
+    warpEndpoints.forEach((endpoint, index) => {
+        const warpTag = `💦 ${index + 1} - Warp 🇮🇷`;
+        proxyTags.push(warpTag);
+
+        const wowTag = `💦 ${index + 1} - WoW 🌍`;
+        chainTags.push(wowTag);
+
+        selectorTags.push(warpTag, wowTag);
+        const warpOutbound = buildWarpOutbound(warpAccounts[0], warpTag, endpoint);
+        const wowOutbound = buildWarpOutbound(warpAccounts[1], wowTag, endpoint, warpTag);
+        endpoints.push(warpOutbound, wowOutbound);  // ← 放入 endpoints
+    });
+
+    const bestPing = buildUrlTest("💦 Warp - Best Ping 🚀", proxyTags, true);
+    const wowBestPing = buildUrlTest("💦 WoW - Best Ping 🚀", chainTags, true);
+
+    const config: Config = {
+        log: {
+            disabled: globalThis.settings.logLevel === "none",
+            level: globalThis.settings.logLevel === "none" ? undefined : globalThis.settings.logLevel === "warning" ? "warn" : globalThis.settings.logLevel,
+            timestamp: true
+        },
+        dns: await buildDNS(true, false),
+        inbounds: [
+            tun,
+            buildMixedInbound()
+        ],
+        outbounds: [  // 只放非 Wireguard 的出站
+            {
+                type: "selector",
+                tag: "✅ Selector",
+                outbounds: selectorTags,
+                interrupt_exist_connections: false
+            },
+            {
+                type: "direct",
+                tag: "direct"
+            },
+            bestPing,
+            wowBestPing
+        ],
+        endpoints: endpoints,  // ← Wireguard 节点放这里
+        route: buildRoutingRules(true, false),
         ntp: {
             enabled: true,
             server: "time.cloudflare.com",
