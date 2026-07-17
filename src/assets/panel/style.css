@@ -875,7 +875,6 @@ summary h3 {
 	font-weight: 900;
 	color: var(--primary-color);
 	font-size: 1.1rem;
-	padding: 0 8px;
 }
 
 .cf-stat-label {
@@ -897,6 +896,22 @@ summary h3 {
 	padding: 4.1px;
 	flex: 1;                  /* 两个子框等宽 */
 	text-align: center;
+}
+
+.cf-label-emoji {
+    font-size: 0.9em;
+    line-height: 1;
+}
+
+.status {
+	display: inline-block;
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.5; }
+	100% { opacity: 1; }
 }
 
 /* ===== 针对 textarea ===== */

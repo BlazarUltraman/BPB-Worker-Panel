@@ -23,7 +23,7 @@
 			<div class="cf-usage-stats">
 				<div class="cf-usage-stats cf-usage-stats-columns">
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
-						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">各使用量</span>
+						<span onclick="fetchcloudflareInfo()" class="cf-stat-title"><span class="cf-label-emoji status">🟡</span> 各使用量</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<!-- 请求量卡片 -->
 							<div class="cf-stat">
@@ -65,7 +65,7 @@
 					
 					<!-- KV 命名空间各用量 -->
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
-						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">KV 详细</span>
+						<span onclick="fetchcloudflareInfo()" class="cf-stat-title"><span class="cf-label-emoji status">🟢</span> KV 详细</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<div id="cf-kv-details">
 								--
