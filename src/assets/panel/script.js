@@ -218,8 +218,6 @@ async function getIpDetails(ip) {
 }
 
 async function fetchIPInfo() {
-    const refreshIcon = document.getElementById("refresh-geo-location").querySelector('i');
-    refreshIcon.classList.add('fa-spin');
     const token = '45c833ff84b517'; // 固定 token
 
     const updateUI = (ip = '-', country = '-', countryCode = '-', city = '-', isp = '-', cfIP) => {
