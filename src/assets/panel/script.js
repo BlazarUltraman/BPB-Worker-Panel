@@ -191,12 +191,12 @@ function darkModeToggle() {
 
 async function getIpDetails(ip) {
     try {
-        const token = '45c833ff84b517'; // 与明码-wp一致，实际部署可改为环境变量
+        const token = '45c833ff84b517';
         const response = await fetch(`https://ipinfo.io/${ip}/json?token=${token}`);
         const data = await response.json();
         if (data.ip) {
             return {
-                country: data.country || '-',      // 两位国家代码（如 'US'）
+                country: data.country || '-',
                 countryCode: data.country || '-',
                 city: data.city || '-',
                 isp: data.org || '-',
@@ -218,15 +218,14 @@ async function getIpDetails(ip) {
 }
 
 async function fetchIPInfo() {
-    const token = '45c833ff84b517'; // 固定 token
+    const token = '45c833ff84b517';
 
-    const updateUI = (ip = '-', country = '-', countryCode = '-', city = '-', isp = '-', cfIP) => {
+    // 只更新两个国家显示字段
+    const updateUI = (country = '-', countryCode = '-', cfIP) => {
         const flag = countryCode !== '-' ? String.fromCodePoint(...[...countryCode].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
-        const updateContent = (id, content) => document.getElementById(id).textContent = content;
-        updateContent(cfIP ? 'cf-ip' : 'ip', ip);
-        updateContent(cfIP ? 'cf-country' : 'country', `${country} ${flag}`);
-        updateContent(cfIP ? 'cf-city' : 'city', city);
-        updateContent(cfIP ? 'cf-isp' : 'isp', isp);
+        const id = cfIP ? 'cf-country' : 'country';
+        const el = document.getElementById(id);
+        if (el) el.textContent = `${country} ${flag}`.trim();
     };
 
     // 1. 获取客户端 IP 信息（Other targets）
@@ -234,13 +233,13 @@ async function fetchIPInfo() {
         const response = await fetch(`https://ipinfo.io/json?token=${token}&nocache=${Date.now()}`);
         const data = await response.json();
         if (data.ip) {
-            updateUI(data.ip, data.country || '-', data.country || '-', data.city || '-', data.org || '-', false);
+            updateUI(data.country || '-', data.country || '-', false);
         } else {
             throw new Error('获取客户端IP信息失败');
         }
-        refreshIcon.classList.remove('fa-spin');
     } catch (error) {
-        console.error("Fetching IP error:", error.message || error);
+        console.error("客户端IP获取失败:", error.message || error);
+        updateUI('-', '-', false);
     }
 
     // 2. 获取 Cloudflare 目标 IP 信息
@@ -252,13 +251,13 @@ async function fetchIPInfo() {
         const ip = (await response.text()).trim();
         const details = await getIpDetails(ip);
         if (details.success) {
-            updateUI(ip, details.country, details.countryCode, details.city, details.isp, true);
+            updateUI(details.country, details.countryCode, true);
         } else {
-            updateUI(ip, '-', '-', '-', '-', true);
+            updateUI('-', '-', true);
         }
-        refreshIcon.classList.remove('fa-spin');
     } catch (error) {
-        console.error("Fetching IP error:", error.message || error);
+        console.error("Cloudflare IP获取失败:", error.message || error);
+        updateUI('-', '-', true);
     }
 }
 
