@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "paths": {
+      // Existing paths
       "@xray/*": ["./src/cores/xray/*"],
       "@sing-box/*": ["./src/cores/sing-box/*"],
       "@clash/*": ["./src/cores/clash/*"],
@@ -21,7 +22,15 @@
       "@common": ["./src/common/common"],
       "@vless": ["./src/protocols/websocket/vless"],
       "@trojan": ["./src/protocols/websocket/trojan"],
-      "@warp": ["./src/protocols/warp"]
+      "@warp": ["./src/protocols/warp"],
+
+      // Newly added missing modules
+      "auth": ["./src/auth"],
+      "kv": ["./src/kv"],
+      "types/clash": ["./src/types/clash"],
+      "types/sing-box": ["./src/types/sing-box"],
+      "types/xray": ["./src/types/xray"],
+      "types/global": ["./src/types/global"]
     }
   }
 }
