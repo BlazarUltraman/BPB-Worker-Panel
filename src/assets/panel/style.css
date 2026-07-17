@@ -872,6 +872,8 @@ summary h3 {
 	padding: 8px;
 	border-radius:var(--inner-container-border-radius);
 	background: var(--table-active-color);
+	width: 100%;
+    height: 100%;
 }
 .cf-stat-inside {
 	background: transparent;
