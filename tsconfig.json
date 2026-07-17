@@ -1,36 +1,29 @@
 {
-  "include": ["src"],
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "types": ["@cloudflare/workers-types"],
-    "strict": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "paths": {
-      // Existing paths
-      "@xray/*": ["./src/cores/xray/*"],
-      "@sing-box/*": ["./src/cores/sing-box/*"],
-      "@clash/*": ["./src/cores/clash/*"],
-      "@utils": ["./src/cores/utils"],
-      "@handlers": ["./src/common/handlers"],
-      "@init": ["./src/common/init"],
-      "@common": ["./src/common/common"],
-      "@vless": ["./src/protocols/websocket/vless"],
-      "@trojan": ["./src/protocols/websocket/trojan"],
-      "@warp": ["./src/protocols/warp"],
-
-      // Newly added missing modules
-      "auth": ["./src/auth"],
-      "kv": ["./src/kv"],
-      "types/clash": ["./src/types/clash"],
-      "types/sing-box": ["./src/types/sing-box"],
-      "types/xray": ["./src/types/xray"],
-      "types/global": ["./src/types/global"]
-    }
-  }
+  "include": ["src"],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "types": ["@cloudflare/workers-types"],
+    "moduleResolution": "node",           // 保持不变
+    "baseUrl": "src",                     // 保持不变
+    "ignoreDeprecations": "6.0",          // ← 新增，屏蔽弃用警告
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "paths": {
+      "@xray/*": ["cores/xray/*"],
+      "@sing-box/*": ["cores/sing-box/*"],
+      "@clash/*": ["cores/clash/*"],
+      "@utils": ["cores/utils"],
+      "@handlers": ["common/handlers"],
+      "@init": ["common/init"],
+      "@common": ["common/common"],
+      "@vless": ["protocols/websocket/vless"],
+      "@trojan": ["protocols/websocket/trojan"],
+      "@warp": ["protocols/warp"]
+    }
+  }
 }
