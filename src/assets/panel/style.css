@@ -847,7 +847,7 @@ summary h3 {
 	cursor: pointer;
 	font-weight: 900;
 	color: var(--primary-color);
-	font-size: 1.1rem;
+	font-size: 1rem;
 	display: flex;
 	align-items: center;
 	gap: 4px;
