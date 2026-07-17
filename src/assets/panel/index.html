@@ -22,7 +22,7 @@
 			<!-- ====== Cloudflare USE ====== -->
 			<div class="cf-usage-stats">
 				<div class="cf-usage-stats cf-usage-stats-columns">
-					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
+					<div class="cf-stat-card">
 						<span onclick="fetchcloudflareInfo()" class="cf-stat-title"><span class="cf-label-emoji status">🟡</span> 各使用量</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<!-- 请求量卡片 -->
@@ -1230,18 +1230,24 @@
 		   <!-- 间隔 -->
 		   <div style="margin:10px 0;"></div>
 
-		   <div class="cf-usage-stats cf-usage-stats-columns">
-				<div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
-					<span onclick="fetchIPInfo()" class="cf-stat-title">
+		   <div class="cf-usage-stats cf-usage-stats-columns" onclick="fetchIPInfo()">
+				<div class="cf-stat-card">
+					<span class="cf-stat-title">
 						<span class="cf-label-emoji">🛡️</span> ProxyIP属性
 					</span>
-					<span id="cf-country" class="cf-usage-stats cf-stat-inside-card" style="color: #ff5a00;">--</span>
+					<span class="cf-stat-inside-card cf-stat-ip">
+						<span class="ip-label">国家:</span>
+						<span id="cf-country" style="color:#ff5a00">--</span>
+					</span>
 				</div>
-				<div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
-					<span onclick="fetchIPInfo()" class="cf-stat-title">
+				<div class="cf-stat-card">
+					<span class="cf-stat-title">
 						<span class="cf-label-emoji">📱</span> 节点IP属性
 					</span>
-					<span id="country" class="cf-usage-stats cf-stat-inside-card" style="color: #ff5a00;">--</span>
+					<span class="cf-stat-inside-card cf-stat-ip">
+						<span class="ip-label">国家:</span>
+						<span id="country" style="color:#ff5a00">--</span>
+					</span>
 				</div>
 			</div>
 			

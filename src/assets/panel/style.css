@@ -864,11 +864,27 @@ summary h3 {
 	width: 100%;
     height: 100%;
 }
+
+.cf-stat-card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+}
+
 .cf-stat-inside {
 	background: transparent;
 	padding: 4.1px;
 	flex: 1;                  /* 两个子框等宽 */
 	text-align: center;
+}
+
+.cf-stat-ip {
+	display: flex;
+	justify-content: space-between;
+	align-content: center;
+	align-items: center;
+	padding: 0 20px;
 }
 
 .cf-label-emoji {
