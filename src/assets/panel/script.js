@@ -1566,9 +1566,9 @@ async function fetchcloudflareInfo() {
 			let detailsHtml = '';
 			if (kvData.body.details && kvData.body.details.length) {
 				detailsHtml = kvData.body.details.map(ns =>
-					`<div style="margin: 4px 0;">
+					`<div style="padding: 5px 0;">
 						<strong>${ns.namespaceName}</strong><br>
-						读:${ns.read} 写:${ns.write} 删:${ns.delete} 列:${ns.list}
+						读: ${ns.read} | 写: ${ns.write} | 删:$ {ns.delete} | 列: ${ns.list}
 					</div>`
 				).join('');
 			} else {

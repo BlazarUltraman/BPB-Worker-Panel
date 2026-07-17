@@ -1231,13 +1231,7 @@
 		   <div style="margin:10px 0;"></div>
 
 		   <div class="cf-usage-stats cf-stat-inside-card" style="padding: 0;">
-				<div class="header-container">
-					<h3 style="color: var(--primary-color);"><span class="material-symbols-rounded">fingerprint</span> My IP</h3>
-					<button type="button" id="refresh-geo-location" class="refresh-geo-location" onclick="fetchIPInfo()">
-						<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-					</button>
-				</div>
-				<table id="ips" class="my-ip">
+				<table id="ips" class="my-ip" onclick="fetchIPInfo()" style="cursor: pointer;">
 					<thead>
 						<th>Information</th>
 						<th>Cloudflare targets</th>
@@ -1254,16 +1248,21 @@
 							<td id="cf-country"></td>
 							<td id="country"></td>
 						</tr>
-						<tr>
-							<td>City</td>
-							<td id="cf-city"></td>
-							<td id="city"></td>
-						</tr>
-						<tr>
-							<td>ISP</td>
-							<td id="cf-isp"></td>
-							<td id="isp"></td>
-						</tr>
+						<details>
+							<summary>
+								<span style="margin:3px 0;">更多</span>
+							<summary>
+							<tr>
+								<td>City</td>
+								<td id="cf-city"></td>
+								<td id="city"></td>
+							</tr>
+							<tr>
+								<td>ISP</td>
+								<td id="cf-isp"></td>
+								<td id="isp"></td>
+							</tr>
+						<details>
 					</tbody>
 				</table>
 			</div>
