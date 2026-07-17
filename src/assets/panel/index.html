@@ -20,10 +20,10 @@
 			</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
-			<div class="cf-usage-stats" style="padding:10px 0">
-				<div class="cf-usage-stats cf-usage-stats-columns" style="background:var(--table-active-color);border-radius: var(--inner-container-border-radius);padding:12px 18px;border: 1px solid var(--border-color);">
+			<div class="cf-usage-stats">
+				<div class="cf-usage-stats cf-usage-stats-columns">
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
-						<span onclick="fetchcloudflareInfo()" style="cursor: pointer; font-weight: 600; color:var(--primary-color)">各使用量</span>
+						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">各使用量</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<!-- 请求量卡片 -->
 							<div class="cf-stat">
@@ -65,7 +65,7 @@
 					
 					<!-- KV 命名空间各用量 -->
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
-						<span onclick="fetchcloudflareInfo()" style="cursor: pointer; font-weight: 600; color:var(--primary-color)">KV 详细</span>
+						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">KV 详细</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<div id="cf-kv-details">
 								--

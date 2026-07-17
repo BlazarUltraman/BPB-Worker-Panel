@@ -835,7 +835,11 @@ summary h3 {
 }
 
 .cf-usage-stats-columns {
-	grid-template-columns:repeat(2,1fr)
+	grid-template-columns:repeat(2,1fr);
+	background:var(--table-active-color);
+	border-radius: var(--inner-container-border-radius);
+	border: 1px solid var(--border-color);
+	padding:12px 18px;
 }
         
 .cf-stat {
@@ -859,6 +863,14 @@ summary h3 {
 	font-size: 1rem;
 	font-weight: bold;
 	color: var(--use-proportion-color);
+}
+
+.cf-stat-title {
+	cursor: pointer;
+	font-weight: 900;
+	color: var(--primary-color);
+	font-size: 1.1rem;
+	padding: 0 8px;
 }
 
 .cf-stat-label {
