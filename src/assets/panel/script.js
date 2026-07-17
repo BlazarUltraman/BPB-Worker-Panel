@@ -1809,10 +1809,10 @@ function openLink(type) {
     updateLinks();
     
     // 找到对应的链接
-    const link = document.querySelector(\`a[data-type="\${type}"]\`);
+    const link = document.querySelector(`a[data-type="${type}"]`);
     if (link && link.href) {
         window.open(link.href, '_blank');
     } else {
-        console.error(\`未找到类型为 \${type} 的链接\`);
+        console.error(`未找到类型为 ${type} 的链接`);
     }
 }
