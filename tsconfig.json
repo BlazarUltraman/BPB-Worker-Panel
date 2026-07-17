@@ -12,18 +12,17 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
-      "@xray/*": ["src/cores/xray/*"],
-      "@sing-box/*": ["src/cores/sing-box/*"],
-      "@clash/*": ["src/cores/clash/*"],
-      "@utils": ["src/cores/utils"],
-      "@handlers": ["src/common/handlers"],
-      "@init": ["src/common/init"],
-      "@common": ["src/common/common"],
-      "@vless": ["src/protocols/websocket/vless"],
-      "@trojan": ["src/protocols/websocket/trojan"],
-      "@warp": ["src/protocols/warp"]
+      "@xray/*": ["./src/cores/xray/*"],
+      "@sing-box/*": ["./src/cores/sing-box/*"],
+      "@clash/*": ["./src/cores/clash/*"],
+      "@utils": ["./src/cores/utils"],
+      "@handlers": ["./src/common/handlers"],
+      "@init": ["./src/common/init"],
+      "@common": ["./src/common/common"],
+      "@vless": ["./src/protocols/websocket/vless"],
+      "@trojan": ["./src/protocols/websocket/trojan"],
+      "@warp": ["./src/protocols/warp"]
     }
   }
 }
