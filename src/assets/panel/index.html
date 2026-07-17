@@ -21,61 +21,63 @@
 			
 			<!-- ====== Cloudflare USE ====== -->
 			<div class="cf-usage-stats" style="padding:10px 0">
-				<div class="header-container">
-					<h3 style="color: var(--primary-color);">Cloudflare Use</h3>
-					<button type="button" id="refresh-cloudflare" class="refresh-geo-location" onclick="fetchcloudflareInfo()">
-							<i class="fa fa-refresh fa-2x refresh-my-ip" aria-hidden="true"></i>
-					</button>
-				</div>
-				
-				<div class="cf-usage-stats cf-usage-stats-columns">
-					<div class="cf-usage-stats cf-stat-inside-card">
-						<!-- 请求量卡片 -->
-						<div class="cf-stat">
-							<div class="cf-stat-inside">
-								<div class="cf-stat-value" id="cf-request-used">--</div>
-								<div class="cf-stat-label">请求总数</div>
+				<div class="cf-usage-stats cf-usage-stats-columns" style="background:var(--table-active-color);border-radius: var(--inner-container-border-radius);padding:12px 18px;border: 1px solid var(--border-color);">
+					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
+						<span onclick="fetchcloudflareInfo()" style="cursor: pointer; font-weight: 600; color:var(--primary-color)">各使用量</span>
+						<div class="cf-usage-stats cf-stat-inside-card">
+							<!-- 请求量卡片 -->
+							<div class="cf-stat">
+								<div class="cf-stat-inside">
+									<div class="cf-stat-value" id="cf-request-used">--</div>
+									<div class="cf-stat-label">请求总数</div>
+								</div>
+								<div class="cf-stat-inside">
+									<div class="cf-stat-proportion" id="cf-request-percent">--</div>
+									<div class="cf-stat-label">请求占比</div>
+								</div>
 							</div>
-							<div class="cf-stat-inside">
-								<div class="cf-stat-proportion" id="cf-request-percent">--</div>
-								<div class="cf-stat-label">请求占比</div>
-							</div>
-						</div>
 
-						<!-- KV 读取卡片 -->
-						<div class="cf-stat">
-							<div class="cf-stat-inside">
-								<div class="cf-stat-value" id="cf-kv-read-used">--</div>
-								<div class="cf-stat-label">读取总数</div>
+							<!-- KV 读取卡片 -->
+							<div class="cf-stat">
+								<div class="cf-stat-inside">
+									<div class="cf-stat-value" id="cf-kv-read-used">--</div>
+									<div class="cf-stat-label">读取总数</div>
+								</div>
+								<div class="cf-stat-inside">
+									<div class="cf-stat-proportion" id="cf-kv-read-percent">--</div>
+									<div class="cf-stat-label">读取占比</div>
+								</div>
 							</div>
-							<div class="cf-stat-inside">
-								<div class="cf-stat-proportion" id="cf-kv-read-percent">--</div>
-								<div class="cf-stat-label">读取占比</div>
-							</div>
-						</div>
 
-						<!-- KV 写入卡片 -->
-						<div class="cf-stat">
-							<div class="cf-stat-inside">
-								<div class="cf-stat-value" id="cf-kv-write-used">--</div>
-								<div class="cf-stat-label">写入总数</div>
-							</div>
-							<div class="cf-stat-inside">
-								<div class="cf-stat-proportion" id="cf-kv-write-percent">--</div>
-								<div class="cf-stat-label">写入占比</div>
+							<!-- KV 写入卡片 -->
+							<div class="cf-stat">
+								<div class="cf-stat-inside">
+									<div class="cf-stat-value" id="cf-kv-write-used">--</div>
+									<div class="cf-stat-label">写入总数</div>
+								</div>
+								<div class="cf-stat-inside">
+									<div class="cf-stat-proportion" id="cf-kv-write-percent">--</div>
+									<div class="cf-stat-label">写入占比</div>
+								</div>
 							</div>
 						</div>
 					</div>
 					
 					<!-- KV 命名空间各用量 -->
-					<div class="cf-usage-stats cf-stat-inside-card">
-						<div id="cf-kv-details">
-							--
+					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
+						<span onclick="fetchcloudflareInfo()" style="cursor: pointer; font-weight: 600; color:var(--primary-color)">KV 详细</span>
+						<div class="cf-usage-stats cf-stat-inside-card">
+							<div id="cf-kv-details">
+								--
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 			
+			<!-- 间隔 -->
+			<div style="margin:10px 0;">
+		   
 			<div class="cf-usage-stats cf-stat-inside-card" style="padding:0 20px">
 				<details>
 					<summary><h3 style="color: var(--primary-color);">设置</h3></summary>
