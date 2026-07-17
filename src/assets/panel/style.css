@@ -621,33 +621,6 @@ table button:active {
     width: fit-content;
 }
 
-.my-ip {
-    overflow-x: auto;
-}
-
-.my-ip table {
-    width: 100%;
-    border: 1px solid var(--border-color);
-    border-collapse: separate;
-    border-spacing: 0;
-    /* border-radius: var(--inner-container-border-radius); */
-    /* margin-bottom: 20px; */
-    overflow: hidden;
-}
-
-.my-ip th,
-.my-ip td {
-    text-wrap: nowrap;
-    padding: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.my-ip td:first-child,
-.my-ip th {
-    background-color: var(--table-active-color);
-    font-weight: bold;
-}
-
 .table-container th,
 .table-container td {
     display: flex;

@@ -191,22 +191,37 @@ function darkModeToggle() {
 
 async function getIpDetails(ip) {
     try {
-        const response = await fetch('/panel/my-ip', { method: 'POST', body: ip });
-        const { success, status, message, body } = await response.json();
-
-        if (!success) {
-            throw new Error(`status ${status} - ${message}`);
+        const token = '45c833ff84b517'; // 与明码-wp一致，实际部署可改为环境变量
+        const response = await fetch(`https://ipinfo.io/${ip}/json?token=${token}`);
+        const data = await response.json();
+        if (data.ip) {
+            return {
+                country: data.country || '-',      // 两位国家代码（如 'US'）
+                countryCode: data.country || '-',
+                city: data.city || '-',
+                isp: data.org || '-',
+                success: true
+            };
+        } else {
+            throw new Error(data.error?.message || '获取IP信息失败');
         }
-
-        return body;
     } catch (error) {
-        console.error("Fetching IP error:", error.message || error)
+        console.error("获取IP详细信息错误:", error.message || error);
+        return {
+            country: '-',
+            countryCode: '-',
+            city: '-',
+            isp: '-',
+            success: false
+        };
     }
 }
 
 async function fetchIPInfo() {
     const refreshIcon = document.getElementById("refresh-geo-location").querySelector('i');
     refreshIcon.classList.add('fa-spin');
+    const token = '45c833ff84b517'; // 固定 token
+
     const updateUI = (ip = '-', country = '-', countryCode = '-', city = '-', isp = '-', cfIP) => {
         const flag = countryCode !== '-' ? String.fromCodePoint(...[...countryCode].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
         const updateContent = (id, content) => document.getElementById(id).textContent = content;
@@ -216,35 +231,36 @@ async function fetchIPInfo() {
         updateContent(cfIP ? 'cf-isp' : 'isp', isp);
     };
 
+    // 1. 获取客户端 IP 信息（Other targets）
     try {
-        const response = await fetch('https://ipwho.is/' + '?nocache=' + Date.now(), { cache: "no-store" });
-        const { success, ip, message } = await response.json();
-
-        if (!success) {
-            throw new Error(`Fetch Other targets IP failed at ${response.url} - ${message}`);
+        const response = await fetch(`https://ipinfo.io/json?token=${token}&nocache=${Date.now()}`);
+        const data = await response.json();
+        if (data.ip) {
+            updateUI(data.ip, data.country || '-', data.country || '-', data.city || '-', data.org || '-', false);
+        } else {
+            throw new Error('获取客户端IP信息失败');
         }
-
-        const { country, countryCode, city, isp } = await getIpDetails(ip);
-        updateUI(ip, country, countryCode, city, isp);
         refreshIcon.classList.remove('fa-spin');
     } catch (error) {
-        console.error("Fetching IP error:", error.message || error)
+        console.error("Fetching IP error:", error.message || error);
     }
 
+    // 2. 获取 Cloudflare 目标 IP 信息
     try {
-        const response = await fetch('https://ipv4.icanhazip.com/?nocache=' + Date.now(), { cache: "no-store" });
-
+        const response = await fetch('https://ipv4.icanhazip.com/?nocache=' + Date.now());
         if (!response.ok) {
-            const errorMessage = await response.text();
-            throw new Error(`Fetch Cloudflare targets IP failed with status ${response.status} at ${response.url} - ${errorMessage}`);
+            throw new Error(`获取Cloudflare IP失败，状态: ${response.status}`);
         }
-
-        const ip = await response.text();
-        const { country, countryCode, city, isp } = await getIpDetails(ip);
-        updateUI(ip, country, countryCode, city, isp, true);
+        const ip = (await response.text()).trim();
+        const details = await getIpDetails(ip);
+        if (details.success) {
+            updateUI(ip, details.country, details.countryCode, details.city, details.isp, true);
+        } else {
+            updateUI(ip, '-', '-', '-', '-', true);
+        }
         refreshIcon.classList.remove('fa-spin');
     } catch (error) {
-        console.error("Fetching IP error:", error.message || error)
+        console.error("Fetching IP error:", error.message || error);
     }
 }
 
@@ -1568,7 +1584,7 @@ async function fetchcloudflareInfo() {
 				detailsHtml = kvData.body.details.map(ns =>
 					`<div style="padding: 5px 0;">
 						<strong>${ns.namespaceName}</strong><br>
-						读: ${ns.read} | 写: ${ns.write} | 删:$ {ns.delete} | 列: ${ns.list}
+						读: ${ns.read} | 写: ${ns.write} | 删: ${ns.delete} | 列: ${ns.list}
 					</div>`
 				).join('');
 			} else {
