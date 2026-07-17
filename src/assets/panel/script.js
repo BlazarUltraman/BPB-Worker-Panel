@@ -219,6 +219,12 @@ async function getIpDetails(ip) {
 
 async function fetchIPInfo() {
     const token = '45c833ff84b517';
+    
+    // 设置加载状态
+	['cf-country', 'country'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.textContent = '检测中...';
+	});
 
     // 只更新两个国家显示字段
     const updateUI = (country = '-', countryCode = '-', cfIP) => {
