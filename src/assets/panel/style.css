@@ -430,6 +430,7 @@ hr {
     margin: 10px auto;
     justify-content: center;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
 }
 
@@ -890,6 +891,11 @@ summary h3 {
 	align-content: center;
 	align-items: center;
 	padding: 12px 20px;
+}
+
+.ip-label {
+	font-weight: 600;
+	color: var(--hr-text-color);
 }
 
 .cf-label-emoji {
