@@ -103,6 +103,8 @@ h1 {
 .container-big {
 	min-height: 100vh;          /* 铺满视口高度 */
 	padding: var(--container-padding);
+    justify-content: center;
+    align-items: center;
 }
 
 .card-container {
@@ -457,7 +459,7 @@ hr {
     cursor: pointer;
 }
 
-.github-container {
+.bestip-container {
     display: flex;
     align-items: center;
     justify-content: center;

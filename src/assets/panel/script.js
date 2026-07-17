@@ -1738,3 +1738,81 @@ function showSubTypeModal() {
 function closeSubTypeModal() {
     document.getElementById('subTypeModal').style.display = 'none';
 }
+
+// 动态域名替换函数
+function updateLinks() {
+    // 获取当前域名
+    const currentDomain = window.location.hostname;
+    const currentHostname = window.location.hostname;
+    
+    // 检查是否是 pages.dev 域名且包含 "-"
+    if (currentHostname.includes('pages.dev') && currentHostname.includes('-')) {
+        // 提取 "-" 后面的部分（包括 "-"）
+        const dashIndex = currentHostname.indexOf('-');
+        const dotIndex = currentHostname.indexOf('.');
+        
+        if (dashIndex !== -1 && dotIndex !== -1 && dashIndex < dotIndex) {
+            const suffix = currentHostname.substring(dashIndex, dotIndex); // 例如: "-b"
+            
+            // 更新所有链接
+            document.querySelectorAll('a.footer-link[data-type], a[data-type]#best-link').forEach(link => {
+                const type = link.getAttribute('data-type');
+                if (type) {
+                    // 解析原始URL
+                    const originalUrl = link.href;
+                    const urlObj = new URL(originalUrl);
+                    
+                    // 保留所有URL组件
+                    const path = urlObj.pathname;
+                    const search = urlObj.search;
+                    const hash = urlObj.hash;
+                    
+                    // 构建新链接：type + suffix + .pages.dev
+                    // 例如: sub-b.pages.dev
+                    link.href = "https://" + type + suffix + ".pages.dev" + path + search + hash;
+                }
+            });
+            return; // 处理完成，直接返回
+        }
+    }
+    
+    // 如果不满足上述条件，执行原先的3级域名替换逻辑
+    const mainDomain = currentDomain.split('.').slice(-3).join('.');
+
+    // 更新所有链接
+	// 1.a.footer-link[data-type] - 选择所有同时具有 .footer-link 类和 data-type 属性的 <a> 标签
+	// 2.a[data-type]#best-link - 选择具有 data-type 属性且 id 为 best-link 的 <a> 标签
+    document.querySelectorAll('a.footer-link[data-type], a[data-type]#best-link').forEach(link => {
+        const type = link.getAttribute('data-type');
+        if (type && mainDomain) {
+            // 解析原始URL
+            const originalUrl = link.href;
+            const urlObj = new URL(originalUrl);
+            
+            // 保留所有URL组件
+            const path = urlObj.pathname;
+            const search = urlObj.search;
+            const hash = urlObj.hash;
+            
+            // 构建新链接
+            link.href = "https://" + type + "." + mainDomain + path + search + hash;
+        }
+    });
+}
+
+// 页面加载时执行域名替换
+document.addEventListener('DOMContentLoaded', updateLinks);
+
+// 打开链接的函数
+function openLink(type) {
+    // 确保链接已经更新
+    updateLinks();
+    
+    // 找到对应的链接
+    const link = document.querySelector(\`a[data-type="\${type}"]\`);
+    if (link && link.href) {
+        window.open(link.href, '_blank');
+    } else {
+        console.error(\`未找到类型为 \${type} 的链接\`);
+    }
+}
