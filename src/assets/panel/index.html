@@ -14,15 +14,17 @@
 
 <body>
     <div class="form-container container-big">
-		<div class="card-container"><h1>BPB Panel</h1>
+		<div class="card-container">
+			<!-- UTC倒计时 -->
+			<div style="display:flex;justify-content: space-between;align-items: center;">
+				<span class="cf-label-emoji">🟢</span>
+				<div style="text-align:center;font-size:.8rem;font-weight:600;color:var(--use-count-color)">UTC Rem. - <span style="color:var(--use-proportion-color)" id="resetCountdown">00:00:00</span> - RST Cnt.</div>
+				<span class="cf-label-emoji">🟢</span>
+			</div>
+			<h1>BPB Panel</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
 			<div class="cf-usage-stats">
-				<!-- UTC倒计时 -->
-				<div style="text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--use-count-color);">
-					Rem. - <span style="color: var(--use-proportion-color);" id="resetCountdown">00:00:00</span> - RST
-				</div>
-				<!-- Cloudflare卡片 -->
 				<div class="cf-usage-stats cf-usage-stats-columns">
 					<div class="cf-stat-card">
 						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">
@@ -70,7 +72,7 @@
 					<!-- KV 命名空间各用量 -->
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
 						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">
-							<span class="cf-label-emoji status">🟢</span> KV 空间详情 👈
+							<span class="cf-label-emoji status">🟠</span> KV 空间详情 👈
 						</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<div id="cf-kv-details" style="font-size: 0.95rem; color: var(--hr-text-color);">
