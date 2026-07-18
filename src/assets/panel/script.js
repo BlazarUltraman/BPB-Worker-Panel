@@ -82,7 +82,7 @@ function initiatePanel(proxySettings) {
     fetchcloudflareInfo();
 }
 
-function populatePanel(proxySettings)function populatePanel(proxySettings) {
+function populatePanel(proxySettings) {
     selectElements.forEach(elm => elm.value = proxySettings[elm.id]);
     checkboxElements.forEach(elm => elm.checked = proxySettings[elm.id]);
     inputElements.forEach(elm => elm.value = proxySettings[elm.id] || "");
