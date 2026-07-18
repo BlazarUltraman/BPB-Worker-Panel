@@ -197,7 +197,7 @@ select {
 
 textarea {
     font-family: inherit;
-    resize: vertical;
+    resize: none;
     color: var(--color);
     max-height: calc(5lh + 10px);
 }
