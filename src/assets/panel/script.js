@@ -1863,7 +1863,7 @@ function updateCountdown() {
 	
 	// 格式化显示
 	const format = (num) => num.toString().padStart(2, '0');
-	const countdownStr = \`\${format(hours)}:\${format(minutes)}:\${format(seconds)}\`;
+	const countdownStr = `${format(hours)}:${format(minutes)}:${format(seconds)}`;
 
 	const countdownElement = document.getElementById('resetCountdown');
 	if (countdownElement) {
