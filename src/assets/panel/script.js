@@ -97,7 +97,7 @@ function populatePanel(proxySettings) {
         if (key === 'linkUrl') {
 			displayValue = proxySettings[key] || '';
 			const lines = displayValue.split('\n').filter(line => line.trim() !== '').length;
-			rowsCount = Math.min(Math.max(lines, 1), 10); // 至少 1 行，最多 10 行
+			rowsCount = Math.min(Math.max(lines, 3), 10); // 至少 3 行，最多 10 行
         } else {
             const arr = Array.isArray(proxySettings[key]) ? proxySettings[key] : [];
             displayValue = arr.join('\r\n');

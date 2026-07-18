@@ -24,7 +24,7 @@
 				<div class="cf-usage-stats cf-usage-stats-columns">
 					<div class="cf-stat-card">
 						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">
-							<span class="cf-label-emoji status">🟡</span> 各类使用量
+							<span class="cf-label-emoji status">🟡</span> 各类使用量（UTC）👈
 						</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<!-- 请求量卡片 -->
@@ -68,7 +68,7 @@
 					<!-- KV 命名空间各用量 -->
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
 						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">
-							<span class="cf-label-emoji status">🟢</span> KV 空间详细
+							<span class="cf-label-emoji status">🟢</span> KV空间详情（UTC）👈
 						</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
 							<div id="cf-kv-details" style="font-size: 0.95rem; color: var(--hr-text-color);">
@@ -224,7 +224,7 @@
 										</a>
 									</label>
 									<div style="flex-direction:column; gap:8px;">
-										<textarea type="text" id="linkUrl" name="linkUrl" placeholder="输入节点列表链接，用逗号隔开 (如: https://ips.txt,https://ip.txt)" style="width: 100%; height: auto;"></textarea>
+										<textarea type="text" id="linkUrl" name="linkUrl" placeholder="输入节点列表链接，用换行 或 逗号隔开 (如: https://ips.txt,https://ip.txt)" style="width: 100%; height: auto;"></textarea>
 										<div id="linkIPsDisplay" class="rules inner-container" style="font-size:0.8rem;">
 											暂无链接节点
 										</div>
