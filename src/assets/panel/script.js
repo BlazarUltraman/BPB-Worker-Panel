@@ -82,23 +82,37 @@ function initiatePanel(proxySettings) {
     fetchcloudflareInfo();
 }
 
-function populatePanel(proxySettings) {
+function populatePanel(proxySettings)function populatePanel(proxySettings) {
     selectElements.forEach(elm => elm.value = proxySettings[elm.id]);
     checkboxElements.forEach(elm => elm.checked = proxySettings[elm.id]);
     inputElements.forEach(elm => elm.value = proxySettings[elm.id] || "");
+    
     textareaElements.forEach(elm => {
         const key = elm.id;
         const element = document.getElementById(key);
-        const value = proxySettings[key]?.join('\r\n');
-        const rowsCount = proxySettings[key].length;
+        
+        let displayValue = '';
+        let rowsCount = 0;
+        
+        if (key === 'linkUrl') {
+            // Special handling for single URL (string, not array)
+            displayValue = proxySettings[key] || '';
+            rowsCount = displayValue ? 1 : 0;
+        } else {
+            const arr = Array.isArray(proxySettings[key]) ? proxySettings[key] : [];
+            displayValue = arr.join('\r\n');
+            rowsCount = arr.length;
+        }
+        
         element.style.height = 'auto';
         if (rowsCount) element.rows = rowsCount;
-        element.value = value;
-        // 显示 linkIPs
-        const linkIPsDisplay = document.getElementById('linkIPsDisplay');
-        const linkIPs = proxySettings.linkIPs || [];
-        linkIPsDisplay.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
+        element.value = displayValue;
     });
+    
+    // 显示 linkIPs (moved outside loop so it runs once)
+    const linkIPsDisplay = document.getElementById('linkIPsDisplay');
+    const linkIPs = proxySettings.linkIPs || [];
+    linkIPsDisplay.textContent = linkIPs.length ? linkIPs.join(', ') : '暂无链接节点';
 }
 
 function initiateForm() {
@@ -1089,9 +1103,14 @@ function validateSettings() {
     });
 
     textareaElements.forEach(elm => {
-		const key = elm.id;
+	    const key = elm.id;
         const value = form[key];
-        form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
+        if (key === 'linkUrl') {
+            // Keep as string for single URL
+            form[key] = (typeof value === 'string' ? value : (value?.[0] || '')).trim();
+        } else {
+            form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
+        }
     });
     return form;
 }
