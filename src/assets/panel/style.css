@@ -113,7 +113,7 @@ h1 {
 	/* border-right: 3px solid #6ed8c9; */
 	border-radius: var(--inner-container-border-radius);
     background: var(--table-active-color);
-	padding: 20px;
+	padding: 15px 20px;
 	min-width: 100%;
 	zoom: 0.85;
 }
@@ -818,11 +818,11 @@ summary h3 {
 }
 
 .cf-usage-stats-columns {
-	grid-template-columns:repeat(2,1fr);
-	background:var(--table-active-color);
+	grid-template-columns: repeat(2,1fr);
+	background: var(--table-active-color);
 	border-radius: var(--inner-container-border-radius);
 	border: 1px solid var(--border-color);
-	padding:10px 15px;
+	padding: 12px 15px;
 }
         
 .cf-stat {
