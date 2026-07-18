@@ -822,7 +822,7 @@ summary h3 {
 	background:var(--table-active-color);
 	border-radius: var(--inner-container-border-radius);
 	border: 1px solid var(--border-color);
-	padding:12px 15px;
+	padding:10px 15px;
 }
         
 .cf-stat {
