@@ -65,6 +65,7 @@ body.dark-mode {
 h1 {
     color: var(--header-color);
     text-shadow: var(--header-shadow);
+    margin: 15px 0;
 }
 
 .icon {
