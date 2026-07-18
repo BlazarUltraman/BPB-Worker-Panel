@@ -189,7 +189,7 @@ select {
     padding: 10px;
     line-height: 1.5;
     border: 1px solid var(--border-color);
-    border-radius: var(--element-border-radius);
+    border-radius: var(--inner-container-border-radius);
     color: var(--color);
     background-color: var(--input-background-color);
     transition: border-color 0.3s ease;
@@ -197,7 +197,7 @@ select {
 
 textarea {
     font-family: inherit;
-    resize: none;
+    resize: vertical;
     color: var(--color);
     max-height: calc(5lh + 10px);
 }
