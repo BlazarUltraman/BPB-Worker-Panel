@@ -1835,3 +1835,42 @@ function openLink(type) {
         console.error(`未找到类型为 ${type} 的链接`);
     }
 }
+
+// UTC时间倒计时功能 - 修复版本
+function updateCountdown() {
+		const now = new Date();
+
+	// 获取当前UTC时间
+	const utcHours = now.getUTCHours();
+	const utcMinutes = now.getUTCMinutes();
+	const utcSeconds = now.getUTCSeconds();
+
+	// 计算到UTC时间0点剩余的时间（毫秒）
+	const remainingMs = (24 * 60 * 60 * 1000) - 
+						(utcHours * 60 * 60 * 1000 + 
+						utcMinutes * 60 * 1000 + 
+						utcSeconds * 1000);
+
+	if (remainingMs <= 0) {
+	// 如果已经过了UTC 0点，刷新页面
+	location.reload();
+	return;
+	}
+
+	const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+	const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+	const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+	
+	// 格式化显示
+	const format = (num) => num.toString().padStart(2, '0');
+	const countdownStr = \`\${format(hours)}:\${format(minutes)}:\${format(seconds)}\`;
+
+	const countdownElement = document.getElementById('resetCountdown');
+	if (countdownElement) {
+	countdownElement.textContent = countdownStr;
+	}
+}
+
+// 启动倒计时
+setInterval(updateCountdown, 1000);
+updateCountdown();
