@@ -5,8 +5,6 @@ import { build } from 'esbuild';
 import { globSync } from 'glob';
 import pkg from '../package.json' with { type: 'json' };
 
-const env = process.env.NODE_ENV || 'dev';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = pathDirname(__filename);
 
@@ -30,8 +28,8 @@ async function processHtmlPages() {
         const dir = pathDirname(relativeIndexPath);
         const base = (file) => join(ASSET_PATH, dir, file);
 
-        const indexHtml = readFileSync(base('index.html'), 'utf8');
-        let finalHtml = indexHtml.replaceAll('__VERSION__', version);
+        let finalHtml = readFileSync(base('index.html'), 'utf8')
+            .replaceAll('__VERSION__', version);
 
         if (dir !== 'error') {
             const styleCode = readFileSync(base('style.css'), 'utf8');
@@ -41,10 +39,11 @@ async function processHtmlPages() {
                 .replaceAll('__SCRIPT__', scriptCode);
         }
 
-        result[dir] = JSON.stringify(finalHtml);
+        // 關鍵修改：使用 esbuild 支援的 raw 字串，避免 Unicode 轉義
+        result[dir] = finalHtml;
     }
 
-    console.log(`${success} Assets bundled successfuly!`);
+    console.log(`${success} Assets bundled successfully!`);
     return result;
 }
 
@@ -63,22 +62,23 @@ async function buildWorker() {
         target: 'esnext',
         loader: { '.ts': 'ts' },
         define: {
-            __PANEL_HTML_CONTENT__: htmls['panel'] ?? '""',
-            __LOGIN_HTML_CONTENT__: htmls['login'] ?? '""',
-            __ERROR_HTML_CONTENT__: htmls['error'] ?? '""',
-            __SECRETS_HTML_CONTENT__: htmls['secrets'] ?? '""',
+            __PANEL_HTML_CONTENT__: JSON.stringify(htmls['panel'] ?? ''),
+            __LOGIN_HTML_CONTENT__: JSON.stringify(htmls['login'] ?? ''),
+            __ERROR_HTML_CONTENT__: JSON.stringify(htmls['error'] ?? ''),
+            __SECRETS_HTML_CONTENT__: JSON.stringify(htmls['secrets'] ?? ''),
             __ICON__: JSON.stringify(faviconBase64),
             __VERSION__: JSON.stringify(version)
-        }
+        },
+        // 防止 Unicode 轉義
+        charset: 'utf8'
     });
 
-    console.log(`${success} Worker built successfuly!`);
+    console.log(`${success} Worker built successfully!`);
 
     const finalCode = code.outputFiles[0].text;
-
     const buildTimestamp = new Date().toISOString();
-    const buildInfo = `// Build: ${buildTimestamp}\n`;
-    const worker = `${buildInfo}// @ts-nocheck\n${finalCode}`;
+    const worker = `// Build: ${buildTimestamp}\n// @ts-nocheck\n${finalCode}`;
+
     mkdirSync(DIST_PATH, { recursive: true });
     writeFileSync('./dist/worker.js', worker, 'utf8');
 
