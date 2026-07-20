@@ -357,26 +357,28 @@ export interface ParsedRule {
 }
 
 export function parseRuleLine(line: string): ParsedRule | null {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) return null;
+    let trimmed = line.trim();
+    if (!trimmed) return null;
+    // 去除行内注释（# 之后的部分）
+    const hashIndex = trimmed.indexOf('#');
+    if (hashIndex !== -1) trimmed = trimmed.substring(0, hashIndex).trim();
+    if (!trimmed) return null;
+    // 去除 YAML 列表前缀 "- "
+    if (trimmed.startsWith('- ')) trimmed = trimmed.substring(2).trim();
+    if (!trimmed) return null;
 
-    // 按逗号分割，但值部分可能包含逗号（如 USER-AGENT,TikTok* ），所以取第一个逗号前为类型，剩余为值
     const firstComma = trimmed.indexOf(',');
     if (firstComma === -1) return null;
-
     const type = trimmed.substring(0, firstComma).toUpperCase().trim();
     const value = trimmed.substring(firstComma + 1).trim();
-
     if (!value) return null;
 
     const supportedTypes = [
-		'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD',
-		'IP-CIDR', 'IP-CIDR6',
-		'PROCESS-NAME', 'USER-AGENT', 'IP-ASN'
-	] as const;  // 添加 as const
+        'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD',
+        'IP-CIDR', 'IP-CIDR6',
+        'PROCESS-NAME', 'USER-AGENT', 'IP-ASN'
+    ] as const;
+    if (!supportedTypes.includes(type as any)) return null;
 
-	// 类型守卫
-	if (!supportedTypes.includes(type as any)) return null;
-
-	return { type: type as ParsedRule['type'], value };
+    return { type: type as ParsedRule['type'], value };
 }
