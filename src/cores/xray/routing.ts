@@ -1,6 +1,6 @@
 import { getGeoAssets } from './geo-assets';
 import { RoutingRule } from 'types/xray';
-import { accRoutingRules } from '@utils';
+import { accRoutingRules, escapeRegExp, isIPv4, isIPv6, isIPv4CIDR, isIPv6CIDR, isDomain } from '@utils';
 
 export function buildRoutingRules(
     isChain: boolean,
@@ -8,7 +8,7 @@ export function buildRoutingRules(
     isWorkerless: boolean,
     isWarp: boolean
 ): RoutingRule[] {
-    const { blockUDP443 } = globalThis.settings;
+    const { blockUDP443, customByproxyRules } = globalThis.settings;
     const rules: RoutingRule[] = [
         {
             inboundTag: [
