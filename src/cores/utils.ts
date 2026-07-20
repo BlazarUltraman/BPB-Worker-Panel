@@ -370,11 +370,13 @@ export function parseRuleLine(line: string): ParsedRule | null {
     if (!value) return null;
 
     const supportedTypes = [
-        'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD',
-        'IP-CIDR', 'IP-CIDR6',
-        'PROCESS-NAME', 'USER-AGENT', 'IP-ASN'
-    ];
-    if (!supportedTypes.includes(type)) return null;
+		'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD',
+		'IP-CIDR', 'IP-CIDR6',
+		'PROCESS-NAME', 'USER-AGENT', 'IP-ASN'
+	] as const;  // 添加 as const
 
-    return { type, value };
+	// 类型守卫
+	if (!supportedTypes.includes(type as any)) return null;
+
+	return { type: type as ParsedRule['type'], value };
 }

@@ -88,6 +88,11 @@ export interface RoutingRule {
     clash_mode?: "Global" | "Direct";
     action?: "route" | "reject" | "hijack-dns" | "sniff";
     outbound?: string;
+    domain?: string[];
+    domain_keyword?: string[];
+    process_name?: string[];
+    user_agent?: string[];
+    asn?: string[];
 }
 
 export interface RuleSet {

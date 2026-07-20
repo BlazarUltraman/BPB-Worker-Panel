@@ -1,6 +1,6 @@
 import { getGeoAssets } from './geo-assets';
 import { RoutingRule } from 'types/xray';
-import { accRoutingRules } from '@utils';
+import { accRoutingRules,parseRuleLine } from '@utils';
 
 export function buildRoutingRules(
     isChain: boolean,
@@ -29,7 +29,6 @@ export function buildRoutingRules(
     
     const outTag = isBalancer ? (isChain ? 'all-chains' : 'all-proxies') : (isChain ? 'chain' : 'proxy');
     const finallOutboundTag = isChain ? "chain" : isWorkerless ? "direct" : "proxy";
-    const outTag = isBalancer ? isChain ? "all-chains" : "all-proxies" : finallOutboundTag;
     const remoteDnsProxy = isBalancer ? "all-proxies" : "proxy";
 
     addRoutingRule(rules, ["remote-dns"], undefined, undefined, undefined, undefined, undefined, remoteDnsProxy, isBalancer);
@@ -103,14 +102,22 @@ export function buildRoutingRules(
             if (type === 'DOMAIN-KEYWORD' || type === 'USER-AGENT') return; // Xray 不支持
             const rule: RoutingRule = { type: 'field' };
             switch (type) {
-                case 'DOMAIN': rule.domain = [value]; break;
-                case 'DOMAIN-SUFFIX': rule.domainSuffix = [value]; break;
-                case 'IP-CIDR':
-                case 'IP-CIDR6': rule.ip = [value]; break;
-                case 'PROCESS-NAME': rule.process = [value]; break;
-                case 'IP-ASN': rule.asn = [value]; break;
-                default: return;
-            }
+				case 'DOMAIN':
+				case 'DOMAIN-SUFFIX':
+					rule.domain = [value];
+					break;
+				case 'IP-CIDR':
+				case 'IP-CIDR6':
+					rule.ip = [value];
+					break;
+				case 'PROCESS-NAME':
+					rule.process = [value];
+					break;
+				case 'IP-ASN':
+					rule.asn = [value];
+					break;
+				default: return;
+			}
             rule.outboundTag = outbound;
             rules.push(rule);
         });

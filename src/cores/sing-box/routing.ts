@@ -1,5 +1,5 @@
 import { getGeoAssets } from './geo-assets';
-import { accRoutingRules } from '@utils';
+import { accRoutingRules,parseRuleLine } from '@utils';
 import { Route, RoutingRule, RuleSet } from 'types/sing-box';
 
 export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
