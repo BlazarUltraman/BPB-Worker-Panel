@@ -18,10 +18,10 @@
 			<h1>BPB Panel</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
-			<div class="cf-usage-stats cf-usage-stats-columns" style="gap: 0; grid-template-columns: 1fr;">
+			<div class="cf-usage-stats cf-usage-stats-columns" style="gap: 0; grid-template-columns: 1fr; cursor: pointer;" onclick="fetchcloudflareInfo()">
 				<div class="cf-usage-stats cf-usage-stats-columns" style="border: 0px solid var(--border-color); padding: 0;">
 					<div class="cf-stat-card">
-						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">
+						<span class="cf-stat-title">
 							<span class="cf-label-emoji status">🟡</span> 各类使用详情 👈
 						</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
@@ -65,7 +65,7 @@
 					
 					<!-- KV 命名空间各用量 -->
 					<div style="display:flex;flex-direction: column;align-items: flex-start;gap:8px;">
-						<span onclick="fetchcloudflareInfo()" class="cf-stat-title">
+						<span class="cf-stat-title">
 							<span class="cf-label-emoji status">🟢</span> KV 空间详情 👈
 						</span>
 						<div class="cf-usage-stats cf-stat-inside-card">
@@ -630,14 +630,14 @@
 										</div>
 									</div>
 									<div class="form-control">
-										<label for="customBypassRules">🟩 Bypass IPs / Domains</label>
+										<label for="customBypassRules">🟩 Bypass IPs / Domains / Keywords</label>
 										<div>
 											<textarea type="text" id="customBypassRules" name="customBypassRules"
 												rows="1"></textarea>
 										</div>
 									</div>
 									<div class="form-control">
-										<label for="customBlockRules">🟥 Block IPs / Domains</label>
+										<label for="customBlockRules">🟥 Block IPs / Domains / Keywords</label>
 										<div>
 											<textarea type="text" id="customBlockRules" name="customBlockRules" rows="1"></textarea>
 										</div>

@@ -849,7 +849,6 @@ summary h3 {
 }
 
 .cf-stat-title {
-	cursor: pointer;
 	font-weight: 900;
 	color: var(--primary-color);
 	font-size: 1rem;
