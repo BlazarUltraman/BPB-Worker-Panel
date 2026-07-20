@@ -1,4 +1,3 @@
-localStorage.getItem('darkMode') === 'enabled' && document.body.classList.add('dark-mode');
 const form = document.getElementById("configForm");
 const [
     selectElements,
@@ -199,8 +198,12 @@ function closeQR() {
 }
 
 function darkModeToggle() {
-    const isDarkMode = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+    const isDark = document.body.classList.toggle('dark-mode');
+    fetch('/panel/dark-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ darkMode: isDark })
+    }).catch(err => console.error('Failed to save dark mode:', err));
 }
 
 async function getIpDetails(ip) {

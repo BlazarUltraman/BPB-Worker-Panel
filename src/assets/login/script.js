@@ -1,4 +1,3 @@
-localStorage.getItem('darkMode') === 'enabled' && document.body.classList.add('dark-mode');
 
 // ====== 新增：加载背景配置 ======
 async function loadBackground() {

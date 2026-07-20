@@ -100,6 +100,7 @@ globalThis.settings = {
     amneziaNoiseCount: 5,
     amneziaNoiseSizeMin: 50,
     amneziaNoiseSizeMax: 100,
+    darkMode: false,
     panelVersion: __VERSION__
 };
 

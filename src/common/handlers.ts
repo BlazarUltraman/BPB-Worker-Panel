@@ -221,6 +221,12 @@ interface BackgroundConfig {
     opacity: number;
 }
 
+// 添加辅助函数 getDarkMode
+async function getDarkMode(env: Env): Promise<boolean> {
+    const proxySettings = await env.kv.get('proxySettings', 'json');
+    return proxySettings?.darkMode === true; // 默认 false
+}
+
 export async function handleWebsocket(request: Request): Promise<Response> {
     const { pathName } = globalThis.globalConfig;
     const encodedPathConfig = pathName.replace("/", "");
@@ -278,7 +284,7 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
         case '/panel/get-warp-configs':
             return await getWarpConfigs(request, env);
             
-        // 在 handlePanel 的 switch 中添加
+        // 在 handlePanel 的 switch 中添加背景路由
 		case '/panel/background-config':
 			if (request.method === 'GET') {
 				return await getBackgroundConfig(env);
@@ -313,6 +319,19 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
 				return await getCloudflareConfigHandler(env);
 			} else if (request.method === 'POST') {
 				return await updateCloudflareConfig(request, env);
+			}
+			return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
+			
+		case '/panel/dark-mode':
+			if (request.method === 'POST') {
+				const auth = await Authenticate(request, env);
+				if (!auth) return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
+				const { darkMode } = await request.json();
+				// 读取现有 proxySettings，更新 darkMode 字段
+				let proxySettings = await env.kv.get('proxySettings', 'json') || {};
+				proxySettings.darkMode = darkMode === true;
+				await env.kv.put('proxySettings', JSON.stringify(proxySettings));
+				return respond(true, HttpStatus.OK, 'Dark mode updated');
 			}
 			return respond(false, HttpStatus.METHOD_NOT_ALLOWED, 'Method not allowed');
 
@@ -680,10 +699,19 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+    const darkMode = await getDarkMode(env);
+    const bodyClass = darkMode ? ' dark-mode' : '';
 
     // 保留原有 body 属性，仅设置 style
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
-        return `<body${attrs} style="${bodyStyle}">`;
+		// 检查是否已有 class 属性
+        let newAttrs = attrs;
+        if (attrs.includes('class=')) {
+            newAttrs = attrs.replace(/class="([^"]*)"/, `class="$1${bodyClass}"`);
+        } else {
+            newAttrs = attrs + ` class="${bodyClass.trim()}"`;
+        }
+        return `<body${newAttrs} style="${bodyStyle}">`;  // 使用 newAttrs
     });
 
     // 插入容器透明度样式
@@ -709,9 +737,18 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
 
     const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
     const bodyStyle = `background-image: url('${bgConfig.image}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+    const darkMode = await getDarkMode(env);
+    const bodyClass = darkMode ? ' dark-mode' : '';
 
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
-        return `<body${attrs} style="${bodyStyle}">`;
+		// 检查是否已有 class 属性
+        let newAttrs = attrs;
+        if (attrs.includes('class=')) {
+            newAttrs = attrs.replace(/class="([^"]*)"/, `class="$1${bodyClass}"`);
+        } else {
+            newAttrs = attrs + ` class="${bodyClass.trim()}"`;
+        }
+        return `<body${newAttrs} style="${bodyStyle}">`;
     });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
@@ -722,12 +759,24 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
     });
 }
 
-export async function renderSecrets(): Promise<Response> {
-    const html = await decompressHtml(__SECRETS_HTML_CONTENT__, false);
-    return new Response(html, {
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8'
+export async function renderSecrets(env: Env): Promise<Response> {
+    const html = await decompressHtml(__SECRETS_HTML_CONTENT__, false) as string;
+    const darkMode = await getDarkMode(env);
+    const bodyClass = darkMode ? ' dark-mode' : '';
+
+    // 替换 <body> 添加 class
+    const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
+        let newAttrs = attrs;
+        if (attrs.includes('class=')) {
+            newAttrs = attrs.replace(/class="([^"]*)"/, `class="$1${bodyClass}"`);
+        } else {
+            newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
+        return `<body${newAttrs}>`;
+    });
+
+    return new Response(modifiedHtml, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
 }
 

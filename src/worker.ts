@@ -39,7 +39,7 @@ export default {
 						return logout();
 
 					case 'secrets':
-						return await renderSecrets();
+						return await renderSecrets(env);
 
 					case 'favicon.ico':
 						return await serveIcon();

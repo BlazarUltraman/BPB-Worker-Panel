@@ -182,6 +182,9 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
         panelVersion: panelVersion
     };
     
+     // 保留 darkMode（如果新设置中没有，则保留当前或默认）
+    updatedSettings.darkMode = newSettings?.darkMode ?? currentSettings?.darkMode ?? settings.darkMode ?? false;
+    
     // 处理 linkUrl -> linkIPs（带缓存比对）
 	const linkUrl = newSettings?.linkUrl ?? currentSettings?.linkUrl ?? settings.linkUrl;
 	const currentLinkIPs = currentSettings?.linkIPs ?? settings.linkIPs ?? [];

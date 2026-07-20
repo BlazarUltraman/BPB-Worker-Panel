@@ -138,6 +138,7 @@ declare global {
         panelVersion: string;
         linkUrl: string;      // 用户输入的链接
 		linkIPs: string[];    // 从链接获取的节点列表
+		darkMode?: boolean;
     }
 
     var settings: Settings;
