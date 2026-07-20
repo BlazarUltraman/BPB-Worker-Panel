@@ -326,11 +326,11 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
 			if (request.method === 'POST') {
 				const auth = await Authenticate(request, env);
 				if (!auth) return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
-				const { darkMode } = await request.json();
+				const body = await request.json() as { darkMode: boolean };
+				const { darkMode } = body;
 				// 读取现有 proxySettings，若不存在则使用全局默认设置
 				let proxySettings = await env.kv.get('proxySettings', 'json') as Settings | null;
 				if (!proxySettings) {
-					// 使用 globalThis.settings 作为基础（包含所有必填字段）
 					proxySettings = { ...globalThis.settings };
 				}
 				proxySettings.darkMode = darkMode === true;
