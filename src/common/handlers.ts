@@ -224,7 +224,7 @@ interface BackgroundConfig {
 // 添加辅助函数 getDarkMode
 async function getDarkMode(env: Env): Promise<boolean> {
     const proxySettings = await env.kv.get('proxySettings', 'json') as Settings | null;
-    return proxySettings?.darkMode === true;
+    return proxySettings?.darkMode ?? false;
 }
 
 export async function handleWebsocket(request: Request): Promise<Response> {
@@ -327,9 +327,12 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
 				const auth = await Authenticate(request, env);
 				if (!auth) return respond(false, HttpStatus.UNAUTHORIZED, 'Unauthorized');
 				const { darkMode } = await request.json();
-				// 读取现有 proxySettings，更新 darkMode 字段
+				// 读取现有 proxySettings，若不存在则使用全局默认设置
 				let proxySettings = await env.kv.get('proxySettings', 'json') as Settings | null;
-				if (!proxySettings) proxySettings = {};
+				if (!proxySettings) {
+					// 使用 globalThis.settings 作为基础（包含所有必填字段）
+					proxySettings = { ...globalThis.settings };
+				}
 				proxySettings.darkMode = darkMode === true;
 				await env.kv.put('proxySettings', JSON.stringify(proxySettings));
 				return respond(true, HttpStatus.OK, 'Dark mode updated');
