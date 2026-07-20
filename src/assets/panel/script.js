@@ -747,30 +747,15 @@ function validateLocalDNS() {
 }
 
 function validateCustomRules() {
-    const invalidDomainIpValues = [
-        'customBypassRules',
-        'customBlockRules'
-    ].flatMap(parseElmValues)
-        .filter(value => !isIPv4CIDR(value) && !isIPv6CIDR(value) && !isDomain(value));
-
+    // customBypassRules 和 customBlockRules 现在支持关键词，不再进行格式校验
+    // 仅校验 customBypassSanctionRules 必须为域名
     const invalidDomainValues = parseElmValues('customBypassSanctionRules').filter(value => !isDomain(value));
-
-    if (invalidDomainIpValues.length) {
-        alert(
-            '⛔ Invalid IPs, Domains or IP ranges.\n' +
-            '💡 Please enter each value in a new line.\n\n' +
-            invalidDomainIpValues.map(val => `⚠️ ${val}`).join('\n')
-        );
-
-        return false;
-    }
 
     if (invalidDomainValues.length) {
         alert(
-            '⛔ Invalid Domains.\n💡 Please enter each value in a new line.\n\n' +
+            '⛔ Invalid Domains in Sanction Bypass rules.\n💡 Please enter each value in a new line.\n\n' +
             invalidDomainValues.map(val => `⚠️ ${val}`).join('\n')
         );
-
         return false;
     }
 
