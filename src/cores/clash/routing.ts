@@ -1,45 +1,67 @@
 import { RuleProvider } from 'types/clash';
 import { getGeoAssets } from './geo-assets';
-import { isIPv6, isIPv4, accRoutingRules, parseRuleLine } from '@utils';
+import { isIPv6, isIPv4, accRoutingRules } from '@utils';
 
 export function buildRoutingRules(isWarp: boolean) {
-    const { blockUDP443, bypassLinkRules, byproxyLinkRules } = globalThis.settings;
-    const rules: string[] = [`GEOIP,lan,DIRECT,no-resolve`];
-    const geoAssets = getGeoAssets(); // 修复：正确获取 geoAssets
+    const { blockUDP443, customByproxyRules } = globalThis.settings;
+    const geoAssets = getGeoAssets();
     const routingRules = accRoutingRules(geoAssets);
+    const rules = [`GEOIP,lan,DIRECT,no-resolve`];
 
-    if (!isWarp) rules.push('NETWORK,udp,REJECT');
-    else if (blockUDP443) rules.push('AND,((NETWORK,udp),(DST-PORT,443)),REJECT');
+    if (!isWarp) {
+        rules.push("NETWORK,udp,REJECT");
+    } else if (blockUDP443) {
+        rules.push("AND,((NETWORK,udp),(DST-PORT,443)),REJECT");
+    }
 
-    // 添加预设规则
-    rules.push(
-        ...routingRules.block.geosites.map(geosite => `RULE-SET,${geosite},REJECT`),
-        ...routingRules.block.domains.map(domain => `DOMAIN-SUFFIX,${domain},REJECT`),
-        ...routingRules.block.geoips.map(geoip => `RULE-SET,${geoip},REJECT`),
-        ...routingRules.block.ips.map(ip => buildIpCidrRule(ip, 'REJECT')),
-        ...routingRules.bypass.geosites.map(geosite => `RULE-SET,${geosite},DIRECT`),
-        ...routingRules.bypass.domains.map(domain => `DOMAIN-SUFFIX,${domain},DIRECT`),
-        ...routingRules.bypass.geoips.map(geoip => `RULE-SET,${geoip},DIRECT`),
-        ...routingRules.bypass.ips.map(ip => buildIpCidrRule(ip, 'DIRECT'))
-    );
+    // ---- block rules ----
+    // (现有 domains 和 ips 不变，新增 keywords)
+    for (const geosite of routingRules.block.geosites) {
+        rules.push(`RULE-SET,${geosite},REJECT`);
+    }
+    for (const domain of routingRules.block.domains) {
+        rules.push(`DOMAIN-SUFFIX,${domain},REJECT`);
+    }
+    for (const geoip of routingRules.block.geoips) {
+        rules.push(`RULE-SET,${geoip},REJECT`);
+    }
+    for (const ip of routingRules.block.ips) {
+        rules.push(buildIpCidrRule(ip, 'REJECT'));
+    }
+    for (const keyword of routingRules.block.keywords) {
+        rules.push(`DOMAIN-KEYWORD,${keyword},REJECT`);
+    }
 
-    // ----- 新增 Link Rules -----
-    const addLinkRules = (ruleList: string[], outbound: string) => {
-        ruleList.forEach(line => {
-            const parsed = parseRuleLine(line);
-            if (!parsed) return;
-            const { type, value } = parsed;
-            // Clash 不支持 IP-ASN，跳过
-            if (type === 'IP-ASN') return;
-            rules.push(`${type},${value},${outbound}`);
-        });
-    };
+    // ---- bypass rules ----
+    // (同理增加 keywords)
+    for (const geosite of routingRules.bypass.geosites) {
+        rules.push(`RULE-SET,${geosite},DIRECT`);
+    }
+    for (const domain of routingRules.bypass.domains) {
+        rules.push(`DOMAIN-SUFFIX,${domain},DIRECT`);
+    }
+    for (const geoip of routingRules.bypass.geoips) {
+        rules.push(`RULE-SET,${geoip},DIRECT`);
+    }
+    for (const ip of routingRules.bypass.ips) {
+        rules.push(buildIpCidrRule(ip, 'DIRECT'));
+    }
+    for (const keyword of routingRules.bypass.keywords) {
+        rules.push(`DOMAIN-KEYWORD,${keyword},DIRECT`);
+    }
 
-    addLinkRules(bypassLinkRules, 'DIRECT');
-    addLinkRules(byproxyLinkRules, '✅ Selector');
+    // ---- byproxy rules ----
+    for (const rule of customByproxyRules) {
+        if (isIPv4CIDR(rule) || isIPv6CIDR(rule) || isIPv4(rule) || isIPv6(rule)) {
+            rules.push(buildIpCidrRule(rule, '✅ Selector'));
+        } else if (isDomain(rule)) {
+            rules.push(`DOMAIN-SUFFIX,${rule},✅ Selector`);
+        } else {
+            rules.push(`DOMAIN-KEYWORD,${rule},✅ Selector`);
+        }
+    }
 
-    // 最后加入 MATCH
-    rules.push('MATCH,✅ Selector');
+    rules.push("MATCH,✅ Selector");
     return rules;
 }
 

@@ -76,6 +76,22 @@ export async function getConfigAddresses(isFragment: boolean, useLink: boolean =
     return addrs.concatIf(!isFragment, customCdnAddrs);
 }
 
+function classifyRules(rules: string[]) {
+    const domains: string[] = [];
+    const ips: string[] = [];
+    const keywords: string[] = [];
+    for (const rule of rules) {
+        if (isDomain(rule)) {
+            domains.push(rule);
+        } else if (isIPv4CIDR(rule) || isIPv6CIDR(rule) || isIPv4(rule) || isIPv6(rule)) {
+            ips.push(rule);
+        } else {
+            keywords.push(rule);
+        }
+    }
+    return { domains, ips, keywords };
+}
+
 // 通用备注查找函数
 function getRemarkFromList(address: string, ipList: string[]): string | null {
     const normalizeAddr = (addr: string) => addr.replace(/^\[|\]$/g, '');
@@ -210,6 +226,16 @@ export function isIPv6(address: string): boolean {
     return ipv6Pattern.test(address);
 }
 
+export function isIPv4CIDR(address: string): boolean {
+    const ipv4CidrPattern = /^(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/([0-9]|[1-2][0-9]|3[0-2]))$/;
+    return ipv4CidrPattern.test(address);
+}
+
+export function isIPv6CIDR(address: string): boolean {
+    const ipv6CidrPattern = /^\[?(?:(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}|(?:[a-fA-F0-9]{1,4}:){1,7}:|::(?:[a-fA-F0-9]{1,4}:){0,7}|(?:[a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}|(?:[a-fA-F0-9]{1,4}:){1,5}(?::[a-fA-F0-9]{1,4}){1,2}|(?:[a-fA-F0-9]{1,4}:){1,4}(?::[a-fA-F0-9]{1,4}){1,3}|(?:[a-fA-F0-9]{1,4}:){1,3}(?::[a-fA-F0-9]{1,4}){1,4}|(?:[a-fA-F0-9]{1,4}:){1,2}(?::[a-fA-F0-9]{1,4}){1,5}|[a-fA-F0-9]{1,4}:(?::[a-fA-F0-9]{1,4}){1,6})\](?:\/(1[0-1][0-9]|12[0-8]|[0-9]?[0-9]))?$/;
+    return ipv6CidrPattern.test(address);
+}
+
 export function getDomain(url: string) {
     try {
         const newUrl = new URL(url);
@@ -269,32 +295,30 @@ export function accRoutingRules(geoAssets: GeoAsset[]) {
         customBypassSanctionRules,
         customBlockRules
     } = globalThis.settings;
+    
+    const bypass = classifyRules(customBypassRules);
+    const block = classifyRules(customBlockRules);
 
     return {
         bypass: {
-            geosites: geoAssets
-                .filter(rule => isBypass(rule.type))
-                .map(rule => rule.geosite),
-            geoips: geoAssets
-                .filter(rule => isBypass(rule.type) && rule.geoip)
-                .map(rule => rule.geoip!),
-            domains: [
-                ...customBypassRules.filter(isDomain),
-                ...customBypassSanctionRules.filter(isDomain)
-            ],
-            ips: customBypassRules.filter(rule => !isDomain(rule))
+            geosites: geoAssets.filter(rule => isBypass(rule.type)).map(rule => rule.geosite),
+            geoips: geoAssets.filter(rule => isBypass(rule.type) && rule.geoip).map(rule => rule.geoip!),
+           domains: bypass.domains,
+           ips: bypass.ips,
+           keywords: bypass.keywords,
         },
         block: {
-            geosites: geoAssets
-                .filter(rule => isBlock(rule.type))
-                .map(rule => rule.geosite),
-            geoips: geoAssets
-                .filter(rule => isBlock(rule.type) && rule.geoip)
-                .map(rule => rule.geoip!),
-            domains: customBlockRules.filter(isDomain),
-            ips: customBlockRules.filter(rule => !isDomain(rule))
+            geosites: geoAssets.filter(rule => isBlock(rule.type)).map(rule => rule.geosite),
+            geoips: geoAssets.filter(rule => isBlock(rule.type) && rule.geoip).map(rule => rule.geoip!),
+           domains: block.domains,
+           ips: block.ips,
+           keywords: block.keywords,
         }
     };
+}
+
+export function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function accDnsRules(geoAssets: GeoAsset[]) {
@@ -348,37 +372,4 @@ Array.prototype.concatIf = function <T>(condition: boolean, concat: T | T[]): T[
 Object.prototype.omitEmpty = function <T>(): T | undefined {
     if (Object.keys(this).length === 0) return undefined;
     return this as T;
-}
-
-//添加规则解析函数，支持所有声明类型，并返回结构化对象
-export interface ParsedRule {
-    type: 'DOMAIN' | 'DOMAIN-SUFFIX' | 'DOMAIN-KEYWORD' | 'IP-CIDR' | 'IP-CIDR6' | 'PROCESS-NAME' | 'USER-AGENT' | 'IP-ASN';
-    value: string;
-}
-
-export function parseRuleLine(line: string): ParsedRule | null {
-    let trimmed = line.trim();
-    if (!trimmed) return null;
-    // 去除行内注释（# 之后的部分）
-    const hashIndex = trimmed.indexOf('#');
-    if (hashIndex !== -1) trimmed = trimmed.substring(0, hashIndex).trim();
-    if (!trimmed) return null;
-    // 去除 YAML 列表前缀 "- "
-    if (trimmed.startsWith('- ')) trimmed = trimmed.substring(2).trim();
-    if (!trimmed) return null;
-
-    const firstComma = trimmed.indexOf(',');
-    if (firstComma === -1) return null;
-    const type = trimmed.substring(0, firstComma).toUpperCase().trim();
-    const value = trimmed.substring(firstComma + 1).trim();
-    if (!value) return null;
-
-    const supportedTypes = [
-        'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD',
-        'IP-CIDR', 'IP-CIDR6',
-        'PROCESS-NAME', 'USER-AGENT', 'IP-ASN'
-    ] as const;
-    if (!supportedTypes.includes(type as any)) return null;
-
-    return { type: type as ParsedRule['type'], value };
 }

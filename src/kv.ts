@@ -169,8 +169,7 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["amneziaNoiseSizeMin"],
             ["amneziaNoiseSizeMax"],
             ["linkUrl"],
-            ["bypassLinkRules"],
-			["byproxyLinkRules"],
+            ["customByproxyRules"]
         ];
 
     const entries = await Promise.all(
@@ -210,17 +209,6 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
 		// 没有 linkUrl，清空 linkIPs
 		updatedSettings.linkIPs = [];
 	}
-	
-	// ----- 新增：从 URL 获取规则 -----
-    const bypassUrl = newSettings?.bypassLinkRulesUrl ?? currentSettings?.bypassLinkRulesUrl ?? settings.bypassLinkRulesUrl;
-    const byproxyUrl = newSettings?.byproxyLinkRulesUrl ?? currentSettings?.byproxyLinkRulesUrl ?? settings.byproxyLinkRulesUrl;
-
-    updatedSettings.bypassLinkRules = await fetchRulesFromUrls(bypassUrl);
-    updatedSettings.byproxyLinkRules = await fetchRulesFromUrls(byproxyUrl);
-
-    // 保存 URL 本身
-    updatedSettings.bypassLinkRulesUrl = bypassUrl;
-    updatedSettings.byproxyLinkRulesUrl = byproxyUrl;
 
     try {
         await env.kv.put("proxySettings", JSON.stringify(updatedSettings));
@@ -251,53 +239,6 @@ export interface CloudflareConfig {
     apiToken: string;
     email: string;
     globalApiKey: string;
-}
-
-// 从单个 URL 获取规则内容
-async function fetchRulesFromUrl(url: string): Promise<string[]> {
-    if (!url) return [];
-    try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const text = await resp.text();
-        
-        // 先按行分割
-        let lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-        
-        // 检测是否为 YAML 单行列表格式（包含 "payload:" 且行数很少）
-        const fullText = text.replace(/\n/g, ' '); // 将所有行合并为单行
-        const payloadMatch = fullText.match(/payload:\s*(.+)/);
-        if (payloadMatch) {
-            // 按 " - " 分割提取规则
-            const rulesPart = payloadMatch[1];
-            const rules = rulesPart.split(' - ')
-                .map(item => item.trim())
-                .filter(item => item && !item.startsWith('#'));
-            return rules;
-        }
-        
-        // 标准格式：逐行解析
-        return lines
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith('#'));
-    } catch (e) {
-        console.error(`Failed to fetch rules from ${url}:`, e);
-        return [];
-    }
-}
-
-// 从多个 URL 获取规则（支持换行或逗号分隔）
-async function fetchRulesFromUrls(input: string): Promise<string[]> {
-    if (!input) return [];
-    const urls = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
-    if (urls.length === 0) return [];
-
-    const results = await Promise.all(
-        urls.map(url => fetchRulesFromUrl(url).catch(() => []))
-    );
-    // 合并、去重、过滤空行
-    const allRules = results.flat();
-    return [...new Set(allRules)];
 }
 
 export async function getCloudflareConfig(env: Env): Promise<CloudflareConfig> {

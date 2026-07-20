@@ -1,22 +1,36 @@
 import { getGeoAssets } from './geo-assets';
-import { accRoutingRules,parseRuleLine } from '@utils';
+import { accRoutingRules } from '@utils';
 import { Route, RoutingRule, RuleSet } from 'types/sing-box';
 
 export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
-    const { blockUDP443, bypassLinkRules, byproxyLinkRules, enableIPv6 } = globalThis.settings;
-    const rules: RoutingRule[] = [];
+    const { blockUDP443, customByproxyRules, enableIPv6 } = globalThis.settings;
 
-    // 添加基础规则
-    rules.push(
-        { ip_cidr: "172.19.0.2", action: "hijack-dns" },
-        { clash_mode: "Direct", outbound: "direct" },
-        { clash_mode: "Global", outbound: "✅ Selector" },
-        { action: "sniff" },
-        { protocol: "dns", action: "hijack-dns" },
-        { ip_is_private: true, outbound: "direct" }
-    );
+    const rules: RoutingRule[] = [
+        {
+            ip_cidr: "172.19.0.2",
+            action: "hijack-dns"
+        },
+        {
+            clash_mode: "Direct",
+            outbound: "direct"
+        },
+        {
+            clash_mode: "Global",
+            outbound: "✅ Selector"
+        },
+        {
+            action: "sniff"
+        },
+        {
+            protocol: "dns",
+            action: "hijack-dns"
+        },
+        {
+            ip_is_private: true,
+            outbound: "direct"
+        }
+    ];
 
-    // 添加 Warp / UDP 规则
     if (!isWarp) {
         addRoutingRule(rules, 'reject', undefined, undefined, undefined, undefined, "udp");
     } else if (blockUDP443) {
@@ -31,35 +45,43 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         ...routingRules.block.domains
     ];
 
-    if (blockDomains.length) {
-        addRoutingRule(rules, 'reject', routingRules.block.domains, undefined, routingRules.block.geosites);
+    // block
+    if (routingRules.block.domains.length || routingRules.block.ips.length || routingRules.block.keywords.length) {
+        const rule: RoutingRule = { action: 'reject' };
+        if (routingRules.block.domains.length) rule.domain_suffix = routingRules.block.domains;
+        if (routingRules.block.ips.length) rule.ip_cidr = routingRules.block.ips;
+        if (routingRules.block.keywords.length) rule.domain_keyword = routingRules.block.keywords;
+        rules.push(rule);
     }
 
-    const blockIPs = [
-        ...routingRules.block.geoips,
-        ...routingRules.block.ips
-    ];
-
-    if (blockIPs.length) {
-        addRoutingRule(rules, 'reject', undefined, routingRules.block.ips, undefined, routingRules.block.geoips);
+    // bypass
+    if (routingRules.bypass.domains.length || routingRules.bypass.ips.length || routingRules.bypass.keywords.length) {
+        const rule: RoutingRule = { outbound: 'direct' };
+        if (routingRules.bypass.domains.length) rule.domain_suffix = routingRules.bypass.domains;
+        if (routingRules.bypass.ips.length) rule.ip_cidr = routingRules.bypass.ips;
+        if (routingRules.bypass.keywords.length) rule.domain_keyword = routingRules.bypass.keywords;
+        rules.push(rule);
     }
-
-    const bypassDomains = [
-        ...routingRules.bypass.geosites,
-        ...routingRules.bypass.domains
-    ];
-
-    if (bypassDomains.length) {
-        addRoutingRule(rules, 'direct', routingRules.bypass.domains, undefined, routingRules.bypass.geosites);
-    }
-
-    const bypassIPs = [
-        ...routingRules.bypass.geoips,
-        ...routingRules.bypass.ips
-    ];
-
-    if (bypassIPs.length) {
-        addRoutingRule(rules, 'direct', undefined, routingRules.bypass.ips, undefined, routingRules.bypass.geoips);
+    
+    // byproxy
+    if (customByproxyRules.length) {
+        const byproxyDomains: string[] = [];
+        const byproxyIps: string[] = [];
+        const byproxyKeywords: string[] = [];
+        for (const item of customByproxyRules) {
+            if (isIPv4CIDR(item) || isIPv6CIDR(item) || isIPv4(item) || isIPv6(item)) {
+                byproxyIps.push(item);
+            } else if (isDomain(item)) {
+                byproxyDomains.push(item);
+            } else {
+                byproxyKeywords.push(item);
+            }
+        }
+        const rule: RoutingRule = { outbound: '✅ Selector' };
+        if (byproxyDomains.length) rule.domain_suffix = byproxyDomains;
+        if (byproxyIps.length) rule.ip_cidr = byproxyIps;
+        if (byproxyKeywords.length) rule.domain_keyword = byproxyKeywords;
+        rules.push(rule);
     }
 
     const strategy = enableIPv6 ? "prefer_ipv4" : "ipv4_only";
@@ -67,32 +89,6 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         addRuleSets(sets, asset);
         return sets;
     }, []);
-
-	// ----- 新增 Link Rules -----
-    const addLinkRules = (ruleList: string[], outbound: string) => {
-        ruleList.forEach(line => {
-            const parsed = parseRuleLine(line);
-            if (!parsed) return;
-            const { type, value } = parsed;
-            const rule: RoutingRule = { action: 'route', outbound };
-            switch (type) {
-                case 'DOMAIN': rule.domain = [value]; break;
-                case 'DOMAIN-SUFFIX': rule.domain_suffix = [value]; break;
-                case 'DOMAIN-KEYWORD': rule.domain_keyword = [value]; break;
-                case 'IP-CIDR':
-                case 'IP-CIDR6': rule.ip_cidr = [value]; break;
-                case 'PROCESS-NAME': rule.process_name = [value]; break;
-                case 'USER-AGENT': rule.user_agent = [value]; break;
-                case 'IP-ASN': rule.asn = [value]; break;
-                default: return;
-            }
-            rules.push(rule);
-        });
-    };
-
-    const finalOutbound = isChain ? '💦 Best Ping 🚀' : '✅ Selector';
-    addLinkRules(bypassLinkRules, 'direct');
-    addLinkRules(byproxyLinkRules, finalOutbound);
 
     return {
         rules,
@@ -105,18 +101,6 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         },
         final: "✅ Selector"
     };
-}
-
-function parseRule(rule: string): any {
-    const [type, value] = rule.split(',').map(s => s.trim());
-    if (!type || !value) return null;
-    switch (type.toUpperCase()) {
-        case 'DOMAIN-SUFFIX': return { domain_suffix: value };
-        case 'DOMAIN': return { domain: value };
-        case 'DOMAIN-KEYWORD': return { domain_keyword: value };
-        // 可扩展 IP-CIDR 等
-        default: return null;
-    }
 }
 
 function addRoutingRule(

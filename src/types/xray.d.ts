@@ -75,12 +75,10 @@ export interface RoutingRule {
     ip?: string[];
     port?: number | string;
     network?: "tcp" | "udp" | "tcp,udp";
-    protocol?: ("http" | "tls" | "bittorrent" | "quic")[];
+    protocol?: Array<"http" | "tls" | "bittorrent" | "quic">;
     outboundTag?: string;
-    balancerTag?: string;
+    balancerTag?: string
     type: "field";
-    process?: string[];   // 新增
-    asn?: string[];       // 新增
 }
 
 export interface Balancer {

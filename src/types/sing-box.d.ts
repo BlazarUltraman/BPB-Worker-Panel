@@ -80,6 +80,7 @@ export interface MixedInbound {
 export interface RoutingRule {
     rule_set?: string[];
     domain_suffix?: string[];
+    domain_keyword?: string[];
     ip_cidr?: string[] | string;
     ip_is_private?: true;
     network?: "tcp" | "udp";
@@ -88,11 +89,6 @@ export interface RoutingRule {
     clash_mode?: "Global" | "Direct";
     action?: "route" | "reject" | "hijack-dns" | "sniff";
     outbound?: string;
-    domain?: string[];
-    domain_keyword?: string[];
-    process_name?: string[];
-    user_agent?: string[];
-    asn?: string[];
 }
 
 export interface RuleSet {
