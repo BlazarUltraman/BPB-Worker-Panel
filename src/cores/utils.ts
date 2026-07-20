@@ -1,6 +1,6 @@
 export function isDomain(address: string): boolean {
     if (!address) return false;
-    const domainRegex = /^(?!-)(?:[A-Za-z0-9-]{1,63}.)+[A-Za-z]{2,}$/;
+    const domainRegex = /^(?!-)(?:[A-Za-z0-9-]{1,63}\.)+[A-Za-z]{2,}$/;
     return domainRegex.test(address);
 }
 
