@@ -8,7 +8,7 @@ export function buildRoutingRules(
     isWorkerless: boolean,
     isWarp: boolean
 ): RoutingRule[] {
-    const { blockUDP443 } = globalThis.settings;
+    const { blockUDP443, bypassLinkRules, byproxyLinkRules } = globalThis.settings;
     const rules: RoutingRule[] = [
         {
             inboundTag: [
@@ -26,7 +26,8 @@ export function buildRoutingRules(
             type: "field"
         }
     ];
-
+    
+    const outTag = isBalancer ? (isChain ? 'all-chains' : 'all-proxies') : (isChain ? 'chain' : 'proxy');
     const finallOutboundTag = isChain ? "chain" : isWorkerless ? "direct" : "proxy";
     const outTag = isBalancer ? isChain ? "all-chains" : "all-proxies" : finallOutboundTag;
     const remoteDnsProxy = isBalancer ? "all-proxies" : "proxy";
@@ -89,8 +90,34 @@ export function buildRoutingRules(
         addRoutingRule(rules, undefined, undefined, undefined, "443,2053,2083,2087,2096,8443", "udp", undefined, "udp-noise", false);
     }
 
+    // final 路由
     const network = isWarp || isWorkerless ? "tcp,udp" : "tcp";
     addRoutingRule(rules, undefined, undefined, undefined, undefined, network, undefined, outTag, isBalancer);
+
+    // ----- 新增 Link Rules -----
+    const addLinkRules = (ruleList: string[], outbound: string) => {
+        ruleList.forEach(line => {
+            const parsed = parseRuleLine(line);
+            if (!parsed) return;
+            const { type, value } = parsed;
+            if (type === 'DOMAIN-KEYWORD' || type === 'USER-AGENT') return; // Xray 不支持
+            const rule: RoutingRule = { type: 'field' };
+            switch (type) {
+                case 'DOMAIN': rule.domain = [value]; break;
+                case 'DOMAIN-SUFFIX': rule.domainSuffix = [value]; break;
+                case 'IP-CIDR':
+                case 'IP-CIDR6': rule.ip = [value]; break;
+                case 'PROCESS-NAME': rule.process = [value]; break;
+                case 'IP-ASN': rule.asn = [value]; break;
+                default: return;
+            }
+            rule.outboundTag = outbound;
+            rules.push(rule);
+        });
+    };
+
+    addLinkRules(bypassLinkRules, 'direct');
+    addLinkRules(byproxyLinkRules, outTag); // 使用统一 outTag
 
     return rules;
 }
@@ -116,3 +143,15 @@ const addRoutingRule = (
     outboundTag: isBalancer ? undefined : outboundTag,
     type: "field"
 });
+
+function parseRule(rule: string): any {
+    const [type, value] = rule.split(',').map(s => s.trim());
+    if (!type || !value) return null;
+    switch (type.toUpperCase()) {
+        case 'DOMAIN-SUFFIX': return { domain_suffix: value };
+        case 'DOMAIN': return { domain: value };
+        case 'DOMAIN-KEYWORD': return { domain_keyword: value };
+        // 可扩展 IP-CIDR 等
+        default: return null;
+    }
+}

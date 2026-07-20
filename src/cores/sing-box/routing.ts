@@ -3,34 +3,20 @@ import { accRoutingRules } from '@utils';
 import { Route, RoutingRule, RuleSet } from 'types/sing-box';
 
 export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
-    const { blockUDP443, enableIPv6 } = globalThis.settings;
+    const { blockUDP443, bypassLinkRules, byproxyLinkRules, enableIPv6 } = globalThis.settings;
+    const rules: RoutingRule[] = [];
 
-    const rules: RoutingRule[] = [
-        {
-            ip_cidr: "172.19.0.2",
-            action: "hijack-dns"
-        },
-        {
-            clash_mode: "Direct",
-            outbound: "direct"
-        },
-        {
-            clash_mode: "Global",
-            outbound: "✅ Selector"
-        },
-        {
-            action: "sniff"
-        },
-        {
-            protocol: "dns",
-            action: "hijack-dns"
-        },
-        {
-            ip_is_private: true,
-            outbound: "direct"
-        }
-    ];
+    // 添加基础规则
+    rules.push(
+        { ip_cidr: "172.19.0.2", action: "hijack-dns" },
+        { clash_mode: "Direct", outbound: "direct" },
+        { clash_mode: "Global", outbound: "✅ Selector" },
+        { action: "sniff" },
+        { protocol: "dns", action: "hijack-dns" },
+        { ip_is_private: true, outbound: "direct" }
+    );
 
+    // 添加 Warp / UDP 规则
     if (!isWarp) {
         addRoutingRule(rules, 'reject', undefined, undefined, undefined, undefined, "udp");
     } else if (blockUDP443) {
@@ -82,6 +68,32 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         return sets;
     }, []);
 
+	// ----- 新增 Link Rules -----
+    const addLinkRules = (ruleList: string[], outbound: string) => {
+        ruleList.forEach(line => {
+            const parsed = parseRuleLine(line);
+            if (!parsed) return;
+            const { type, value } = parsed;
+            const rule: RoutingRule = { action: 'route', outbound };
+            switch (type) {
+                case 'DOMAIN': rule.domain = [value]; break;
+                case 'DOMAIN-SUFFIX': rule.domain_suffix = [value]; break;
+                case 'DOMAIN-KEYWORD': rule.domain_keyword = [value]; break;
+                case 'IP-CIDR':
+                case 'IP-CIDR6': rule.ip_cidr = [value]; break;
+                case 'PROCESS-NAME': rule.process_name = [value]; break;
+                case 'USER-AGENT': rule.user_agent = [value]; break;
+                case 'IP-ASN': rule.asn = [value]; break;
+                default: return;
+            }
+            rules.push(rule);
+        });
+    };
+
+    const finalOutbound = isChain ? '💦 Best Ping 🚀' : '✅ Selector';
+    addLinkRules(bypassLinkRules, 'direct');
+    addLinkRules(byproxyLinkRules, finalOutbound);
+
     return {
         rules,
         rule_set: ruleSets.omitEmpty(),
@@ -93,6 +105,18 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         },
         final: "✅ Selector"
     };
+}
+
+function parseRule(rule: string): any {
+    const [type, value] = rule.split(',').map(s => s.trim());
+    if (!type || !value) return null;
+    switch (type.toUpperCase()) {
+        case 'DOMAIN-SUFFIX': return { domain_suffix: value };
+        case 'DOMAIN': return { domain: value };
+        case 'DOMAIN-KEYWORD': return { domain_keyword: value };
+        // 可扩展 IP-CIDR 等
+        default: return null;
+    }
 }
 
 function addRoutingRule(

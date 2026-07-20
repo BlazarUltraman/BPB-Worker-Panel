@@ -69,6 +69,8 @@ globalThis.settings = {
     bypassAsus: false,
     bypassHp: false,
     bypassLenovo: false,
+    bypassLinkRules: [],
+	byproxyLinkRules: [],
     blockAds: false,
     blockPorn: false,
     blockUDP443: false,

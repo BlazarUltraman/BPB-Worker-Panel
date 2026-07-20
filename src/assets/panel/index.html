@@ -624,6 +624,18 @@
 								<div class="container">
 									<h3><span class="material-symbols-rounded">tune</span> Custom Rules</h3>
 									<div class="form-control">
+										<label for="byproxyLinkRules">🟨 Byproxy rules for link</label>
+										<div>
+											<textarea id="byproxyLinkRules" name="byproxyLinkRules" rows="3" placeholder="每行一条规则，如：&#10;DOMAIN-SUFFIX,example.com"></textarea>
+										</div>
+									</div>
+									<div class="form-control">
+										<label for="bypassLinkRules">🟩 Bypass rules for link</label>
+										<div>
+											<textarea id="bypassLinkRules" name="bypassLinkRules" rows="3" placeholder="每行一条规则，如：&#10;DOMAIN-SUFFIX,x10.mx&#10;DOMAIN-KEYWORD,x10"></textarea>
+										</div>
+									</div>
+									<div class="form-control">
 										<label for="customBypassRules">🟩 Bypass IPs / Domains</label>
 										<div>
 											<textarea type="text" id="customBypassRules" name="customBypassRules"

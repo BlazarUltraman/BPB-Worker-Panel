@@ -349,3 +349,32 @@ Object.prototype.omitEmpty = function <T>(): T | undefined {
     if (Object.keys(this).length === 0) return undefined;
     return this as T;
 }
+
+//添加规则解析函数，支持所有声明类型，并返回结构化对象
+export interface ParsedRule {
+    type: 'DOMAIN' | 'DOMAIN-SUFFIX' | 'DOMAIN-KEYWORD' | 'IP-CIDR' | 'IP-CIDR6' | 'PROCESS-NAME' | 'USER-AGENT' | 'IP-ASN';
+    value: string;
+}
+
+export function parseRuleLine(line: string): ParsedRule | null {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return null;
+
+    // 按逗号分割，但值部分可能包含逗号（如 USER-AGENT,TikTok* ），所以取第一个逗号前为类型，剩余为值
+    const firstComma = trimmed.indexOf(',');
+    if (firstComma === -1) return null;
+
+    const type = trimmed.substring(0, firstComma).toUpperCase().trim();
+    const value = trimmed.substring(firstComma + 1).trim();
+
+    if (!value) return null;
+
+    const supportedTypes = [
+        'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD',
+        'IP-CIDR', 'IP-CIDR6',
+        'PROCESS-NAME', 'USER-AGENT', 'IP-ASN'
+    ];
+    if (!supportedTypes.includes(type)) return null;
+
+    return { type, value };
+}

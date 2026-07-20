@@ -1,21 +1,18 @@
 import { RuleProvider } from 'types/clash';
 import { getGeoAssets } from './geo-assets';
-import { isIPv6, isIPv4, accRoutingRules } from '@utils';
+import { isIPv6, isIPv4, accRoutingRules, parseRuleLine } from '@utils';
 
 export function buildRoutingRules(isWarp: boolean) {
-    const { blockUDP443 } = globalThis.settings;
-    const geoAssets = getGeoAssets();
+    const { blockUDP443, bypassLinkRules, byproxyLinkRules } = globalThis.settings;
+    const rules: string[] = [`GEOIP,lan,DIRECT,no-resolve`];
+    const geoAssets = getGeoAssets(); // 修复：正确获取 geoAssets
     const routingRules = accRoutingRules(geoAssets);
-    const rules = [`GEOIP,lan,DIRECT,no-resolve`];
 
-    if (!isWarp) {
-        rules.push("NETWORK,udp,REJECT");
-    } else if (blockUDP443) {
-        rules.push("AND,((NETWORK,udp),(DST-PORT,443)),REJECT");
-    }
+    if (!isWarp) rules.push('NETWORK,udp,REJECT');
+    else if (blockUDP443) rules.push('AND,((NETWORK,udp),(DST-PORT,443)),REJECT');
 
-    return [
-        ...rules,
+    // 添加预设规则
+    rules.push(
         ...routingRules.block.geosites.map(geosite => `RULE-SET,${geosite},REJECT`),
         ...routingRules.block.domains.map(domain => `DOMAIN-SUFFIX,${domain},REJECT`),
         ...routingRules.block.geoips.map(geoip => `RULE-SET,${geoip},REJECT`),
@@ -23,9 +20,27 @@ export function buildRoutingRules(isWarp: boolean) {
         ...routingRules.bypass.geosites.map(geosite => `RULE-SET,${geosite},DIRECT`),
         ...routingRules.bypass.domains.map(domain => `DOMAIN-SUFFIX,${domain},DIRECT`),
         ...routingRules.bypass.geoips.map(geoip => `RULE-SET,${geoip},DIRECT`),
-        ...routingRules.bypass.ips.map(ip => buildIpCidrRule(ip, 'DIRECT')),
-        "MATCH,✅ Selector"
-    ];
+        ...routingRules.bypass.ips.map(ip => buildIpCidrRule(ip, 'DIRECT'))
+    );
+
+    // ----- 新增 Link Rules -----
+    const addLinkRules = (ruleList: string[], outbound: string) => {
+        ruleList.forEach(line => {
+            const parsed = parseRuleLine(line);
+            if (!parsed) return;
+            const { type, value } = parsed;
+            // Clash 不支持 IP-ASN，跳过
+            if (type === 'IP-ASN') return;
+            rules.push(`${type},${value},${outbound}`);
+        });
+    };
+
+    addLinkRules(bypassLinkRules, 'DIRECT');
+    addLinkRules(byproxyLinkRules, '✅ Selector');
+
+    // 最后加入 MATCH
+    rules.push('MATCH,✅ Selector');
+    return rules;
 }
 
 export function buildRuleProviders(): Record<string, RuleProvider> | undefined {

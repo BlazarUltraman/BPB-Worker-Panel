@@ -107,7 +107,15 @@ function populatePanel(proxySettings) {
         if (rowsCount) element.rows = rowsCount;
         element.value = displayValue;
     });
-    
+    // 在 textareaElements 循环后，单独对这两个字段设置 rows
+	['bypassLinkRules', 'byproxyLinkRules'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) {
+			const lines = (proxySettings[id] || []).length;
+			el.rows = Math.min(Math.max(lines || 3, 3), 10);
+		}
+	});
+
     // 显示 linkIPs (moved outside loop so it runs once)
     const linkIPsDisplay = document.getElementById('linkIPsDisplay');
     const linkIPs = proxySettings.linkIPs || [];
