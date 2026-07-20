@@ -139,8 +139,10 @@ declare global {
         linkUrl: string;      // 用户输入的链接
 		linkIPs: string[];    // 从链接获取的节点列表
 		darkMode?: boolean;
-		bypassLinkRules: string[];   // 直连规则列表
-		byproxyLinkRules: string[];  // 代理规则列表
+		bypassLinkRulesUrl: string;    // 规则 URL（多行）
+		byproxyLinkRulesUrl: string;   // 规则 URL（多行）
+		bypassLinkRules: string[];     // 解析后的规则列表
+		byproxyLinkRules: string[];    // 解析后的规则列表
     }
 
     var settings: Settings;

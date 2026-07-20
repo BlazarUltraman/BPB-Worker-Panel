@@ -210,6 +210,17 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
 		// 没有 linkUrl，清空 linkIPs
 		updatedSettings.linkIPs = [];
 	}
+	
+	// ----- 新增：从 URL 获取规则 -----
+    const bypassUrl = newSettings?.bypassLinkRulesUrl ?? currentSettings?.bypassLinkRulesUrl ?? settings.bypassLinkRulesUrl;
+    const byproxyUrl = newSettings?.byproxyLinkRulesUrl ?? currentSettings?.byproxyLinkRulesUrl ?? settings.byproxyLinkRulesUrl;
+
+    updatedSettings.bypassLinkRules = await fetchRulesFromUrls(bypassUrl);
+    updatedSettings.byproxyLinkRules = await fetchRulesFromUrls(byproxyUrl);
+
+    // 保存 URL 本身
+    updatedSettings.bypassLinkRulesUrl = bypassUrl;
+    updatedSettings.byproxyLinkRulesUrl = byproxyUrl;
 
     try {
         await env.kv.put("proxySettings", JSON.stringify(updatedSettings));
@@ -240,6 +251,36 @@ export interface CloudflareConfig {
     apiToken: string;
     email: string;
     globalApiKey: string;
+}
+
+// 从单个 URL 获取规则内容
+async function fetchRulesFromUrl(url: string): Promise<string[]> {
+    if (!url) return [];
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text = await resp.text();
+        return text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+    } catch (e) {
+        console.error(`Failed to fetch rules from ${url}:`, e);
+        return [];
+    }
+}
+
+// 从多个 URL 获取规则（支持换行或逗号分隔）
+async function fetchRulesFromUrls(input: string): Promise<string[]> {
+    if (!input) return [];
+    const urls = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    if (urls.length === 0) return [];
+
+    const results = await Promise.all(
+        urls.map(url => fetchRulesFromUrl(url).catch(() => []))
+    );
+    // 合并、去重、过滤空行
+    const allRules = results.flat();
+    return [...new Set(allRules)];
 }
 
 export async function getCloudflareConfig(env: Env): Promise<CloudflareConfig> {
