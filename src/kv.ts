@@ -260,7 +260,24 @@ async function fetchRulesFromUrl(url: string): Promise<string[]> {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const text = await resp.text();
-        return text.split('\n')
+        
+        // 先按行分割
+        let lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+        
+        // 检测是否为 YAML 单行列表格式（包含 "payload:" 且行数很少）
+        const fullText = text.replace(/\n/g, ' '); // 将所有行合并为单行
+        const payloadMatch = fullText.match(/payload:\s*(.+)/);
+        if (payloadMatch) {
+            // 按 " - " 分割提取规则
+            const rulesPart = payloadMatch[1];
+            const rules = rulesPart.split(' - ')
+                .map(item => item.trim())
+                .filter(item => item && !item.startsWith('#'));
+            return rules;
+        }
+        
+        // 标准格式：逐行解析
+        return lines
             .map(line => line.trim())
             .filter(line => line && !line.startsWith('#'));
     } catch (e) {
