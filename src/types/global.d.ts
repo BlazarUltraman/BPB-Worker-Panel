@@ -28,8 +28,10 @@ declare global {
     }
 
     interface Env {
-        readonly UUID: string;
-        readonly TR_PASS: string;
+        readonly UUID?: string;
+		readonly TR_PASS?: string;
+		readonly V_KEY?: string;   // 新增：VLESS UUID 别名
+		readonly T_KEY?: string;   // 新增：Trojan 密码别名
         readonly PROXY_IP: string;
         readonly PREFIX: string;
         readonly FALLBACK: string;
