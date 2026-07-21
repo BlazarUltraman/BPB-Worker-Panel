@@ -112,14 +112,18 @@ export async function setSettings(request: Request, env: Env) {
 
 export function init(request: Request, env: Env) {
     const { pathname } = new URL(request.url);
-    const { UUID, TR_PASS, FALLBACK, DOH_URL } = env;
+    // 优先使用 V_KEY / T_KEY，若不存在则回退到 UUID / TR_PASS
+    const userID = env.V_KEY || env.UUID || '';   // 添加默认空字符串
+	const trPass = env.T_KEY || env.TR_PASS || ''; // 添加默认空字符串
+    const fallbackDomain = env.FALLBACK || 'speed.cloudflare.com';
+    const dohURL = env.DOH_URL || 'https://cloudflare-dns.com/dns-query';
 
     globalThis.globalConfig = {
-        userID: UUID,
-        TrPass: TR_PASS,
+        userID,
+        TrPass: trPass,
         pathName: decodeURIComponent(pathname),
-        fallbackDomain: FALLBACK || 'speed.cloudflare.com',
-        dohURL: DOH_URL || 'https://cloudflare-dns.com/dns-query'
+        fallbackDomain,
+        dohURL
     };
 }
 
@@ -140,13 +144,23 @@ export function initWs(env: any) {
 
 export function initHttp(request: Request, env: any) {
     const { _VL_CAP_, _TR_CAP_, _website_ } = globalThis.dict;
-    const { UUID, TR_PASS, SUB_PATH, kv } = env;
+    const { SUB_PATH, kv } = env;
     const { pathname, origin, searchParams, hostname } = new URL(request.url);
 
     if (!['/secrets', '/favicon.ico'].includes(decodeURIComponent(pathname))) {
-        if (!UUID || !TR_PASS) throw new Error(`Please set ${_VL_CAP_} UUID and ${_TR_CAP_} password first. Visit <a href="${origin}/secrets" target="_blank">here</a> to generate them.`, { cause: "init" });
-        if (!isValidUUID(UUID)) throw new Error(`Invalid UUID: ${UUID}`, { cause: "init" });
-        if (typeof kv !== 'object') throw new Error(`KV Dataset is not properly set! Please refer to <a href="${_website_}" target="_blank">tutorials</a>.`, { cause: "init" });
+        // 使用 globalConfig 中的值
+        if (!globalThis.globalConfig.userID || !globalThis.globalConfig.TrPass) {
+            throw new Error(
+                `Please set ${_VL_CAP_} UUID (via V_KEY or UUID) and ${_TR_CAP_} password (via T_KEY or TR_PASS) first. Visit <a href="${origin}/secrets" target="_blank">here</a> to generate them.`,
+                { cause: "init" }
+            );
+        }
+        if (!isValidUUID(globalThis.globalConfig.userID)) {
+            throw new Error(`Invalid UUID: ${globalThis.globalConfig.userID}`, { cause: "init" });
+        }
+        if (typeof kv !== 'object') {
+            throw new Error(`KV Dataset is not properly set! Please refer to <a href="${_website_}" target="_blank">tutorials</a>.`, { cause: "init" });
+        }
     }
 
     globalThis.httpConfig = {
@@ -156,6 +170,6 @@ export function initHttp(request: Request, env: any) {
         hostName: hostname,
         client: decodeURIComponent(searchParams.get('app') ?? ''),
         urlOrigin: origin,
-        subPath: SUB_PATH || UUID,
+        subPath: SUB_PATH || globalThis.globalConfig.userID,  // 使用 userID 作为备选
     };
 }
