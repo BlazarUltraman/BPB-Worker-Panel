@@ -31,19 +31,9 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         }
     ];
 
-    if (!isWarp) {
-        addRoutingRule(rules, 'reject', undefined, undefined, undefined, undefined, "udp");
-    } else if (blockUDP443) {
-        addRoutingRule(rules, 'reject', undefined, undefined, undefined, undefined, "udp", "quic", 443);
-    }
-
+	// ===== 自定义规则（优先） =====
     const geoAssets = getGeoAssets();
     const routingRules = accRoutingRules(geoAssets);
-
-    const blockDomains = [
-        ...routingRules.block.geosites,
-        ...routingRules.block.domains
-    ];
 
     // block
     if (routingRules.block.domains.length || routingRules.block.ips.length || routingRules.block.keywords.length) {
@@ -83,6 +73,22 @@ export function buildRoutingRules(isWarp: boolean, isChain: boolean): Route {
         if (byproxyKeywords.length) rule.domain_keyword = byproxyKeywords;
         rules.push(rule);
     }
+
+	// ===== 内置规则（后置） =====
+    if (!isWarp) {
+        addRoutingRule(rules, 'reject', undefined, undefined, undefined, undefined, "udp");
+    } else if (blockUDP443) {
+        addRoutingRule(rules, 'reject', undefined, undefined, undefined, undefined, "udp", "quic", 443);
+    }
+
+	// UDP 规则之后添加对 Geosite/GeoIP 的引用
+	addRoutingRule(rules, 'reject', undefined, undefined, routingRules.block.geosites, routingRules.block.geoips);
+	addRoutingRule(rules, 'direct', undefined, undefined, routingRules.bypass.geosites, routingRules.bypass.geoips);
+
+    const blockDomains = [
+        ...routingRules.block.geosites,
+        ...routingRules.block.domains
+    ];
 
     const strategy = enableIPv6 ? "prefer_ipv4" : "ipv4_only";
     const ruleSets: RuleSet[] = geoAssets.reduce((sets, asset) => {

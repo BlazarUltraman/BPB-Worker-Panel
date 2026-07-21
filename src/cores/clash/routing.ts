@@ -6,24 +6,12 @@ export function buildRoutingRules(isWarp: boolean) {
     const { blockUDP443, customByproxyRules } = globalThis.settings;
     const geoAssets = getGeoAssets();
     const routingRules = accRoutingRules(geoAssets);
-    const rules = [`GEOIP,lan,DIRECT,no-resolve`];
+    const rules = [`GEOIP,lan,DIRECT,no-resolve`];  // 保留 LAN 直连在最前
 
-    if (!isWarp) {
-        rules.push("NETWORK,udp,REJECT");
-    } else if (blockUDP443) {
-        rules.push("AND,((NETWORK,udp),(DST-PORT,443)),REJECT");
-    }
-
-    // ---- block rules ----
-    // (现有 domains 和 ips 不变，新增 keywords)
-    for (const geosite of routingRules.block.geosites) {
-        rules.push(`RULE-SET,${geosite},REJECT`);
-    }
+    // ===== 自定义规则（优先） =====
+    // ---- block rules (customBlockRules) ----
     for (const domain of routingRules.block.domains) {
         rules.push(`DOMAIN-SUFFIX,${domain},REJECT`);
-    }
-    for (const geoip of routingRules.block.geoips) {
-        rules.push(`RULE-SET,${geoip},REJECT`);
     }
     for (const ip of routingRules.block.ips) {
         rules.push(buildIpCidrRule(ip, 'REJECT'));
@@ -32,16 +20,9 @@ export function buildRoutingRules(isWarp: boolean) {
         rules.push(`DOMAIN-KEYWORD,${keyword},REJECT`);
     }
 
-    // ---- bypass rules ----
-    // (同理增加 keywords)
-    for (const geosite of routingRules.bypass.geosites) {
-        rules.push(`RULE-SET,${geosite},DIRECT`);
-    }
+    // ---- bypass rules (customBypassRules) ----
     for (const domain of routingRules.bypass.domains) {
         rules.push(`DOMAIN-SUFFIX,${domain},DIRECT`);
-    }
-    for (const geoip of routingRules.bypass.geoips) {
-        rules.push(`RULE-SET,${geoip},DIRECT`);
     }
     for (const ip of routingRules.bypass.ips) {
         rules.push(buildIpCidrRule(ip, 'DIRECT'));
@@ -59,6 +40,27 @@ export function buildRoutingRules(isWarp: boolean) {
         } else {
             rules.push(`DOMAIN-KEYWORD,${rule},✅ Selector`);
         }
+    }
+
+    // ===== 内置规则 =====
+    if (!isWarp) {
+        rules.push("NETWORK,udp,REJECT");
+    } else if (blockUDP443) {
+        rules.push("AND,((NETWORK,udp),(DST-PORT,443)),REJECT");
+    }
+
+    // 内置 Geosite/GeoIP 规则（从 geoAssets 生成）
+    for (const geosite of routingRules.block.geosites) {
+        rules.push(`RULE-SET,${geosite},REJECT`);
+    }
+    for (const geoip of routingRules.block.geoips) {
+        rules.push(`RULE-SET,${geoip},REJECT`);
+    }
+    for (const geosite of routingRules.bypass.geosites) {
+        rules.push(`RULE-SET,${geosite},DIRECT`);
+    }
+    for (const geoip of routingRules.bypass.geoips) {
+        rules.push(`RULE-SET,${geoip},DIRECT`);
     }
 
     rules.push("MATCH,✅ Selector");

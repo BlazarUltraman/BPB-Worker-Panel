@@ -28,22 +28,10 @@ export function buildRoutingRules(
     ];
 
     const finallOutboundTag = isChain ? "chain" : isWorkerless ? "direct" : "proxy";
-    const outTag = isBalancer ? isChain ? "all-chains" : "all-proxies" : finallOutboundTag;
     const remoteDnsProxy = isBalancer ? "all-proxies" : "proxy";
-
-    addRoutingRule(rules, ["remote-dns"], undefined, undefined, undefined, undefined, undefined, remoteDnsProxy, isBalancer);
-    addRoutingRule(rules, ["dns"], undefined, undefined, undefined, undefined, undefined, "direct", false);
-
-    addRoutingRule(rules, undefined, ["geosite:private"], undefined, undefined, undefined, undefined, "direct", false);
-    addRoutingRule(rules, undefined, undefined, ["geoip:private"], undefined, undefined, undefined, "direct", false);
-
-    if (!(isWarp || isWorkerless)) {
-        addRoutingRule(rules, undefined, undefined, undefined, undefined, "udp", undefined, "block", false);
-    } else if (blockUDP443) {
-        addRoutingRule(rules, undefined, undefined, undefined, 443, "udp", undefined, "block", false);
-    }
-
-    const geoRules: GeoAsset[] = getGeoAssets();
+	const outTag = isBalancer ? isChain ? "all-chains" : "all-proxies" : finallOutboundTag;
+	
+	 // ===== 自定义规则（优先） =====
     const routingRules = accRoutingRules(getGeoAssets());
 
     // block (domains, ips, keywords)
@@ -90,6 +78,43 @@ export function buildRoutingRules(
         if (keywords.length) rule.domain = (rule.domain || []).concat(keywords);
         rules.push(rule);
     }
+
+    addRoutingRule(rules, ["remote-dns"], undefined, undefined, undefined, undefined, undefined, remoteDnsProxy, isBalancer);
+    addRoutingRule(rules, ["dns"], undefined, undefined, undefined, undefined, undefined, "direct", false);
+
+    addRoutingRule(rules, undefined, ["geosite:private"], undefined, undefined, undefined, undefined, "direct", false);
+    addRoutingRule(rules, undefined, undefined, ["geoip:private"], undefined, undefined, undefined, "direct", false);
+
+    if (!(isWarp || isWorkerless)) {
+        addRoutingRule(rules, undefined, undefined, undefined, undefined, "udp", undefined, "block", false);
+    } else if (blockUDP443) {
+        addRoutingRule(rules, undefined, undefined, undefined, 443, "udp", undefined, "block", false);
+    }
+	
+	// 内置 Geosite/GeoIP 规则（放在 UDP 规则之后）
+	if (routingRules.block.geosites.length || routingRules.block.geoips.length) {
+		const rule: RoutingRule = { outboundTag: 'block', type: 'field' };
+		const domains: string[] = [];
+		const ips: string[] = [];
+		if (routingRules.block.geosites.length) domains.push(...routingRules.block.geosites.map(g => `geosite:${g}`));
+		if (routingRules.block.geoips.length) ips.push(...routingRules.block.geoips.map(g => `geoip:${g}`));
+		if (domains.length) rule.domain = domains;
+		if (ips.length) rule.ip = ips;
+		rules.push(rule);
+	}
+
+	if (routingRules.bypass.geosites.length || routingRules.bypass.geoips.length) {
+		const rule: RoutingRule = { outboundTag: 'direct', type: 'field' };
+		const domains: string[] = [];
+		const ips: string[] = [];
+		if (routingRules.bypass.geosites.length) domains.push(...routingRules.bypass.geosites.map(g => `geosite:${g}`));
+		if (routingRules.bypass.geoips.length) ips.push(...routingRules.bypass.geoips.map(g => `geoip:${g}`));
+		if (domains.length) rule.domain = domains;
+		if (ips.length) rule.ip = ips;
+		rules.push(rule);
+	}
+
+    const geoRules: GeoAsset[] = getGeoAssets();
 
     if (isWorkerless) {
         addRoutingRule(rules, undefined, undefined, undefined, undefined, "tcp", ["tls"], "proxy", false);
