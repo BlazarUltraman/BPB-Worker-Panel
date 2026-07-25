@@ -41,6 +41,14 @@ export type DNS = OptionalIntersection<{
     "direct-nameserver-follow-policy": boolean;
     "nameserver-policy"?: Record<string, string>
     "hosts"?: DnsHosts
+	"default-nameserver"?: string[];
+	"fallback"?: string[];
+	"fallback-filter"?: {
+		"geoip": boolean;
+		"geoip-code": string;
+		"geosite": string[];
+		"ipcidr": string[];
+	};
 }, FakeDNS>;
 
 export interface Tun {
