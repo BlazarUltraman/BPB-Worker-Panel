@@ -295,7 +295,7 @@ function generateSubUrl(path, app, tag, singboxType, useLink = false) {
     if (app) url.searchParams.append('app', app);
     if (useLink) url.searchParams.append('link', '');
     if (tag) {
-        url.hash = `💦 BPB ${tag}`;
+        url.hash = `💦 db ${tag}`;
     }
     return singboxType
         ? `sing-box://import-remote-profile?url=${encodeURIComponent(url.href)}`

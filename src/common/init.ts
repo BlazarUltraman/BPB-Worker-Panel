@@ -9,7 +9,7 @@ globalThis.dict = {
     _TR_CAP_: atob('VHJvamFu'),
     _SS_: atob('c2hhZG93c29ja3M='),
     _V2_: atob('djJyYXk='),
-    _project_: atob('QlBC'),
+    _project_: 'db Panel',
     _website_: atob('aHR0cHM6Ly9iaWEtcGFpbi1iYWNoZS5naXRodWIuaW8vQlBCLVdvcmtlci1QYW5lbC8='),
     _public_proxy_ip_: atob('YnBiLnlvdXNlZi5pc2VnYXJvLmNvbQ==')
 };
@@ -79,6 +79,8 @@ globalThis.settings = {
     customBypassRules: [],
     customBlockRules: [],
     customBypassSanctionRules: [],
+	defaultNameserver: ["119.29.29.29", "223.5.5.5"],
+	fallback: ["tls://1.0.0.1:853", "tls://dns.google:853"],
     warpRemoteDNS: "1.1.1.1",
     warpEndpoints: ["engage.cloudflareclient.com:2408"],
     bestWarpInterval: 30,

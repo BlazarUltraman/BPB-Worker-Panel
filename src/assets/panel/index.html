@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BPB Panel</title>
+    <title>db Panel</title>
     <link rel="icon" href="/favicon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet"
@@ -15,7 +15,7 @@
 <body>
     <div class="form-container container-big">
 		<div class="card-container">
-			<h1>BPB Panel</h1>
+			<h1>db Panel</h1>
 			
 			<!-- ====== Cloudflare USE ====== -->
 			<div class="cf-usage-stats cf-usage-stats-columns" style="gap: 0; grid-template-columns: 1fr; cursor: pointer;" onclick="fetchcloudflareInfo()">
@@ -229,7 +229,7 @@
 									</label>
 									<div style="flex-direction:column; gap:8px;">
 										<textarea type="text" id="linkUrl" name="linkUrl" placeholder="输入节点列表链接，支持多链接，用换行 或 逗号隔开 (如: https://ips.txt,https://ip.txt)" style="width: 100%; height: auto; resize: vertical;"></textarea>
-										<div id="linkIPsDisplay" class="rules inner-container" style="font-size:0.8rem;">
+										<div id="linkIPsDisplay" class="rules inner-container" style="font-size:0.8rem; background: var(--link-ips-list-bg); color: var(--link-ips-list-color); border: 1px solid var(--link-ips-border);">
 											暂无链接节点
 										</div>
 									</div>
@@ -347,6 +347,26 @@
 										</div>
 									</div>
 								</div>
+								
+								<!-- 添加default-nameserver 和 fallback -->
+								<div class="container">
+									<div class="section">
+										<h3><span class="material-symbols-rounded">tune</span> Only for Clash</h3>
+										<div class="form-control">
+											<label for="defaultNameserver">📡 Default Nameserver</label>
+											<div>
+												<textarea type="text" id="defaultNameserver" name="defaultNameserver" rows="1"></textarea>
+											</div>
+										</div>
+										<div class="form-control">
+											<label for="fallback">🔄 Fallback DNS</label>
+											<div>
+												<textarea type="text" id="fallback" name="fallback" rows="1"></textarea>
+											</div>
+										</div>
+									</div>
+								</div>
+								
 								<div class="container">
 									<div class="section">
 										<h3><span class="material-symbols-rounded">tune</span> Custom CDN</h3>

@@ -21,6 +21,9 @@
     --inner-container-gap: 14px;
 	--use-count-color: #0369a1;
 	--use-proportion-color: #8b5cf6;
+	--link-ips-list-color: #0369a1;
+	--link-ips-list-bg: #f1faff;
+	--link-ips-border: #d3e8f3;
 }
 
 body {
@@ -60,6 +63,9 @@ body.dark-mode {
     --container-box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
     --use-count-color: #50aaff;
     --use-proportion-color: #a57ffc;
+	--link-ips-list-color: #abc4e5;
+	--link-ips-list-bg: #1c1c1c;
+	--link-ips-border: #353535;
 }
 
 h1 {

@@ -142,6 +142,8 @@ declare global {
 		linkIPs: string[];    // 从链接获取的节点列表
 		darkMode?: boolean;
 		customByproxyRules: string[];
+		defaultNameserver: string[];
+		fallback: string[];
     }
 
     var settings: Settings;

@@ -12,7 +12,9 @@ export async function buildDNS(isChain: boolean, isWarp: boolean, isPro: boolean
         remoteDnsHost,
         enableIPv6,
         fakeDNS,
-        allowLANConnection
+        allowLANConnection,
+		defaultNameserver,
+		fallback,
     } = globalThis.settings;
 
     const finalLocalDNS = localDNS === 'localhost' ? 'system' : `${localDNS}#DIRECT`;
@@ -89,6 +91,14 @@ export async function buildDNS(isChain: boolean, isWarp: boolean, isPro: boolean
         "direct-nameserver-follow-policy": true,
         "nameserver-policy": nameserverPolicy.omitEmpty(),
         "enhanced-mode": enhancedMode,
+		"default-nameserver": defaultNameserver,
+		"fallback": fallback,
+		"fallback-filter": {
+			"geoip": true,
+			"geoip-code": "CN",
+			"geosite": ["gfw"],
+			"ipcidr": ["240.0.0.0/4"]
+		},
         ...fakeDnsSettings
     };
 

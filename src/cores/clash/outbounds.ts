@@ -198,7 +198,7 @@ export function buildUrlTest(
         "proxies": proxies,
         "url": "https://www.gstatic.com/generate_204",
         "interval": isWarp ? bestWarpInterval : bestVLTRInterval,
-        "tolerance": 50
+        "tolerance": 150
     };
 }
 

@@ -169,7 +169,9 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["amneziaNoiseSizeMin"],
             ["amneziaNoiseSizeMax"],
             ["linkUrl"],
-            ["customByproxyRules"]
+            ["customByproxyRules"],
+			["defaultNameserver"],
+			["fallback"],
         ];
 
     const entries = await Promise.all(
