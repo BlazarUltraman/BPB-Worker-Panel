@@ -23,13 +23,6 @@ async function buildConfig(
 ): Promise<Config> {
     const { logLevel, allowLANConnection, mtu, fakeDNS } = globalThis.settings;
 
-    const tcpSettings = isWarp ? {} : {
-        "disable-keep-alive": false,
-        "keep-alive-idle": 10,
-        "keep-alive-interval": 15,
-        "tcp-concurrent": true
-    };
-
     const tun: Tun = {
         enable: true,
         stack: "mixed",
@@ -60,14 +53,14 @@ async function buildConfig(
         }
     };
 
-    const config: Config = {
+    // 使用 Object.assign 构建基础配置，再添加动态字段
+    const baseConfig: any = {
         "mixed-port": 7890,
         "ipv6": true,
         "allow-lan": allowLANConnection,
         "unified-delay": false,
         "log-level": logLevel.replace("none", "silent"),
         "mode": "rule",
-        ...tcpSettings,
         "geo-auto-update": true,
         "geo-update-interval": 168,
         "external-controller": "127.0.0.1:9090",
@@ -102,11 +95,27 @@ async function buildConfig(
         }
     };
 
+    // 如果是非 Warp 模式，添加 TCP 优化参数
+    if (!isWarp) {
+        Object.assign(baseConfig, {
+            "disable-keep-alive": false,
+            "keep-alive-idle": 10,
+            "keep-alive-interval": 15,
+            "tcp-concurrent": true
+        });
+    }
+
+    const config = baseConfig as Config;
+
     const name = isWarp ? `💦 Warp ${isPro ? "Pro " : ""}- Best Ping 🚀` : "💦 Best Ping 🚀";
     const mainUrlTest = buildUrlTest(name, proxyTags, isWarp);
     config["proxy-groups"].push(mainUrlTest);
-    if (isWarp) config["proxy-groups"].push(buildUrlTest(`💦 WoW ${isPro ? "Pro " : ""}- Best Ping 🚀`, chainTags, isWarp));
-    if (isChain) config["proxy-groups"].push(buildUrlTest("💦 🔗 Best Ping 🚀", chainTags, isWarp));
+    if (isWarp) {
+        config["proxy-groups"].push(buildUrlTest(`💦 WoW ${isPro ? "Pro " : ""}- Best Ping 🚀`, chainTags, isWarp));
+    }
+    if (isChain) {
+        config["proxy-groups"].push(buildUrlTest("💦 🔗 Best Ping 🚀", chainTags, isWarp));
+    }
 
     return config;
 }
