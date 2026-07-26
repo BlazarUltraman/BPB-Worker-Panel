@@ -22,8 +22,14 @@ async function buildConfig(
     isPro: boolean
 ): Promise<Config> {
     const { logLevel, allowLANConnection, mtu, fakeDNS } = globalThis.settings;
-    
-    // 动态构建 tun
+
+    const tcpSettings = isWarp ? {} : {
+        "disable-keep-alive": false,
+        "keep-alive-idle": 10,
+        "keep-alive-interval": 15,
+        "tcp-concurrent": true
+    };
+
     const tun: Tun = {
         enable: true,
         stack: "mixed",
@@ -31,82 +37,70 @@ async function buildConfig(
         strict-route: true,
         auto-detect-interface: true,
         dns-hijack: ["any:53", "tcp://any:53"],
-        mtu: mtu || 1500   // 使用设置值，默认 1500
+        mtu: mtu || 1500
     };
 
-    // 动态构建 sniffer
-    let sniffer: Sniffer;
-    if (fakeDNS) {
-        // Fake DNS 启用时禁用 sniffer
-        sniffer = {
-            enable: false,
-            force-dns-mapping: false,
-            parse-pure-ip: false,
-            override-destination: false,
-            sniff: {
-                HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
-                TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
-            }
-        };
-    } else {
-        sniffer = {
-            enable: true,
-            force-dns-mapping: true,
-            parse-pure-ip: true,
-            override-destination: true,
-            sniff: {
-                HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
-                TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
-            }
-        };
-    }
+    const sniffer: Sniffer = fakeDNS ? {
+        enable: false,
+        force-dns-mapping: false,
+        parse-pure-ip: false,
+        override-destination: false,
+        sniff: {
+            HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
+            TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
+        }
+    } : {
+        enable: true,
+        force-dns-mapping: true,
+        parse-pure-ip: true,
+        override-destination: true,
+        sniff: {
+            HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
+            TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
+        }
+    };
 
     const config: Config = {
-		"mixed-port": 7890,
-		"ipv6": true,
-		"allow-lan": allowLANConnection,
-		"unified-delay": false,
-		"log-level": logLevel.replace("none", "silent"),
-		"mode": "rule",
-		...(isWarp ? {} : {
-			"disable-keep-alive": false,
-			"keep-alive-idle": 10,
-			"keep-alive-interval": 15,
-			"tcp-concurrent": true
-		}),
-		"geo-auto-update": true,
-		"geo-update-interval": 168,
-		"external-controller": "127.0.0.1:9090",
-		"external-controller-cors": {
-			"allow-origins": ["*"],
-			"allow-private-network": true
-		},
-		"external-ui": "ui",
-		"external-ui-url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
-		"profile": {
-			"store-selected": true,
-			"store-fake-ip": true
-		},
-		"dns": await buildDNS(isChain, isWarp, isPro),
-		"tun": tun,          // ← 显式键值对
-		"sniffer": sniffer,  // ← 显式键值对
-		"proxies": outbounds,
-		"proxy-groups": [
-			{
-				"name": "✅ Selector",
-				"type": "select",
-				"proxies": selectorTags
-			}
-		],
-		"rule-providers": buildRuleProviders(),
-		"rules": buildRoutingRules(isWarp),
-		"ntp": {
-			"enable": true,
-			"server": "time.cloudflare.com",
-			"port": 123,
-			"interval": 30
-		}
-	};
+        "mixed-port": 7890,
+        "ipv6": true,
+        "allow-lan": allowLANConnection,
+        "unified-delay": false,
+        "log-level": logLevel.replace("none", "silent"),
+        "mode": "rule",
+        ...tcpSettings,
+        "geo-auto-update": true,
+        "geo-update-interval": 168,
+        "external-controller": "127.0.0.1:9090",
+        "external-controller-cors": {
+            "allow-origins": ["*"],
+            "allow-private-network": true
+        },
+        "external-ui": "ui",
+        "external-ui-url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+        "profile": {
+            "store-selected": true,
+            "store-fake-ip": true
+        },
+        "dns": await buildDNS(isChain, isWarp, isPro),
+        "tun": tun,
+        "sniffer": sniffer,
+        "proxies": outbounds,
+        "proxy-groups": [
+            {
+                "name": "✅ Selector",
+                "type": "select",
+                "proxies": selectorTags
+            }
+        ],
+        "rule-providers": buildRuleProviders(),
+        "rules": buildRoutingRules(isWarp),
+        "ntp": {
+            "enable": true,
+            "server": "time.cloudflare.com",
+            "port": 123,
+            "interval": 30
+        }
+    };
 
     const name = isWarp ? `💦 Warp ${isPro ? "Pro " : ""}- Best Ping 🚀` : "💦 Best Ping 🚀";
     const mainUrlTest = buildUrlTest(name, proxyTags, isWarp);
