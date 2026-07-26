@@ -53,11 +53,11 @@ export interface Tun {
         "any:53",
         "tcp://any:53"
     ];
-    "mtu": 9000;
+    "mtu": number;       // 改为 number
 }
 
 export interface Sniffer {
-    "enable": true;
+    "enable": boolean;   // 改为 boolean
     "force-dns-mapping": true;
     "parse-pure-ip": true;
     "override-destination": true;

@@ -64,7 +64,7 @@ export interface TunInbound {
     type: "tun";
     tag: "tun-in";
     address: string[];
-    mtu: 9000;
+    mtu: number;
     auto_route: true;
     strict_route: true;
     stack: "mixed";
