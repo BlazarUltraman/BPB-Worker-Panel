@@ -2,9 +2,8 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
-import type { WireguardOutbound, Config, Outbound, URLTest, Selector } from 'types/clash';
+import type { WireguardOutbound, Config, Outbound, URLTest, Selector, Tun, Sniffer } from 'types/clash';
 import { getConfigAddresses, generateRemark, getProtocols } from '@utils';
-import { sniffer, tun } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
@@ -22,13 +21,51 @@ async function buildConfig(
     isWarp: boolean,
     isPro: boolean
 ): Promise<Config> {
-    const { logLevel, allowLANConnection } = globalThis.settings;
+    const { logLevel, allowLANConnection, mtu, fakeDNS } = globalThis.settings;
     const tcpSettings = isWarp ? {} : {
         "disable-keep-alive": false,
         "keep-alive-idle": 10,
         "keep-alive-interval": 15,
         "tcp-concurrent": true
     };
+
+    // 动态构建 tun
+    const tun: Tun = {
+        enable: true,
+        stack: "mixed",
+        auto-route: true,
+        strict-route: true,
+        auto-detect-interface: true,
+        dns-hijack: ["any:53", "tcp://any:53"],
+        mtu: mtu || 1500   // 使用设置值，默认 1500
+    };
+
+    // 动态构建 sniffer
+    let sniffer: Sniffer;
+    if (fakeDNS) {
+        // Fake DNS 启用时禁用 sniffer
+        sniffer = {
+            enable: false,
+            force-dns-mapping: false,
+            parse-pure-ip: false,
+            override-destination: false,
+            sniff: {
+                HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
+                TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
+            }
+        };
+    } else {
+        sniffer = {
+            enable: true,
+            force-dns-mapping: true,
+            parse-pure-ip: true,
+            override-destination: true,
+            sniff: {
+                HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
+                TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
+            }
+        };
+    }
 
     const config: Config = {
         "mixed-port": 7890,
@@ -52,8 +89,8 @@ async function buildConfig(
             "store-fake-ip": true
         },
         "dns": await buildDNS(isChain, isWarp, isPro),
-        "tun": tun,
-        "sniffer": sniffer,
+        tun,
+        sniffer,
         "proxies": outbounds,
         "proxy-groups": [
             {
