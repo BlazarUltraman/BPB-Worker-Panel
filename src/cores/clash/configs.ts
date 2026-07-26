@@ -2,7 +2,7 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
-import type { WireguardOutbound, Config, Outbound, URLTest, Selector } from 'types/clash';
+import type { WireguardOutbound, Config, Outbound, URLTest, Selector, Tun, Sniffer } from 'types/clash';
 import { getConfigAddresses, generateRemark, getProtocols } from '@utils';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
@@ -22,7 +22,12 @@ async function buildConfig(
     isPro: boolean
 ): Promise<Config> {
     const { logLevel, allowLANConnection, mtu, fakeDNS } = globalThis.settings;
-    const tcpSettings = isWarp ? {} : { /* ... */ };
+    const tcpSettings = isWarp ? {} : {
+        "disable-keep-alive": false,
+        "keep-alive-idle": 10,
+        "keep-alive-interval": 15,
+        "tcp-concurrent": true
+    };
 
     // 动态构建 tun
     const tun: Tun = {
@@ -84,8 +89,8 @@ async function buildConfig(
             "store-fake-ip": true
         },
         "dns": await buildDNS(isChain, isWarp, isPro),
-        "tun",
-        "sniffer",
+        tun,
+        sniffer,
         "proxies": outbounds,
         "proxy-groups": [
             {
