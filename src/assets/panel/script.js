@@ -84,8 +84,16 @@ function initiatePanel(proxySettings) {
 function populatePanel(proxySettings) {
     selectElements.forEach(elm => elm.value = proxySettings[elm.id]);
     checkboxElements.forEach(elm => elm.checked = proxySettings[elm.id]);
-    inputElements.forEach(elm => elm.value = proxySettings[elm.id] || "");
     
+	inputElements.forEach(elm => {
+		// 针对 mtu 字段，若后端无值则默认 1500
+		let value = proxySettings[elm.id];
+		if (elm.id === 'mtu' && (value === undefined || value === null || value === '')) {
+			value = 1500;
+		}
+		elm.value = value || "";
+	});
+	
     textareaElements.forEach(elm => {
         const key = elm.id;
         const element = document.getElementById(key);
