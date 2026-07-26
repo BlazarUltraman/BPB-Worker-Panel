@@ -138,12 +138,11 @@ declare global {
         amneziaNoiseSizeMin: number;
         amneziaNoiseSizeMax: number;
         panelVersion: string;
+		mtu: number;          // 手动设置 MTU，默认 1500
         linkUrl: string;      // 用户输入的链接
 		linkIPs: string[];    // 从链接获取的节点列表
 		darkMode?: boolean;
 		customByproxyRules: string[];
-		defaultNameserver: string[];
-		fallback: string[];
     }
 
     var settings: Settings;

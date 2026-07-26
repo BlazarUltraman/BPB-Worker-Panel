@@ -184,6 +184,12 @@
 									</div>
 								</div>
 								<div class="form-control">
+									<label for="mtu">📦 MTU</label>
+									<div>
+										<input type="number" id="mtu" name="mtu" min="576" max="9000" value="1500">
+									</div>
+								</div>
+								<div class="form-control">
 									<label for="logLevel">🎚️ Log Level</label>
 									<div>
 										<select id="logLevel" name="logLevel">
@@ -347,26 +353,6 @@
 										</div>
 									</div>
 								</div>
-								
-								<!-- 添加default-nameserver 和 fallback -->
-								<div class="container">
-									<div class="section">
-										<h3><span class="material-symbols-rounded">tune</span> Only for Clash</h3>
-										<div class="form-control">
-											<label for="defaultNameserver">📡 Default Nameserver</label>
-											<div>
-												<textarea type="text" id="defaultNameserver" name="defaultNameserver" rows="1"></textarea>
-											</div>
-										</div>
-										<div class="form-control">
-											<label for="fallback">🔄 Fallback DNS</label>
-											<div>
-												<textarea type="text" id="fallback" name="fallback" rows="1"></textarea>
-											</div>
-										</div>
-									</div>
-								</div>
-								
 								<div class="container">
 									<div class="section">
 										<h3><span class="material-symbols-rounded">tune</span> Custom CDN</h3>

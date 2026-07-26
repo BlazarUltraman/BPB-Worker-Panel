@@ -4,7 +4,7 @@ import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
 import { Outbound, WireguardEndpoint, Config, URLTest, Selector } from 'types/sing-box';
 import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
-import { buildMixedInbound, tun } from './inbounds';
+import { buildMixedInbound, buildTunInbound } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
@@ -103,7 +103,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         },
         dns: await buildDNS(false, isChain),
         inbounds: [
-            tun,
+            buildTunInbound(globalThis.settings.mtu || 1500),
             buildMixedInbound()
         ],
         outbounds: outbounds,
@@ -177,7 +177,7 @@ export async function getSbWarpConfig(request: Request, env: Env): Promise<Respo
         },
         dns: await buildDNS(true, false),
         inbounds: [
-            tun,
+            buildTunInbound(globalThis.settings.mtu || 1500),
             buildMixedInbound()
         ],
         outbounds: [  // 只放非 Wireguard 的出站

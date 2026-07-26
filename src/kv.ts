@@ -104,6 +104,7 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["antiSanctionDNS"],
             ["enableIPv6"],
             ["fakeDNS"],
+            ["mtu"],
             ["logLevel"],
             ["allowLANConnection"],
             ["proxyIPMode"],
@@ -169,9 +170,7 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["amneziaNoiseSizeMin"],
             ["amneziaNoiseSizeMax"],
             ["linkUrl"],
-            ["customByproxyRules"],
-			["defaultNameserver"],
-			["fallback"],
+            ["customByproxyRules"]
         ];
 
     const entries = await Promise.all(

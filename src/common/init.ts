@@ -20,6 +20,7 @@ globalThis.settings = {
     fakeDNS: false,
     enableIPv6: true,
     allowLANConnection: false,
+    mtu: 1500,
     logLevel: "warning",
     remoteDNS: "https://8.8.8.8/dns-query",
     remoteDnsHost: {
@@ -79,8 +80,6 @@ globalThis.settings = {
     customBypassRules: [],
     customBlockRules: [],
     customBypassSanctionRules: [],
-	defaultNameserver: ["119.29.29.29", "223.5.5.5"],
-	fallback: ["tls://1.0.0.1:853", "tls://dns.google:853"],
     warpRemoteDNS: "1.1.1.1",
     warpEndpoints: ["engage.cloudflareclient.com:2408"],
     bestWarpInterval: 30,

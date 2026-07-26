@@ -1,13 +1,15 @@
 import { MixedInbound, TunInbound } from "types/sing-box";
 
-export const tun: TunInbound = {
-    type: "tun",
-    tag: "tun-in",
-    address: ["172.19.0.1/28"],
-    mtu: 9000,
-    auto_route: true,
-    strict_route: true,
-    stack: "mixed"
+export function buildTunInbound(mtu: number): TunInbound {
+    return {
+        type: "tun",
+        tag: "tun-in",
+        address: ["172.19.0.1/28"],
+        mtu: mtu || 1500,
+        auto_route: true,
+        strict_route: true,
+        stack: "mixed"
+    };
 }
 
 export function buildMixedInbound(): MixedInbound {
