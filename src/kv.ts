@@ -61,6 +61,17 @@ export async function getDataset(
         if (panelVersion !== proxySettings.panelVersion) {
             proxySettings = await updateDataset(request, env);
         }
+        
+        if (!proxySettings) {
+			await env.kv.put("proxySettings", JSON.stringify(settings));
+			proxySettings = settings;
+		} else {
+			// 若存在但缺失 mtu，则补充默认值
+			if (proxySettings.mtu === undefined) {
+				proxySettings.mtu = settings.mtu;
+				await env.kv.put("proxySettings", JSON.stringify(proxySettings));
+			}
+		}
 
         return {
             settings: proxySettings,
