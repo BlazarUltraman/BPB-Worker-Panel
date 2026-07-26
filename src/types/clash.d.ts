@@ -44,23 +44,20 @@ export type DNS = OptionalIntersection<{
 }, FakeDNS>;
 
 export interface Tun {
-    "enable": true;
+    "enable": boolean;
     "stack": "mixed" | "gvisor" | "system";
-    "auto-route": true;
-    "strict-route": true;
-    "auto-detect-interface": true;
-    "dns-hijack": [
-        "any:53",
-        "tcp://any:53"
-    ];
+    "auto-route": boolean;
+    "strict-route": boolean;
+    "auto-detect-interface": boolean;
+    "dns-hijack": string[];
     "mtu": number;       // 改为 number
 }
 
 export interface Sniffer {
     "enable": boolean;   // 改为 boolean
-    "force-dns-mapping": true;
-    "parse-pure-ip": true;
-    "override-destination": true;
+    "force-dns-mapping": boolean;
+    "parse-pure-ip": boolean;
+    "override-destination": boolean;
     "sniff": {
         "HTTP": {
             "ports": number[];
