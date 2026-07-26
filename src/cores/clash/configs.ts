@@ -23,37 +23,39 @@ async function buildConfig(
 ): Promise<Config> {
     const { logLevel, allowLANConnection, mtu, fakeDNS } = globalThis.settings;
 
+    // ---- tun 配置（所有连字符属性加引号） ----
     const tun: Tun = {
         enable: true,
         stack: "mixed",
-        auto-route: true,
-        strict-route: true,
-        auto-detect-interface: true,
-        dns-hijack: ["any:53", "tcp://any:53"],
+        "auto-route": true,
+        "strict-route": true,
+        "auto-detect-interface": true,
+        "dns-hijack": ["any:53", "tcp://any:53"],
         mtu: mtu || 1500
     };
 
+    // ---- sniffer 配置（所有连字符属性加引号） ----
     const sniffer: Sniffer = fakeDNS ? {
         enable: false,
-        force-dns-mapping: false,
-        parse-pure-ip: false,
-        override-destination: false,
+        "force-dns-mapping": false,
+        "parse-pure-ip": false,
+        "override-destination": false,
         sniff: {
             HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
             TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
         }
     } : {
         enable: true,
-        force-dns-mapping: true,
-        parse-pure-ip: true,
-        override-destination: true,
+        "force-dns-mapping": true,
+        "parse-pure-ip": true,
+        "override-destination": true,
         sniff: {
             HTTP: { ports: [80, 8080, 8880, 2052, 2082, 2086, 2095] },
             TLS: { ports: [443, 8443, 2053, 2083, 2087, 2096] }
         }
     };
 
-    // 使用 Object.assign 构建基础配置，再添加动态字段
+    // ---- 基础配置 ----
     const baseConfig: any = {
         "mixed-port": 7890,
         "ipv6": true,
@@ -95,7 +97,7 @@ async function buildConfig(
         }
     };
 
-    // 如果是非 Warp 模式，添加 TCP 优化参数
+    // ---- 非 Warp 模式下添加 TCP 优化参数（带连字符属性加引号） ----
     if (!isWarp) {
         Object.assign(baseConfig, {
             "disable-keep-alive": false,
@@ -107,6 +109,7 @@ async function buildConfig(
 
     const config = baseConfig as Config;
 
+    // ---- 添加动态探测组 ----
     const name = isWarp ? `💦 Warp ${isPro ? "Pro " : ""}- Best Ping 🚀` : "💦 Best Ping 🚀";
     const mainUrlTest = buildUrlTest(name, proxyTags, isWarp);
     config["proxy-groups"].push(mainUrlTest);
