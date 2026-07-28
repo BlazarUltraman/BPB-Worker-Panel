@@ -39,7 +39,10 @@ async function buildConfig(
             auto-route: true,
             strict-route: true,
             auto-detect-interface: true,
-            "dns-hijack": string[];
+            "dns-hijack": [
+				"any:53",
+				"tcp://any:53"
+			],
             mtu: mtu || 1500
         };
     }
