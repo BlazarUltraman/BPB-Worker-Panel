@@ -2,7 +2,7 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
-import type { WireguardOutbound, Config, Outbound, URLTest, Selector } from 'types/clash';
+import type { WireguardOutbound, Config, Outbound, URLTest, Selector, Tun } from 'types/clash';
 import { getConfigAddresses, generateRemark, getProtocols } from '@utils';
 import { buildSniffer } from './inbounds';
 
@@ -31,6 +31,7 @@ async function buildConfig(
     };
     
     // 构建 tun（仅当 enableTun 为 true 时）
+    let tun: Tun | undefined;
 	if (enableTun) {
 		tun = {
 			enable: true,
