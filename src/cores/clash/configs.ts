@@ -4,7 +4,7 @@ import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
 import type { WireguardOutbound, Config, Outbound, URLTest, Selector } from 'types/clash';
 import { getConfigAddresses, generateRemark, getProtocols } from '@utils';
-import { buildTun, buildSniffer } from './inbounds';
+import { buildSniffer } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
