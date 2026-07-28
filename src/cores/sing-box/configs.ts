@@ -13,8 +13,7 @@ function extractCountryCode(tag: string): string | null {
 }
 
 export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = false): Promise<Response> {
-    const { outProxy, ports, mtu } = globalThis.settings;
-    const { enableTun, mtu } = globalThis.settings;
+    const { outProxy, ports, enableTun, mtu } = globalThis.settings;
     const tunInbound = buildTunInbound(enableTun, mtu);
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
     const isChain = !!chainProxy;
@@ -105,9 +104,9 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         },
         dns: await buildDNS(false, isChain),
         inbounds: [
-            tunInbound,
-            buildMixedInbound()
-        ].filter(Boolean),
+			tunInbound,
+			buildMixedInbound()
+		].filter(Boolean) as (MixedInbound | TunInbound)[],
         outbounds: outbounds,
         route: buildRoutingRules(false, isChain),
         ntp: {
@@ -144,8 +143,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
 }
 
 export async function getSbWarpConfig(request: Request, env: Env): Promise<Response> {
-    const { warpEndpoints, mtu } = globalThis.settings;
-    const { enableTun, mtu } = globalThis.settings;
+    const { warpEndpoints, enableTun, mtu } = globalThis.settings;
     const tunInbound = buildTunInbound(enableTun, mtu);
     const { warpAccounts } = await getDataset(request, env);
 
@@ -181,9 +179,9 @@ export async function getSbWarpConfig(request: Request, env: Env): Promise<Respo
         },
         dns: await buildDNS(true, false),
         inbounds: [
-            tunInbound,
-            buildMixedInbound()
-        ].filter(Boolean),
+			tunInbound,
+			buildMixedInbound()
+		].filter(Boolean) as (MixedInbound | TunInbound)[],
         outbounds: [  // 只放非 Wireguard 的出站
             {
                 type: "selector",
