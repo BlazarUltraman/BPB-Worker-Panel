@@ -20,6 +20,7 @@ globalThis.settings = {
     fakeDNS: false,
     enableIPv6: true,
     allowLANConnection: false,
+    enableTun: false,
     mtu: 1500,
     logLevel: "warning",
     remoteDNS: "https://8.8.8.8/dns-query",

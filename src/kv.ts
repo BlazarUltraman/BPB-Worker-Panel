@@ -114,6 +114,7 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["localDNS"],
             ["antiSanctionDNS"],
             ["enableIPv6"],
+            ["enableTun"],
             ["mtu"],
             ["fakeDNS"],
             ["logLevel"],

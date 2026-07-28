@@ -184,12 +184,6 @@
 									</div>
 								</div>
 								<div class="form-control">
-									<label for="mtu">📦 MTU</label>
-									<div>
-										<input type="number" id="mtu" name="mtu" min="576" max="9000" value="1500">
-									</div>
-								</div>
-								<div class="form-control">
 									<label for="logLevel">🎚️ Log Level</label>
 									<div>
 										<select id="logLevel" name="logLevel">
@@ -372,6 +366,26 @@
 											<label for="customCdnSni">💀 SNI</label>
 											<div>
 												<input type="text" id="customCdnSni" name="customCdnSni">
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="container">
+									<div class="section">
+										<h3><span class="material-symbols-rounded">tune</span> Custom TUN</h3>
+										<div class="form-control">
+											<label for="enableTun">🔄 TUN Mode</label>
+											<div>
+												<select id="enableTun" name="enableTun">
+													<option value="true">Enabled</option>
+													<option value="false" selected>Disabled</option>
+												</select>
+											</div>
+										</div>
+										<div class="form-control">
+											<label for="mtu">📦 MTU</label>
+											<div>
+												<input type="number" id="mtu" name="mtu" min="576" max="9000" value="1500">
 											</div>
 										</div>
 									</div>

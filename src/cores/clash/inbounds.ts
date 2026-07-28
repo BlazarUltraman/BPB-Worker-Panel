@@ -1,20 +1,5 @@
 import { Sniffer, Tun } from "types/clash";
 
-export function buildTun(mtu: number): Tun {
-    return {
-        "enable": true,
-        "stack": "mixed",
-        "auto-route": true,
-        "strict-route": true,
-        "auto-detect-interface": true,
-        "dns-hijack": [
-            "any:53",
-            "tcp://any:53"
-        ],
-        "mtu": mtu
-    };
-}
-
 export function buildSniffer(fakeDNS: boolean): Sniffer {
     const enabled = !fakeDNS;
     return {

@@ -164,6 +164,18 @@ function initiateForm() {
         bgFileInput.addEventListener('change', convertBgImageToBase64);
     }
     // ----- 结束 -----
+    
+    // TUN 开关控制 MTU 输入框禁用状态
+	const enableTunSelect = document.getElementById('enableTun');
+	const mtuInput = document.getElementById('mtu');
+
+	function toggleMtu() {
+		mtuInput.disabled = enableTunSelect.value !== 'true';
+	}
+	enableTunSelect.addEventListener('change', toggleMtu);
+	// 初始化状态
+	toggleMtu();
+	// ----- 结束 -----
 
     handleFragmentMode();
 }

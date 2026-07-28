@@ -4,7 +4,7 @@ import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
 import { Outbound, WireguardEndpoint, Config, URLTest, Selector } from 'types/sing-box';
 import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
-import { buildMixedInbound, buildTun } from './inbounds';
+import { buildMixedInbound, buildTunInbound } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
@@ -14,6 +14,8 @@ function extractCountryCode(tag: string): string | null {
 
 export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = false): Promise<Response> {
     const { outProxy, ports, mtu } = globalThis.settings;
+    const { enableTun, mtu } = globalThis.settings;
+    const tunInbound = buildTunInbound(enableTun, mtu);
     const chainProxy = outProxy ? buildChainOutbound() : undefined;
     const isChain = !!chainProxy;
 
@@ -103,9 +105,9 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         },
         dns: await buildDNS(false, isChain),
         inbounds: [
-            buildTun(mtu),
+            tunInbound,
             buildMixedInbound()
-        ],
+        ].filter(Boolean),
         outbounds: outbounds,
         route: buildRoutingRules(false, isChain),
         ntp: {
@@ -143,6 +145,8 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
 
 export async function getSbWarpConfig(request: Request, env: Env): Promise<Response> {
     const { warpEndpoints, mtu } = globalThis.settings;
+    const { enableTun, mtu } = globalThis.settings;
+    const tunInbound = buildTunInbound(enableTun, mtu);
     const { warpAccounts } = await getDataset(request, env);
 
     const proxyTags: string[] = [];
@@ -177,9 +181,9 @@ export async function getSbWarpConfig(request: Request, env: Env): Promise<Respo
         },
         dns: await buildDNS(true, false),
         inbounds: [
-            buildTun(mtu),
+            tunInbound,
             buildMixedInbound()
-        ],
+        ].filter(Boolean),
         outbounds: [  // 只放非 Wireguard 的出站
             {
                 type: "selector",

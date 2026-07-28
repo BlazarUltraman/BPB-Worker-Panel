@@ -72,6 +72,7 @@ declare global {
         fakeDNS: boolean;
         enableIPv6: boolean;
         allowLANConnection: boolean;
+        enableTun: boolean;    // 是否启用 TUN 模式，默认 false
         mtu: number;
         logLevel: "none" | "warning" | "error" | "info" | "debug";
         remoteDNS: string;

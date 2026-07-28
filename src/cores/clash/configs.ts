@@ -22,13 +22,27 @@ async function buildConfig(
     isWarp: boolean,
     isPro: boolean
 ): Promise<Config> {
-    const { logLevel, allowLANConnection, mtu, fakeDNS } = globalThis.settings;
+    const { logLevel, allowLANConnection, mtu, enableTun, fakeDNS } = globalThis.settings;
     const tcpSettings = isWarp ? {} : {
         "disable-keep-alive": false,
         "keep-alive-idle": 10,
         "keep-alive-interval": 15,
         "tcp-concurrent": true
     };
+    
+    // 构建 tun（仅当 enableTun 为 true 时）
+    let tun: Tun | undefined;
+    if (enableTun) {
+        tun = {
+            enable: true,
+            stack: "mixed",
+            auto-route: true,
+            strict-route: true,
+            auto-detect-interface: true,
+            dns-hijack: ["any:53"],  // 按用户示例只保留 any:53
+            mtu: mtu || 1500
+        };
+    }
 
     const config: Config = {
         "mixed-port": 7890,
@@ -52,7 +66,7 @@ async function buildConfig(
             "store-fake-ip": true
         },
         "dns": await buildDNS(isChain, isWarp, isPro),
-        "tun": buildTun(mtu),
+        ...(enableTun ? { tun } : {}),   // 仅当启用时添加
         "sniffer": buildSniffer(fakeDNS),
         "proxies": outbounds,
         "proxy-groups": [
