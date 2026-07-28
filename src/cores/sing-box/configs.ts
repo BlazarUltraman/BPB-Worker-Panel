@@ -2,7 +2,7 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
-import { Outbound, WireguardEndpoint, Config, URLTest, Selector } from 'types/sing-box';
+import { Outbound, WireguardEndpoint, Config, URLTest, Selector, MixedInbound, TunInbound } from 'types/sing-box';
 import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
 import { buildMixedInbound, buildTunInbound } from './inbounds';
 
