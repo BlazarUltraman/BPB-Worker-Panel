@@ -49,10 +49,7 @@ export interface Tun {
     "auto-route": true;
     "strict-route": true;
     "auto-detect-interface": true;
-    "dns-hijack": [
-        "any:53",
-        "tcp://any:53"
-    ];
+    "dns-hijack": string[];
     "mtu": number;
 }
 
