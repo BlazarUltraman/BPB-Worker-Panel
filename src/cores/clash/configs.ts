@@ -31,21 +31,20 @@ async function buildConfig(
     };
     
     // 构建 tun（仅当 enableTun 为 true 时）
-    let tun: Tun | undefined;
-    if (enableTun) {
-        tun = {
-            enable: true,
-            stack: "mixed",
-            auto-route: true,
-            strict-route: true,
-            auto-detect-interface: true,
-            "dns-hijack": [
+	if (enableTun) {
+		tun = {
+			enable: true,
+			stack: "mixed",
+			"auto-route": true,
+			"strict-route": true,
+			"auto-detect-interface": true,
+			"dns-hijack": [
 				"any:53",
 				"tcp://any:53"
 			],
-            mtu: mtu || 1500
-        };
-    }
+			mtu: mtu || 1500
+		};
+	}
 
     const config: Config = {
         "mixed-port": 7890,
