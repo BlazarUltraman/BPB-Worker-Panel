@@ -251,7 +251,7 @@ export interface Config {
     "external-ui-url": string;
     "profile": Profile;
     "dns": Dns;
-    "tun": Tun;
+    "tun?": Tun;
     "sniffer": Sniffer;
     "proxies": Outbound[];
     "proxy-groups": Array<Selector | URLTest>;
