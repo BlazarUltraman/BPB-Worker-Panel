@@ -12,6 +12,19 @@ function extractCountryCode(tag: string): string | null {
     return match ? match[1] : null;
 }
 
+// 拉取并解析规则
+async function fetchCustomGroupRules(url: string): Promise<string[]> {
+    try {
+        const resp = await fetch(url);
+        const text = await resp.text();
+        return text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+    } catch {
+        return [];
+    }
+}
+
 // ==================== buildConfig 函数（保持不变） ====================
 async function buildConfig(
     outbounds: Outbound[],
@@ -22,7 +35,7 @@ async function buildConfig(
     isWarp: boolean,
     isPro: boolean
 ): Promise<Config> {
-    const { logLevel, allowLANConnection, mtu, enableTun, fakeDNS } = globalThis.settings;
+    const { logLevel, allowLANConnection, mtu, enableTun, fakeDNS, enableIPv6 } = globalThis.settings;  // 添加 enableIPv6
     const tcpSettings = isWarp ? {} : {
         "disable-keep-alive": false,
         "keep-alive-idle": 10,
@@ -49,7 +62,7 @@ async function buildConfig(
 
     const config: Config = {
         "mixed-port": 7890,
-        "ipv6": true,
+        "ipv6": enableIPv6,
         "allow-lan": allowLANConnection,
         "unified-delay": false,
         "log-level": logLevel.replace("none", "silent"),
@@ -194,6 +207,54 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
         false
     );
     builtConfig['proxy-groups'] = proxyGroups;
+    
+    // 构建所有可用节点列表（用于自定义分组的 proxies）
+    const allProxies = [
+        '✅ Selector',
+        '💦 Best Ping 🚀',
+        ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
+        ...countryGroupTags,
+        ...proxyTags,
+        ...(isChain ? chainTags : []),
+    ];
+
+    const customGroups = globalThis.settings.customGroups || [];
+    const insertedRules: string[] = [];
+    const newProxyGroups: Selector[] = [];
+
+    for (const group of customGroups) {
+        if (!group.url) continue;
+        const rules = await fetchCustomGroupRules(group.url);
+        if (rules.length === 0) continue;
+
+        // 生成 Selector 组
+        newProxyGroups.push({
+            name: group.name,
+            type: 'select',
+            proxies: allProxies,
+        });
+
+        // 收集规则（每行作为 Clash 规则）
+        for (const rule of rules) {
+            insertedRules.push(rule); // 规则格式如 "DOMAIN-KEYWORD,youtube"
+        }
+    }
+
+    // 将新分组追加到 proxy-groups
+    builtConfig['proxy-groups'].push(...newProxyGroups);
+
+    // 插入规则到 rules 数组（放在拦截规则之前）
+    if (insertedRules.length > 0) {
+        const rulesArray = builtConfig.rules;
+        // 找到第一个 REJECT 规则的位置（从后往前找，或找 MATCH 之前）
+        let insertIndex = rulesArray.findIndex(r => r.includes(',REJECT') || r.includes('REJECT'));
+        if (insertIndex === -1) {
+            // 若没有 REJECT，则在 MATCH 之前
+            insertIndex = rulesArray.findIndex(r => r.startsWith('MATCH'));
+        }
+        if (insertIndex === -1) insertIndex = rulesArray.length; // 末尾
+        rulesArray.splice(insertIndex, 0, ...insertedRules);
+    }
 
     return new Response(JSON.stringify(builtConfig, null, 4), {
         status: 200,

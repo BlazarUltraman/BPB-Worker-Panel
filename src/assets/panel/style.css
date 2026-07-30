@@ -163,8 +163,14 @@ h1 {
     flex-direction: column;
     gap: var(--container-gap);
     margin: 0 0 var(--container-gap) 0;
+    padding: 0 20px;
 }
 
+.padding {
+    padding: 0 20px !important;
+    gap: 0 !important;
+}
+    
 .form-control {
     width: 100%;
     display: flex;
@@ -950,6 +956,16 @@ textarea::-webkit-scrollbar {
 	}
 	.container-big {
 		padding: var(--container-padding) calc(var(--container-padding) / 2);
+	}
+	.padding {
+		padding: 0 15px !important;
+		gap: 0 !important;
+	}
+	.configForm {
+		padding: 0px 15px;
+	}
+	.section {
+		padding: 8px 15px;
 	}
 }
 

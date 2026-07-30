@@ -86,7 +86,7 @@
 			<!-- 间隔 -->
 			<div style="margin:10px 0;"></div>
 		   
-			<div class="cf-usage-stats cf-stat-inside-card" style="padding:0 20px; gap:0;">
+			<div class="cf-usage-stats cf-stat-inside-card padding">
 				<details>
 					<summary><h3 style="color: var(--primary-color);">设置</h3></summary>
 					<form id="configForm" class="configForm" onsubmit="updateSettings(event)">
@@ -293,7 +293,7 @@
 									</div>
 								</div>
 								<div class="form-control">
-									<label for="bestVLTRInterval">🔄 Best Interval</label>
+									<label for="bestVLTRInterval">🔄 Best Interval (s)</label>
 									<div>
 										<input type="number" id="bestVLTRInterval" name="bestVLTRInterval" min="10" max="86400">
 									</div>
@@ -308,85 +308,79 @@
 									</div>
 								</div>
 								<div class="container">
-									<div class="section">
-										<h3><span class="material-symbols-rounded">tune</span> Proxy IP</h3>
-										<div class="form-control">
-											<label for="proxyIPMode">🎚️ Mode</label>
-											<div>
-												<select id="proxyIPMode" name="proxyIPMode">
-													<option value="proxyip">Proxy IP</option>
-													<option value="prefix">NAT64</option>
-												</select>
-											</div>
+									<h3><span class="material-symbols-rounded">tune</span> Proxy IP</h3>
+									<div class="form-control">
+										<label for="proxyIPMode">🎚️ Mode</label>
+										<div>
+											<select id="proxyIPMode" name="proxyIPMode">
+												<option value="proxyip">Proxy IP</option>
+												<option value="prefix">NAT64</option>
+											</select>
 										</div>
-										<div class="form-control">
-											<label for="proxyIPs">
-												📍 Proxy IPs / Domains
-												<a class="scanner"
-													href="https://www.nslookup.io/domains/bpb.yousef.isegaro.com/dns-records/"
-													title="Proxy IPs" target="_blank" rel="noopener noreferrer">
-													<span class="material-symbols-rounded">open_in_new</span>
-												</a>
-											</label>
-											<div>
-												<textarea type="text" id="proxyIPs" name="proxyIPs" rows="1"></textarea>
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="proxyIPs">
+											📍 Proxy IPs / Domains
+											<a class="scanner"
+												href="https://www.nslookup.io/domains/bpb.yousef.isegaro.com/dns-records/"
+												title="Proxy IPs" target="_blank" rel="noopener noreferrer">
+												<span class="material-symbols-rounded">open_in_new</span>
+											</a>
+										</label>
+										<div>
+											<textarea type="text" id="proxyIPs" name="proxyIPs" rows="1"></textarea>
 										</div>
-										<div class="form-control">
-											<label for="prefixes">
-												📍 NAT64 Prefixes
-												<a class="scanner"
-													href="https://github.com/bia-pain-bache/BPB-Worker-Panel/blob/main/docs/NAT64Prefixes.md"
-													title="NAT64 prefixes" target="_blank" rel="noopener noreferrer">
-													<span class="material-symbols-rounded">open_in_new</span>
-												</a>
-											</label>
-											<div>
-												<textarea type="text" id="prefixes" name="prefixes" rows="1"></textarea>
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="prefixes">
+											📍 NAT64 Prefixes
+											<a class="scanner"
+												href="https://github.com/bia-pain-bache/BPB-Worker-Panel/blob/main/docs/NAT64Prefixes.md"
+												title="NAT64 prefixes" target="_blank" rel="noopener noreferrer">
+												<span class="material-symbols-rounded">open_in_new</span>
+											</a>
+										</label>
+										<div>
+											<textarea type="text" id="prefixes" name="prefixes" rows="1"></textarea>
 										</div>
 									</div>
 								</div>
 								<div class="container">
-									<div class="section">
-										<h3><span class="material-symbols-rounded">tune</span> Custom CDN</h3>
-										<div class="form-control">
-											<label for="customCdnAddrs">💀 Addresses</label>
-											<div>
-												<textarea type="text" id="customCdnAddrs" name="customCdnAddrs" rows="1"></textarea>
-											</div>
+									<h3><span class="material-symbols-rounded">tune</span> Custom CDN</h3>
+									<div class="form-control">
+										<label for="customCdnAddrs">💀 Addresses</label>
+										<div>
+											<textarea type="text" id="customCdnAddrs" name="customCdnAddrs" rows="1"></textarea>
 										</div>
-										<div class="form-control">
-											<label for="customCdnHost">💀 Host</label>
-											<div>
-												<input type="text" id="customCdnHost" name="customCdnHost">
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="customCdnHost">💀 Host</label>
+										<div>
+											<input type="text" id="customCdnHost" name="customCdnHost">
 										</div>
-										<div class="form-control">
-											<label for="customCdnSni">💀 SNI</label>
-											<div>
-												<input type="text" id="customCdnSni" name="customCdnSni">
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="customCdnSni">💀 SNI</label>
+										<div>
+											<input type="text" id="customCdnSni" name="customCdnSni">
 										</div>
 									</div>
 								</div>
 								<div class="container">
-									<div class="section">
-										<h3><span class="material-symbols-rounded">tune</span> Custom TUN</h3>
-										<div class="form-control">
-											<label for="enableTun">🔄 TUN Mode</label>
-											<div>
-												<select id="enableTun" name="enableTun">
-													<option value="true">Enabled</option>
-													<option value="false" selected>Disabled</option>
-												</select>
-											</div>
+									<h3><span class="material-symbols-rounded">tune</span> TUN Mode</h3>
+									<div class="form-control">
+										<label for="enableTun">🔄 TUN Status</label>
+										<div>
+											<select id="enableTun" name="enableTun">
+												<option value="true">Enabled</option>
+												<option value="false" selected>Disabled</option>
+											</select>
 										</div>
-										<div class="form-control">
-											<label for="mtu">📦 MTU</label>
-											<div>
-												<input type="number" id="mtu" name="mtu" min="576" max="9000" value="1500">
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="mtu">📦 MTU</label>
+										<div>
+											<input type="number" id="mtu" name="mtu" min="576" max="9000" value="1500">
 										</div>
 									</div>
 								</div>
@@ -509,61 +503,57 @@
 							</summary>
 							<div class="section">
 								<div class="container">
-									<div class="section">
-										<h3><span class="material-symbols-rounded">tune</span> MahsaNG Noise</h3>
-										<div class="form-control">
-											<label for="knockerNoiseMode">😵‍💫 Mode</label>
-											<div>
-												<input type="text" id="knockerNoiseMode" name="knockerNoiseMode"
-													title="Fill in 'none', 'quic', 'random', or any HEX string like 'ee0000000108aaaa'"
-													required>
-											</div>
+									<h3><span class="material-symbols-rounded">tune</span> MahsaNG Noise</h3>
+									<div class="form-control">
+										<label for="knockerNoiseMode">😵‍💫 Mode</label>
+										<div>
+											<input type="text" id="knockerNoiseMode" name="knockerNoiseMode"
+												title="Fill in 'none', 'quic', 'random', or any HEX string like 'ee0000000108aaaa'"
+												required>
 										</div>
-										<div class="form-control">
-											<label for="noiseCountMin">🎚️ Count</label>
-											<div class="min-max">
-												<input type="number" id="noiseCountMin" name="noiseCountMin" min="1" required>
-												<span>-</span>
-												<input type="number" id="noiseCountMax" name="noiseCountMax" min="1" required>
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="noiseCountMin">🎚️ Count</label>
+										<div class="min-max">
+											<input type="number" id="noiseCountMin" name="noiseCountMin" min="1" required>
+											<span>-</span>
+											<input type="number" id="noiseCountMax" name="noiseCountMax" min="1" required>
 										</div>
-										<div class="form-control">
-											<label for="noiseSizeMin">📏 Size</label>
-											<div class="min-max">
-												<input type="number" id="noiseSizeMin" name="noiseSizeMin" min="1" required>
-												<span>-</span>
-												<input type="number" id="noiseSizeMax" name="noiseSizeMax" min="1" required>
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="noiseSizeMin">📏 Size</label>
+										<div class="min-max">
+											<input type="number" id="noiseSizeMin" name="noiseSizeMin" min="1" required>
+											<span>-</span>
+											<input type="number" id="noiseSizeMax" name="noiseSizeMax" min="1" required>
 										</div>
-										<div class="form-control">
-											<label for="noiseDelayMin">🕞 Delay</label>
-											<div class="min-max">
-												<input type="number" id="noiseDelayMin" name="noiseDelayMin" min="1" required>
-												<span>-</span>
-												<input type="number" id="noiseDelayMax" name="noiseDelayMax" min="1" required>
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="noiseDelayMin">🕞 Delay</label>
+										<div class="min-max">
+											<input type="number" id="noiseDelayMin" name="noiseDelayMin" min="1" required>
+											<span>-</span>
+											<input type="number" id="noiseDelayMax" name="noiseDelayMax" min="1" required>
 										</div>
 									</div>
 								</div>
 								<div class="container">
-									<div class="section">
-										<h3><span class="material-symbols-rounded">tune</span> Clash - Amnezia Noise</h3>
-										<div class="form-control">
-											<label for="amneziaNoiseCount">🎚️ Count</label>
-											<div>
-												<input type="number" id="amneziaNoiseCount" name="amneziaNoiseCount" min="1"
-													required>
-											</div>
+									<h3><span class="material-symbols-rounded">tune</span> Clash - Amnezia Noise</h3>
+									<div class="form-control">
+										<label for="amneziaNoiseCount">🎚️ Count</label>
+										<div>
+											<input type="number" id="amneziaNoiseCount" name="amneziaNoiseCount" min="1"
+												required>
 										</div>
-										<div class="form-control">
-											<label for="amneziaNoiseSizeMin">📏 Size</label>
-											<div class="min-max">
-												<input type="number" id="amneziaNoiseSizeMin" name="amneziaNoiseSizeMin" min="1"
-													required>
-												<span>-</span>
-												<input type="number" id="amneziaNoiseSizeMax" name="amneziaNoiseSizeMax" min="1"
-													required>
-											</div>
+									</div>
+									<div class="form-control">
+										<label for="amneziaNoiseSizeMin">📏 Size</label>
+										<div class="min-max">
+											<input type="number" id="amneziaNoiseSizeMin" name="amneziaNoiseSizeMin" min="1"
+												required>
+											<span>-</span>
+											<input type="number" id="amneziaNoiseSizeMax" name="amneziaNoiseSizeMax" min="1"
+												required>
 										</div>
 									</div>
 								</div>
@@ -729,6 +719,19 @@
 										<div>
 											<textarea type="text" id="customBypassSanctionRules" name="customBypassSanctionRules"
 												rows="1"></textarea>
+										</div>
+									</div>
+									<div class="container">
+										<h3><span class="material-symbols-rounded">tune</span> Custom Group</h3>
+										<div class="form-control">
+											<div id="customGroupsContainer">
+												<div id="customGroupList"></div>
+												<div style="display:flex; gap:10px; margin-top:10px;">
+													<input type="text" id="newGroupName" placeholder="分组名称（如 🇬 YouTube）" style="flex:1;">
+													<input type="url" id="newGroupUrl" placeholder="规则链接（如 https://.../YouTube.list）" style="flex:2;">
+													<button type="button" class="button" onclick="addCustomGroup()" style="flex:0;">添加</button>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>

@@ -66,9 +66,18 @@ export async function getDataset(
 			await env.kv.put("proxySettings", JSON.stringify(settings));
 			proxySettings = settings;
 		} else {
-			// 若存在但缺失 mtu，则补充默认值
+			// 检查并补充缺失的字段
+			let needUpdate = false;
 			if (proxySettings.mtu === undefined) {
 				proxySettings.mtu = settings.mtu;
+				needUpdate = true;
+			}
+			if (proxySettings.enableTun === undefined) {
+				proxySettings.enableTun = settings.enableTun;
+				needUpdate = true;
+			}
+			// 如果还有其他可能缺失的字段，可在此添加
+			if (needUpdate) {
 				await env.kv.put("proxySettings", JSON.stringify(proxySettings));
 			}
 		}
@@ -182,7 +191,8 @@ export async function updateDataset(request: Request, env: Env): Promise<Setting
             ["amneziaNoiseSizeMin"],
             ["amneziaNoiseSizeMax"],
             ["linkUrl"],
-            ["customByproxyRules"]
+            ["customByproxyRules"],
+			["customGroups"],   // 新增
         ];
 
     const entries = await Promise.all(

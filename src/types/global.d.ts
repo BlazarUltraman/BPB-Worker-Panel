@@ -125,6 +125,7 @@ declare global {
         customBypassRules: string[];
         customBlockRules: string[];
         customBypassSanctionRules: string[];
+        customGroups: Array<{ name: string; url: string }>;
         warpRemoteDNS: string;
         warpEndpoints: string[];
         bestWarpInterval: number;

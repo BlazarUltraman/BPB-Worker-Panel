@@ -79,6 +79,9 @@ function initiatePanel(proxySettings) {
     loadBackgroundOnInit();
     loadCloudflareConfig();
     fetchcloudflareInfo();
+    // 新增：初始化自定义分组
+    globalThis.customGroups = proxySettings.customGroups || [];
+    renderCustomGroups();
 }
 
 function populatePanel(proxySettings) {
@@ -1107,8 +1110,9 @@ function validateSettings() {
     });
 
     numInputElements.forEach(elm => {
-        form[elm.id] = Number(form[elm.id].trim());
-    });
+		const raw = form[elm.id] !== undefined ? form[elm.id] : document.getElementById(elm.id).value;
+		form[elm.id] = Number(raw?.trim() || 0);
+	});
 
     textareaElements.forEach(elm => {
 	    const key = elm.id;
@@ -1120,6 +1124,9 @@ function validateSettings() {
             form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
         }
     });
+    
+    form.customGroups = globalThis.customGroups || [];
+    
     return form;
 }
 
@@ -1882,3 +1889,35 @@ function updateCountdown() {
 // 启动倒计时
 setInterval(updateCountdown, 1000);
 updateCountdown();
+
+// 渲染分组列表
+function renderCustomGroups() {
+    const list = document.getElementById('customGroupList');
+    const groups = globalThis.customGroups || [];
+    list.innerHTML = groups.map((g, i) => `
+        <div class="custom-group-item" style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border-color);">
+            <span><strong>${g.name}</strong> — ${g.url}</span>
+            <button type="button" class="delete-noise" onclick="removeCustomGroup(${i})" style="background:none; border:none; color:red; cursor:pointer;">✕</button>
+        </div>
+    `).join('');
+}
+
+function removeCustomGroup(index) {
+    globalThis.customGroups.splice(index, 1);
+    renderCustomGroups();
+    enableApplyButton();
+}
+
+function addCustomGroup() {
+    const nameInput = document.getElementById('newGroupName');
+    const urlInput = document.getElementById('newGroupUrl');
+    const name = nameInput.value.trim();
+    const url = urlInput.value.trim();
+    if (!name || !url) return alert('请填写完整信息');
+    if (!globalThis.customGroups) globalThis.customGroups = [];
+    globalThis.customGroups.push({ name, url });
+    nameInput.value = '';
+    urlInput.value = '';
+    renderCustomGroups();
+    enableApplyButton();
+}
