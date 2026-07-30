@@ -209,72 +209,71 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
     builtConfig['proxy-groups'] = proxyGroups;
     
     // 构建所有可用节点列表（用于自定义分组的 proxies）
-    const allProxies = [
-        '✅ Selector',
-        '💦 Best Ping 🚀',
-        ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
-        ...countryGroupTags,
-        ...proxyTags,
-        ...(isChain ? chainTags : []),
-    ];
+	const allProxies = [
+		'✅ Selector',
+		'💦 Best Ping 🚀',
+		...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
+		...countryGroupTags,
+		...proxyTags,
+		...(isChain ? chainTags : []),
+	];
 
-    const customGroups = globalThis.settings.customGroups || [];
-    const insertedRules: string[] = [];
-    const newProxyGroups: Selector[] = [];
+	const customGroups = globalThis.settings.customGroups || [];
+	const insertedRules: string[] = [];
+	const newProxyGroups: Selector[] = [];
 
-    for (const group of customGroups) {
-    if (!group.url) continue;
-    const rules = await fetchCustomGroupRules(group.url);
-    if (rules.length === 0) continue;
+	for (const group of customGroups) {
+		if (!group.url) continue;
+		const rules = await fetchCustomGroupRules(group.url);
+		if (rules.length === 0) continue;
 
-    // 生成 Selector 组
-    newProxyGroups.push({
-        name: group.name,
-        type: 'select',
-        proxies: allProxies,
-    });
+		// 生成 Selector 组
+		newProxyGroups.push({
+			name: group.name,
+			type: 'select',
+			proxies: allProxies,
+		});
 
-    // 处理每条规则，自动追加目标组
-    for (const rule of rules) {
-        const trimmed = rule.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
+		// 处理每条规则，自动追加目标组
+		for (const rule of rules) {
+			const trimmed = rule.trim();
+			if (!trimmed || trimmed.startsWith('#')) continue;
+			const parts = trimmed.split(',');
+			const ruleType = parts[0].trim();
+			const routeTypes = [
+				'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'DOMAIN-FULL',
+				'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'SRC-IP-CIDR',
+				'SRC-PORT', 'DST-PORT', 'PROCESS-NAME'
+			];
+			let finalRule = trimmed;
+			if (routeTypes.includes(ruleType) && parts.length < 3) {
+				finalRule = `${trimmed},${group.name}`;
+			}
+			insertedRules.push(finalRule);
+		}
+	}
 
-        // 分割规则，判断是否已有目标代理组
-        const parts = trimmed.split(',');
-        const ruleType = parts[0].trim();
+	// 将新分组插入到 proxy-groups 中，位置在 ✅ Selector 之后
+	if (newProxyGroups.length > 0) {
+		const selectorIdx = builtConfig['proxy-groups'].findIndex(g => g.name === '✅ Selector');
+		if (selectorIdx !== -1) {
+			builtConfig['proxy-groups'].splice(selectorIdx + 1, 0, ...newProxyGroups);
+		} else {
+			// fallback
+			builtConfig['proxy-groups'].push(...newProxyGroups);
+		}
+	}
 
-        // 常见的 Clash 路由规则类型（可根据需要扩充）
-        const routeTypes = [
-            'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'DOMAIN-FULL',
-            'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'SRC-IP-CIDR',
-            'SRC-PORT', 'DST-PORT', 'PROCESS-NAME'
-        ];
-
-        let finalRule = trimmed;
-        if (routeTypes.includes(ruleType) && parts.length < 3) {
-            // 只有两个字段，说明没有目标代理组 → 追加分组名
-            finalRule = `${trimmed},${group.name}`;
-        }
-        // 若已包含目标组（parts.length >= 3），则保持原样
-        insertedRules.push(finalRule);
-    }
-}
-
-    // 将新分组追加到 proxy-groups
-    builtConfig['proxy-groups'].push(...newProxyGroups);
-
-    // 插入规则到 rules 数组（放在拦截规则之前）
-    if (insertedRules.length > 0) {
-        const rulesArray = builtConfig.rules;
-        // 找到第一个 REJECT 规则的位置（从后往前找，或找 MATCH 之前）
-        let insertIndex = rulesArray.findIndex(r => r.includes(',REJECT') || r.includes('REJECT'));
-        if (insertIndex === -1) {
-            // 若没有 REJECT，则在 MATCH 之前
-            insertIndex = rulesArray.findIndex(r => r.startsWith('MATCH'));
-        }
-        if (insertIndex === -1) insertIndex = rulesArray.length; // 末尾
-        rulesArray.splice(insertIndex, 0, ...insertedRules);
-    }
+	// 插入规则到 rules 数组（放在拦截规则之前）
+	if (insertedRules.length > 0) {
+		const rulesArray = builtConfig.rules;
+		let insertIndex = rulesArray.findIndex(r => r.includes(',REJECT') || r.includes('REJECT'));
+		if (insertIndex === -1) {
+			insertIndex = rulesArray.findIndex(r => r.startsWith('MATCH'));
+		}
+		if (insertIndex === -1) insertIndex = rulesArray.length;
+		rulesArray.splice(insertIndex, 0, ...insertedRules);
+	}
 
     return new Response(JSON.stringify(builtConfig, null, 4), {
         status: 200,
