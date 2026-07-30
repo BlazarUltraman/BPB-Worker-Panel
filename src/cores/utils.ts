@@ -374,13 +374,28 @@ Object.prototype.omitEmpty = function <T>(): T | undefined {
     return this as T;
 }
 
+// 自动检测并解析 YAML 格式
 export async function fetchCustomGroupRules(url: string): Promise<string[]> {
     try {
         const resp = await fetch(url);
         const text = await resp.text();
-        return text.split('\n')
+        const lines = text.split('\n')
             .map(line => line.trim())
             .filter(line => line && !line.startsWith('#'));
+
+        // 检测是否为 YAML 格式（包含 "payload:" 或 "- " 开头的规则行）
+        const isYaml = lines.some(line => line === 'payload:' || line.startsWith('- '));
+
+        if (isYaml) {
+            // YAML 格式解析：提取 "- " 开头的行，去掉前缀
+            return lines
+                .filter(line => line.startsWith('- '))
+                .map(line => line.substring(2).trim()) // 去掉 "- "
+                .filter(line => line.length > 0);
+        }
+
+        // 纯文本格式：直接返回所有非空、非注释行
+        return lines;
     } catch {
         return [];
     }
