@@ -3,7 +3,7 @@ import { buildDNS } from './dns';
 import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
 import { Outbound, WireguardEndpoint, Config, URLTest, Selector, MixedInbound, TunInbound } from 'types/sing-box';
-import { getConfigAddresses, generateRemark, isHttps, getProtocols, fetchCustomGroupRules } from '@utils';
+import { getConfigAddresses, generateRemark, isHttps, getProtocols, fetchCustomGroupRules, isSupportedClashRule } from '@utils';
 import { buildMixedInbound, buildTunInbound } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
@@ -119,6 +119,8 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
 
         // 转换规则为 sing-box 路由规则
         for (const rule of rules) {
+			// 过滤不支持的规则类型
+			if (!isSupportedClashRule(rule)) continue;
             const trimmed = rule.trim();
             if (!trimmed || trimmed.startsWith('#')) continue;
             // 解析 Clash 风格规则：DOMAIN-KEYWORD, youtube, ...

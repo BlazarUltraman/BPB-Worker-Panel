@@ -3,7 +3,7 @@ import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
 import type { WireguardOutbound, Config, Outbound, URLTest, Selector, Tun } from 'types/clash';
-import { getConfigAddresses, generateRemark, getProtocols, fetchCustomGroupRules } from '@utils';
+import { getConfigAddresses, generateRemark, getProtocols, fetchCustomGroupRules, isSupportedClashRule } from '@utils';
 import { buildSniffer } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
@@ -223,6 +223,8 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
 
 		// 处理每条规则，自动追加目标组
 		for (const rule of rules) {
+			// 过滤不支持的规则类型
+			if (!isSupportedClashRule(rule)) continue;
 			const trimmed = rule.trim();
 			if (!trimmed || trimmed.startsWith('#')) continue;
 			const parts = trimmed.split(',');

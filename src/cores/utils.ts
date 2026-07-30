@@ -399,3 +399,15 @@ export async function fetchCustomGroupRules(url: string): Promise<string[]> {
         return [];
     }
 }
+
+// 添加统一过滤函数
+export function isSupportedClashRule(rule: string): boolean {
+    const parts = rule.split(',');
+    const type = parts[0]?.trim().toUpperCase();
+    const supportedTypes = [
+        'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'DOMAIN-FULL',
+        'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'SRC-IP-CIDR',
+        'SRC-PORT', 'DST-PORT', 'PROCESS-NAME'
+    ];
+    return supportedTypes.includes(type);
+}

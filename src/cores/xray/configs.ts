@@ -19,7 +19,8 @@ import {
     parseHostPort,
     toRange,
     fetchCustomGroupRules,
-    escapeRegExp
+    escapeRegExp,
+    isSupportedClashRule
 } from '@utils';
 
 // 辅助：提取国家代码
@@ -381,6 +382,8 @@ export async function getXrCustomConfigs(isFragment: boolean, useLink: boolean =
 			});
 
 			for (const rule of rules) {
+				// 过滤不支持的规则类型
+				if (!isSupportedClashRule(rule)) continue;
 				const trimmed = rule.trim();
 				if (!trimmed || trimmed.startsWith('#')) continue;
 				const parts = trimmed.split(',');
