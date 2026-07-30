@@ -925,13 +925,13 @@ summary h3 {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	gap: 12px;
+	gap: var(--inner-container-padding);
+	text-align: left;
 }
 
 .custom-Group-List {
 	word-break: break-all;
 	flex-direction: column;
-	gap: 8px;
 	flex-wrap: wrap;
 }
 
