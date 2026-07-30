@@ -723,15 +723,13 @@
 									</div>
 									<div class="container">
 										<h3><span class="material-symbols-rounded">tune</span> Custom Group</h3>
-										<div class="form-control">
-											<div id="customGroupsContainer">
-												<div id="customGroupList"></div>
-												<div style="display:flex; gap:10px; margin-top:10px;">
-													<input type="text" id="newGroupName" placeholder="分组名称（如 🇬 YouTube）" style="flex:1;">
-													<input type="url" id="newGroupUrl" placeholder="规则链接（如 https://.../YouTube.list）" style="flex:2;">
-													<button type="button" class="button" onclick="addCustomGroup()" style="flex:0;">添加</button>
-												</div>
+										<div class="form-control" id="customGroupsContainer" style="flex-direction: column;">
+											<div style="display:flex; gap:10px; margin-bottom:10px;">
+												<input type="text" id="newGroupName" placeholder="分组名称" style="flex:1;">
+												<input type="url" id="newGroupUrl" placeholder="规则链接（如 https://.../YouTube.list）" style="flex:2;">
+												<button type="button" class="button" onclick="addCustomGroup()" style="flex:0;">添加</button>
 											</div>
+											<div id="customGroupList" class="inner-container custom-Group-List"></div>
 										</div>
 									</div>
 								</div>

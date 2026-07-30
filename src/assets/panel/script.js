@@ -1895,7 +1895,7 @@ function renderCustomGroups() {
     const list = document.getElementById('customGroupList');
     const groups = globalThis.customGroups || [];
     list.innerHTML = groups.map((g, i) => `
-        <div class="custom-group-item" style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border-color);">
+        <div class="custom-group-item">
             <span><strong>${g.name}</strong> — ${g.url}</span>
             <button type="button" class="delete-noise" onclick="removeCustomGroup(${i})" style="background:none; border:none; color:red; cursor:pointer;">✕</button>
         </div>

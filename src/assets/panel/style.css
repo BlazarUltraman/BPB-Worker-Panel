@@ -921,6 +921,20 @@ summary h3 {
 	animation: pulse 2s infinite;
 }
 
+.custom-group-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+
+.custom-Group-List {
+	word-break: break-all;
+	flex-direction: column;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
 @keyframes pulse {
 	0% { opacity: 1; }
 	50% { opacity: 0.5; }
