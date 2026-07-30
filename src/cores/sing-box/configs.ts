@@ -3,7 +3,7 @@ import { buildDNS } from './dns';
 import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
 import { Outbound, WireguardEndpoint, Config, URLTest, Selector, MixedInbound, TunInbound } from 'types/sing-box';
-import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
+import { getConfigAddresses, generateRemark, isHttps, getProtocols, fetchCustomGroupRules } from '@utils';
 import { buildMixedInbound, buildTunInbound } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
@@ -88,11 +88,86 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
         interrupt_exist_connections: false
     };
     outbounds.push(selectorGroup);
+    
+     // ===== 新增：自定义分组处理 =====
+    const customGroups = globalThis.settings.customGroups || [];
+    const customGroupOutbounds: Selector[] = [];
+    const customRules: any[] = []; // 用于路由规则
+
+    // 构建所有可用节点列表（用于自定义分组的 proxies）
+    const allProxies = [
+        '✅ Selector',
+        '💦 Best Ping 🚀',
+        ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
+        ...countryGroupTags,
+        ...proxyTags,
+        ...(isChain ? chainTags : []),
+    ];
+
+    for (const group of customGroups) {
+        if (!group.url) continue;
+        const rules = await fetchCustomGroupRules(group.url);
+        if (rules.length === 0) continue;
+
+        // 生成 Selector 组
+        customGroupOutbounds.push({
+            type: "selector",
+            tag: group.name,
+            outbounds: allProxies,
+            interrupt_exist_connections: false
+        });
+
+        // 转换规则为 sing-box 路由规则
+        for (const rule of rules) {
+            const trimmed = rule.trim();
+            if (!trimmed || trimmed.startsWith('#')) continue;
+            // 解析 Clash 风格规则：DOMAIN-KEYWORD, youtube, ...
+            const parts = trimmed.split(',');
+            const ruleType = parts[0].trim().toUpperCase();
+            const value = parts[1]?.trim();
+            if (!value) continue;
+
+            // 构建 sing-box 路由规则（只处理常见类型）
+            let singRule: any = { outbound: group.name };
+            switch (ruleType) {
+                case 'DOMAIN':
+                    singRule.domain = [value];
+                    break;
+                case 'DOMAIN-SUFFIX':
+                    singRule.domain_suffix = [value];
+                    break;
+                case 'DOMAIN-KEYWORD':
+                    singRule.domain_keyword = [value];
+                    break;
+                case 'DOMAIN-FULL':
+                    singRule.domain = [value]; // 全匹配
+                    break;
+                case 'IP-CIDR':
+                case 'IP-CIDR6':
+                    singRule.ip_cidr = [value];
+                    break;
+                case 'GEOIP':
+                    // GEOIP 暂时忽略，因为需要 rule_set
+                    continue;
+                default:
+                    continue; // 忽略不支持的规则
+            }
+            customRules.push(singRule);
+        }
+    }
+    // ===== 自定义分组处理结束 =====
 
     // 如果有链式代理，添加链式 Best Ping
     if (isChain) {
         const chainBestPing = buildUrlTest('💦 🔗 Best Ping 🚀', chainTags, false);
         outbounds.push(chainBestPing);
+    }
+    
+    const selectorIdx = outbounds.findIndex(o => o.tag === '✅ Selector');
+    if (selectorIdx !== -1) {
+        outbounds.splice(selectorIdx + 1, 0, ...customGroupOutbounds);
+    } else {
+        outbounds.push(...customGroupOutbounds);
     }
 
     // 构建最终配置
@@ -131,6 +206,20 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
             }
         }
     };
+    
+    // 重新构建 route，合并规则
+    const baseRoute = buildRoutingRules(false, isChain);
+	const rulesArray = baseRoute.rules;
+	// 找到第一个 reject 规则索引
+	let insertIdx = rulesArray.findIndex(r => r.action === 'reject');
+	if (insertIdx === -1) {
+		// 若无，则在 final 规则前
+		insertIdx = rulesArray.findIndex(r => r.outbound === '✅ Selector' || r.outbound?.includes('Selector'));
+	}
+	if (insertIdx === -1) insertIdx = rulesArray.length;
+	// 插入自定义规则
+	rulesArray.splice(insertIdx, 0, ...customRules);
+	config.route = { ...baseRoute, rules: rulesArray };
 
     return new Response(JSON.stringify(config, null, 4), {
         status: 200,

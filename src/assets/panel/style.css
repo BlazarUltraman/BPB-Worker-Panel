@@ -929,10 +929,11 @@ summary h3 {
 	text-align: left;
 }
 
-.custom-Group-List {
+.custom-group-list {
 	word-break: break-all;
 	flex-direction: column;
 	flex-wrap: wrap;
+	margin-bottom: 5px;
 }
 
 @keyframes pulse {

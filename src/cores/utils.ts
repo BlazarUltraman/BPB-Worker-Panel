@@ -373,3 +373,15 @@ Object.prototype.omitEmpty = function <T>(): T | undefined {
     if (Object.keys(this).length === 0) return undefined;
     return this as T;
 }
+
+export async function fetchCustomGroupRules(url: string): Promise<string[]> {
+    try {
+        const resp = await fetch(url);
+        const text = await resp.text();
+        return text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+    } catch {
+        return [];
+    }
+}

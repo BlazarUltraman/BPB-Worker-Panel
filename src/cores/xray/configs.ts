@@ -1,7 +1,7 @@
 import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules } from './routing';
-import type { Balancer, Config, Observatory, Outbound } from 'types/xray';
+import type { Balancer, Config, Observatory, Outbound, RoutingRule } from 'types/xray';
 import { buildDokodemoInbound, buildMixedInbound } from './inbounds';
 import {
     buildChainOutbound,
@@ -17,7 +17,9 @@ import {
     isHttps,
     getProtocols,
     parseHostPort,
-    toRange
+    toRange,
+    fetchCustomGroupRules,
+    escapeRegExp
 } from '@utils';
 
 // 辅助：提取国家代码
@@ -342,6 +344,90 @@ export async function getXrCustomConfigs(isFragment: boolean, useLink: boolean =
 		await addBestFragmentConfigs(configs, proxies[0], chainProxy);
 		await addWorkerlessConfigs(configs);
 	}
+	
+	// 获取自定义分组
+    const customGroups = globalThis.settings.customGroups || [];
+    if (customGroups.length > 0) {
+        // 构建所有可用节点标签（用于自定义分组的 selector）
+        // 收集所有代理标签（从全局 proxies 和 chains）
+		const allProxyTags = [
+			...proxies.map(p => p.tag),   // proxy-1, proxy-2, ...
+			...chains.map(c => c.tag),    // chain-1, chain-2, ...
+		];
+
+		// 找到包含 'all-proxies' balancer 的主配置（通常是 Best Ping）
+		const mainConfig = configs.find(cfg => 
+			cfg.routing.balancers?.some(b => b.tag === 'all-proxies')
+		) || configs[configs.length - 1]; // fallback
+
+		// 清除已有自定义 balancer（避免重复添加）
+		if (mainConfig.routing.balancers) {
+			mainConfig.routing.balancers = mainConfig.routing.balancers.filter(b => !customGroups.some(g => g.name === b.tag));
+		}
+
+		const customBalancers: Balancer[] = [];
+		const extraRules: RoutingRule[] = [];
+
+		for (const group of customGroups) {
+			if (!group.url) continue;
+			const rules = await fetchCustomGroupRules(group.url);
+			if (rules.length === 0) continue;
+
+			const balancerTag = group.name;
+			customBalancers.push({
+				tag: balancerTag,
+				selector: allProxyTags,   // 使用完整节点列表
+				strategy: { type: "leastPing" },
+			});
+
+			for (const rule of rules) {
+				const trimmed = rule.trim();
+				if (!trimmed || trimmed.startsWith('#')) continue;
+				const parts = trimmed.split(',');
+				const ruleType = parts[0].trim().toUpperCase();
+				const value = parts[1]?.trim();
+				if (!value) continue;
+
+				let xrayRule: RoutingRule = { type: "field", outboundTag: balancerTag };
+				switch (ruleType) {
+					case 'DOMAIN':
+						xrayRule.domain = [`domain:${value}`];
+						break;
+					case 'DOMAIN-SUFFIX':
+						xrayRule.domain = [`domain:${value}`];
+						break;
+					case 'DOMAIN-KEYWORD':
+						xrayRule.domain = [`regexp:.*${escapeRegExp(value)}.*`];
+						break;
+					case 'DOMAIN-FULL':
+						xrayRule.domain = [`full:${value}`];
+						break;
+					case 'IP-CIDR':
+					case 'IP-CIDR6':
+						xrayRule.ip = [value];
+						break;
+					default:
+						continue;
+				}
+				extraRules.push(xrayRule);
+			}
+		}
+
+		if (customBalancers.length > 0) {
+			if (!mainConfig.routing.balancers) mainConfig.routing.balancers = [];
+			mainConfig.routing.balancers.push(...customBalancers);
+		}
+
+		if (extraRules.length > 0) {
+			const rulesArray = mainConfig.routing.rules;
+			let insertIdx = rulesArray.findIndex(r => r.outboundTag === 'block');
+			if (insertIdx === -1) {
+				insertIdx = rulesArray.findIndex(r => r.outboundTag === 'direct' || r.outboundTag === 'proxy');
+			}
+			if (insertIdx === -1) insertIdx = rulesArray.length;
+			rulesArray.splice(insertIdx, 0, ...extraRules);
+		}
+    }
 
     return new Response(JSON.stringify(configs, null, 4), {
         status: 200,

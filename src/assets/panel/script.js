@@ -1894,12 +1894,16 @@ updateCountdown();
 function renderCustomGroups() {
     const list = document.getElementById('customGroupList');
     const groups = globalThis.customGroups || [];
-    list.innerHTML = groups.map((g, i) => `
-        <div class="custom-group-item">
-            <span><strong>${g.name}</strong> — ${g.url}</span>
-            <button type="button" class="delete-noise" onclick="removeCustomGroup(${i})" style="background:none; border:none; color:red; cursor:pointer;">✕</button>
-        </div>
-    `).join('');
+    if (groups.length === 0) {
+        list.innerHTML = `<div style="color: var(--hr-text-color); justify-content: center;">暂无自定义分组规则</div>`;
+    } else {
+		list.innerHTML = groups.map((g, i) => `
+			<div class="custom-group-item">
+				<span><strong>${g.name}</strong> — ${g.url}</span>
+				<button type="button" class="delete-noise" onclick="removeCustomGroup(${i})" style="background:none; border:none; color:red; cursor:pointer;     padding: 0;">✕</button>
+			</div>
+		`).join('');
+	}
 }
 
 function removeCustomGroup(index) {
