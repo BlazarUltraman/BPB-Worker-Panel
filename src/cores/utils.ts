@@ -392,8 +392,9 @@ export async function fetchCustomGroupRules(url: string): Promise<string[]> {
                 .filter(line => line.length > 0);
         }
 
-        // 否则视为纯文本格式，每行一条规则
-        return lines;
+        // 若没有 YAML 特征，视为纯文本，但需过滤掉 "payload:" 等无效行
+        const validLines = lines.filter(line => !/^payload\s*:/.test(line));
+        return validLines;
     } catch {
         return [];
     }

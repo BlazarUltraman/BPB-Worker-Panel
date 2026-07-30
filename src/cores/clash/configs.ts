@@ -3,26 +3,13 @@ import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
 import type { WireguardOutbound, Config, Outbound, URLTest, Selector, Tun } from 'types/clash';
-import { getConfigAddresses, generateRemark, getProtocols } from '@utils';
+import { getConfigAddresses, generateRemark, getProtocols, fetchCustomGroupRules } from '@utils';
 import { buildSniffer } from './inbounds';
 
 // 辅助函数：从节点名称中提取国家代码（如 "🇺🇸 US-VLESS 1" -> "US"）
 function extractCountryCode(tag: string): string | null {
     const match = tag.match(/\s([A-Z]{2})-/);
     return match ? match[1] : null;
-}
-
-// 拉取并解析规则
-async function fetchCustomGroupRules(url: string): Promise<string[]> {
-    try {
-        const resp = await fetch(url);
-        const text = await resp.text();
-        return text.split('\n')
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith('#'));
-    } catch {
-        return [];
-    }
 }
 
 // ==================== buildConfig 函数（保持不变） ====================
