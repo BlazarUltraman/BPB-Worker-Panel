@@ -223,22 +223,42 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
     const newProxyGroups: Selector[] = [];
 
     for (const group of customGroups) {
-        if (!group.url) continue;
-        const rules = await fetchCustomGroupRules(group.url);
-        if (rules.length === 0) continue;
+    if (!group.url) continue;
+    const rules = await fetchCustomGroupRules(group.url);
+    if (rules.length === 0) continue;
 
-        // 生成 Selector 组
-        newProxyGroups.push({
-            name: group.name,
-            type: 'select',
-            proxies: allProxies,
-        });
+    // 生成 Selector 组
+    newProxyGroups.push({
+        name: group.name,
+        type: 'select',
+        proxies: allProxies,
+    });
 
-        // 收集规则（每行作为 Clash 规则）
-        for (const rule of rules) {
-            insertedRules.push(rule); // 规则格式如 "DOMAIN-KEYWORD,youtube"
+    // 处理每条规则，自动追加目标组
+    for (const rule of rules) {
+        const trimmed = rule.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        // 分割规则，判断是否已有目标代理组
+        const parts = trimmed.split(',');
+        const ruleType = parts[0].trim();
+
+        // 常见的 Clash 路由规则类型（可根据需要扩充）
+        const routeTypes = [
+            'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'DOMAIN-FULL',
+            'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'SRC-IP-CIDR',
+            'SRC-PORT', 'DST-PORT', 'PROCESS-NAME'
+        ];
+
+        let finalRule = trimmed;
+        if (routeTypes.includes(ruleType) && parts.length < 3) {
+            // 只有两个字段，说明没有目标代理组 → 追加分组名
+            finalRule = `${trimmed},${group.name}`;
         }
+        // 若已包含目标组（parts.length >= 3），则保持原样
+        insertedRules.push(finalRule);
     }
+}
 
     // 将新分组追加到 proxy-groups
     builtConfig['proxy-groups'].push(...newProxyGroups);
