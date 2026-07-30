@@ -383,18 +383,16 @@ export async function fetchCustomGroupRules(url: string): Promise<string[]> {
             .map(line => line.trim())
             .filter(line => line && !line.startsWith('#'));
 
-        // 检测是否为 YAML 格式（包含 "payload:" 或 "- " 开头的规则行）
-        const isYaml = lines.some(line => line === 'payload:' || line.startsWith('- '));
-
-        if (isYaml) {
-            // YAML 格式解析：提取 "- " 开头的行，去掉前缀
-            return lines
-                .filter(line => line.startsWith('- '))
-                .map(line => line.substring(2).trim()) // 去掉 "- "
+        // 检测是否为 YAML 格式：存在以 "- " 开头的行（可能带缩进）
+        const yamlLines = lines.filter(line => /^\s*-\s+/.test(line));
+        if (yamlLines.length > 0) {
+            // 提取这些行并去掉 "- " 前缀，得到纯规则
+            return yamlLines
+                .map(line => line.replace(/^\s*-\s*/, '').trim())
                 .filter(line => line.length > 0);
         }
 
-        // 纯文本格式：直接返回所有非空、非注释行
+        // 否则视为纯文本格式，每行一条规则
         return lines;
     } catch {
         return [];
