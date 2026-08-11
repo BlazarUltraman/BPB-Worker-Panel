@@ -57,44 +57,9 @@ const CLOUDFLARE_REQUESTS_LIMIT = 100000;
 const KV_READ_LIMIT = 100000;
 const KV_WRITE_LIMIT = 1000;
 
-// 辅助：从 QueryUrl 获取完整数据（缓存可选项）
-async function fetchUsageFromQueryUrl(url: string): Promise<any> {
-    try {
-        const resp = await fetch(url, { cache: 'no-store' });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return await resp.json();
-    } catch (e) {
-        console.error('QueryUrl fetch failed:', e);
-        return null;
-    }
-}
-
 async function getCloudflareUsage(env: Env): Promise<Response> {
     const config = await getCloudflareConfig(env);
     // 优先使用 QueryUrl
-    if (config.queryUrl) {
-        const data = await fetchUsageFromQueryUrl(config.queryUrl);
-        if (data && typeof data === 'object') {
-            // 期望返回 { pages, workers, total, percentage, limit } 或类似结构
-            const pages = data.pages ?? 0;
-            const workers = data.workers ?? 0;
-            const total = data.total ?? (pages + workers);
-            const percentage = data.percentage ?? ((total / (data.limit || 100000)) * 100).toFixed(2);
-            return respond(true, HttpStatus.OK, '', {
-                pages,
-                workers,
-                total,
-                percentage: Number(percentage).toFixed(2),
-                limit: data.limit || 100000,
-            });
-        }
-        // 若 QueryUrl 返回无效数据，返回错误（不 fallback，避免混淆）
-        return respond(false, HttpStatus.INTERNAL_SERVER_ERROR, 'Invalid data from QueryUrl', {
-            pages: 0, workers: 0, total: 0, percentage: 0, limit: 100000,
-        });
-    }
-    
-    // 原有 Cloudflare API 逻辑
     const { accountId, apiToken, email, globalApiKey } = config;
 
     if (!accountId || (!apiToken && (!email || !globalApiKey))) {
@@ -152,26 +117,6 @@ async function getCloudflareUsage(env: Env): Promise<Response> {
 
 async function getKvUsage(env: Env): Promise<Response> {
     const config = await getCloudflareConfig(env);
-    if (config.queryUrl) {
-        const data = await fetchUsageFromQueryUrl(config.queryUrl);
-        if (data && typeof data === 'object') {
-            // 期望返回 { readTotal, writeTotal, readPercentage, writePercentage, readLimit, writeLimit, details }
-            return respond(true, HttpStatus.OK, '', {
-                readTotal: data.readTotal ?? 0,
-                writeTotal: data.writeTotal ?? 0,
-                readPercentage: data.readPercentage ?? 0,
-                writePercentage: data.writePercentage ?? 0,
-                readLimit: data.readLimit ?? 100000,
-                writeLimit: data.writeLimit ?? 1000,
-                details: data.details ?? [],
-            });
-        }
-        return respond(false, HttpStatus.INTERNAL_SERVER_ERROR, 'Invalid data from QueryUrl', {
-            readTotal: 0, writeTotal: 0, readPercentage: 0, writePercentage: 0, details: [],
-        });
-    }
-
-    // 原有 KV API 逻辑
     const { accountId, apiToken, email, globalApiKey } = config;
 
     if (!accountId || (!apiToken && (!email || !globalApiKey))) {
