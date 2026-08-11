@@ -95,7 +95,6 @@ async function getCloudflareUsage(env: Env): Promise<Response> {
     }
     
     // 原有 Cloudflare API 逻辑
-    const config = await getCloudflareConfig(env);
     const { accountId, apiToken, email, globalApiKey } = config;
 
     if (!accountId || (!apiToken && (!email || !globalApiKey))) {
@@ -173,7 +172,6 @@ async function getKvUsage(env: Env): Promise<Response> {
     }
 
     // 原有 KV API 逻辑
-    const config = await getCloudflareConfig(env);
     const { accountId, apiToken, email, globalApiKey } = config;
 
     if (!accountId || (!apiToken && (!email || !globalApiKey))) {
