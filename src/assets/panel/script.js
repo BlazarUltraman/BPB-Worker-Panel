@@ -1689,10 +1689,9 @@ function saveCloudflareConfig() {
         apiToken: document.getElementById('cfApiToken').value.trim(),
         email: document.getElementById('cfEmail').value.trim(),
         globalApiKey: document.getElementById('cfGlobalApiKey').value.trim(),
-        queryUrl: document.getElementById('cfQueryUrl').value.trim(),  // 新增
+        queryUrl: document.getElementById('cfQueryUrl').value.trim(),
     };
 
-    // 至少要有 Account ID + (Token 或 Email+GlobalKey)
     if (!config.accountId) {
         alert('请填写 Account ID');
         return;
@@ -1711,6 +1710,10 @@ function saveCloudflareConfig() {
     .then(data => {
         if (data.success) {
             alert('✅ Cloudflare 配置已保存');
+            // 延迟2秒刷新用量数据，等待KV写入生效
+            setTimeout(() => {
+                fetchcloudflareInfo();
+            }, 2000);
         } else {
             alert('保存失败: ' + data.message);
         }
@@ -1736,7 +1739,12 @@ function clearCloudflareConfig() {
             document.getElementById('cfApiToken').value = '';
             document.getElementById('cfEmail').value = '';
             document.getElementById('cfGlobalApiKey').value = '';
+            document.getElementById('cfQueryUrl').value = '';   // 同时清空QueryUrl输入框
             alert('✅ 配置已清除');
+            // 延迟2秒刷新用量数据
+            setTimeout(() => {
+                fetchcloudflareInfo();
+            }, 2000);
         } else {
             alert('清除失败: ' + data.message);
         }
