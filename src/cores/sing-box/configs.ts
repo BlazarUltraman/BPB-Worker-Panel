@@ -2,7 +2,7 @@ import { getDataset } from 'kv';
 import { buildDNS } from './dns';
 import { buildRoutingRules } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
-import { Outbound, WireguardEndpoint, Config, URLTest, Selector, MixedInbound, TunInbound } from 'types/sing-box';
+import { Outbound, WireguardEndpoint, Config, URLTest, Selector, MixedInbound, TunInbound, ChainOutbound, DirectOutbound } from 'types/sing-box';
 import { getConfigAddresses, generateRemark, isHttps, getProtocols, fetchCustomGroupRules, isSupportedClashRule, resetRemarkCounter } from '@utils';
 import { buildMixedInbound, buildTunInbound } from './inbounds';
 
@@ -20,8 +20,8 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
 
     const proxyTags: string[] = [];
     const chainTags: string[] = [];
-    const outbounds: Outbound[] = [];
-
+	const outbounds: Outbound[] = [];
+   
     const protocols = getProtocols();
     const Addresses = await getConfigAddresses(isFragment, useLink);
     const totalPorts = ports.filter(port => !isFragment || isHttps(port));
@@ -48,7 +48,7 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
 
                 if (isChain) {
                     const chainTag = generateRemark(protocolIndex, port, addr, protocol, isFragment, true, useLink);
-                    const chain = structuredClone(chainProxy);
+                    const chain = structuredClone(chainProxy) as ChainOutbound;
                     chain.tag = chainTag;
                     chain.detour = tag;
                     outbounds.push(chain);
@@ -97,12 +97,19 @@ export async function getSbCustomConfig(isFragment: boolean, useLink: boolean = 
     const customGroupOutbounds: Selector[] = [];
     const customRules: any[] = []; // 用于路由规则
 
+    const directOutbound = {
+		type: 'direct',
+		tag: '🎯 DIRECT',
+	} as DirectOutbound;
+	outbounds.push(directOutbound);
+
     // 构建所有可用节点列表（用于自定义分组的 proxies）
     const allProxies = [
         '✅ Selector',
         '💦 Best Ping 🚀',
         ...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
         ...countryGroupTags,
+        '🎯 DIRECT',   // 新增：直连选项
         ...proxyTags,
         ...(isChain ? chainTags : []),
     ];

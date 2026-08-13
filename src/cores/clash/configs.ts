@@ -46,7 +46,7 @@ async function buildConfig(
 			mtu: mtu || 1500
 		};
 	}
-
+	
     const config: Config = {
         "mixed-port": 7890,
         "ipv6": enableIPv6,
@@ -177,7 +177,16 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
         type: 'select',
         proxies: selectorProxies
     };
-
+    
+	const directGroup: URLTest = {
+		name: '🎯 DIRECT',
+		type: 'url-test',
+		proxies: ['DIRECT'],
+		url: 'https://detectportal.firefox.com/success.txt',  // 必需的探测地址
+		interval: 86400,           // 探测间隔（秒）
+		tolerance: 50,           // 可选，延迟容忍度
+	};
+	
     // 收集所有 proxy-groups
     const proxyGroups: (Selector | URLTest)[] = [selectorGroup, bestPingGroup];
     if (isChain) {
@@ -185,6 +194,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
         proxyGroups.push(chainBestPing);
     }
     proxyGroups.push(...countryGroups);
+    proxyGroups.push(directGroup);
 
     // 只调用一次 buildConfig，然后覆盖 proxy-groups
     const builtConfig = await buildConfig(
@@ -204,6 +214,7 @@ export async function getClNormalConfig(useLink: boolean = false): Promise<Respo
 		'💦 Best Ping 🚀',
 		...(isChain ? ['💦 🔗 Best Ping 🚀'] : []),
 		...countryGroupTags,
+		'🎯 DIRECT',   // 新增：直连选项
 		...proxyTags,
 		...(isChain ? chainTags : []),
 	];

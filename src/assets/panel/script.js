@@ -56,7 +56,7 @@ fetch('/panel/settings')
         });
     });
 
-function initiatePanel(proxySettings) {
+async function initiatePanel(proxySettings) {
     const {
         VLConfigs,
         TRConfigs,
@@ -75,10 +75,9 @@ function initiatePanel(proxySettings) {
     renderUdpNoiseBlock(xrayUdpNoises);
     initiateForm();
     fetchIPInfo();
-    // 最后添加
-    loadBackgroundOnInit();
-    loadCloudflareConfig();
-    fetchcloudflareInfo();
+    // 最后添加，等待加载 Cloudflare 配置完成
+    await loadCloudflareConfig();   // 确保 globalThis.cfQueryUrl 已设置
+    await fetchcloudflareInfo();    // 现在优先使用 QueryUrl
     // 新增：初始化自定义分组
     globalThis.customGroups = proxySettings.customGroups || [];
     renderCustomGroups();
@@ -1608,6 +1607,16 @@ if (typeof showToast !== 'function') {
 // ============ Cloudflare 用量查询 ============
 // 更新 UI 的公共函数
 function updateCloudflareUI(usageData, kvData) {
+    // 更新状态 emoji
+    const usageEmoji = document.getElementById('usage-status-emoji');
+    const kvEmoji = document.getElementById('kv-status-emoji');
+    if (usageEmoji) {
+        usageEmoji.textContent = usageData.success ? '🟡' : '🔴';
+    }
+    if (kvEmoji) {
+        kvEmoji.textContent = kvData.success ? '🟢' : '🔴';
+    }
+
     // 请求量
     if (usageData.success && usageData.body) {
         const total = (usageData.body.pages || 0) + (usageData.body.workers || 0);
@@ -1653,37 +1662,53 @@ async function fetchcloudflareInfo() {
     if (icon) icon.classList.add('fa-spin');
 
     try {
-        // 1. 优先使用浏览器直接访问 QueryUrl
+        let queryUrlFailed = false;
+
+        // 1. 尝试使用 QueryUrl（独立 try-catch，失败不影响后续）
         if (globalThis.cfQueryUrl) {
-            const response = await fetch(globalThis.cfQueryUrl, { cache: 'no-store' });
-            if (response.ok) {
-                const data = await response.json();
-                // 兼容字段名，构造后端格式
-                const usageData = {
-                    success: true,
-                    body: {
-                        pages: data.pages || 0,
-                        workers: data.workers || 0,
-                        total: (data.pages || 0) + (data.workers || 0),
-                        percentage: data.percentage || '0',
-                        limit: data.limit || 100000,
-                    }
-                };
-                const kvData = {
-                    success: true,
-                    body: {
-                        readTotal: data.readTotal || 0,
-                        writeTotal: data.writeTotal || 0,
-                        readPercentage: data.readPercentage || 0,
-                        writePercentage: data.writePercentage || 0,
-                        details: data.details || [],
-                    }
-                };
-                updateCloudflareUI(usageData, kvData);
-                return;
-            } else {
-                console.warn('QueryUrl 请求失败，回退到后端 API');
+            try {
+                const response = await fetch(globalThis.cfQueryUrl, { cache: 'no-store' });
+                if (response.ok) {
+                    const data = await response.json();
+                    // 构造后端格式
+                    const usageData = {
+                        success: true,
+                        body: {
+                            pages: data.pages || 0,
+                            workers: data.workers || 0,
+                            total: (data.pages || 0) + (data.workers || 0),
+                            percentage: data.percentage || '0',
+                            limit: data.limit || 100000,
+                        }
+                    };
+                    const kvData = {
+                        success: true,
+                        body: {
+                            readTotal: data.readTotal || 0,
+                            writeTotal: data.writeTotal || 0,
+                            readPercentage: data.readPercentage || 0,
+                            writePercentage: data.writePercentage || 0,
+                            details: data.details || [],
+                        }
+                    };
+                    updateCloudflareUI(usageData, kvData);
+                    return; // 成功则直接返回
+                } else {
+                    console.warn('QueryUrl 请求失败 (HTTP ' + response.status + ')，回退到后端 API');
+                    queryUrlFailed = true;
+                }
+            } catch (queryErr) {
+                console.warn('QueryUrl 请求异常，回退到后端 API:', queryErr);
+                queryUrlFailed = true;
             }
+        }
+
+        // 如果 QueryUrl 失败，先显示橙色提示
+        if (queryUrlFailed) {
+            const usageEmoji = document.getElementById('usage-status-emoji');
+            const kvEmoji = document.getElementById('kv-status-emoji');
+            if (usageEmoji) usageEmoji.textContent = '🟠';
+            if (kvEmoji) kvEmoji.textContent = '🟠';
         }
 
         // 2. 回退：请求后端 API
@@ -1696,14 +1721,10 @@ async function fetchcloudflareInfo() {
         updateCloudflareUI(usageData, kvData);
     } catch (err) {
         console.error('获取 Cloudflare 用量失败:', err);
-        // 显示错误状态
-        document.getElementById('cf-request-used').textContent = '--';
-        document.getElementById('cf-request-percent').textContent = '--';
-        document.getElementById('cf-kv-read-used').textContent = '--';
-        document.getElementById('cf-kv-read-percent').textContent = '--';
-        document.getElementById('cf-kv-write-used').textContent = '--';
-        document.getElementById('cf-kv-write-percent').textContent = '--';
-        document.getElementById('cf-kv-details').textContent = '加载失败';
+        // 构造失败状态
+        const usageData = { success: false, body: null };
+        const kvData = { success: false, body: null };
+        updateCloudflareUI(usageData, kvData);
     } finally {
         if (icon) icon.classList.remove('fa-spin');
     }
@@ -1738,14 +1759,20 @@ function saveCloudflareConfig() {
         queryUrl: document.getElementById('cfQueryUrl').value.trim(),
     };
 
-    if (!config.accountId) {
-        alert('请填写 Account ID');
-        return;
+    const { accountId, apiToken, email, globalApiKey, queryUrl } = config;
+
+    // 校验：如果没有 QueryUrl，则必须提供 Account ID + (Token 或 Email+Key)
+    if (!queryUrl) {
+        if (!accountId) {
+            alert('请填写 Account ID（或使用 Query URL）');
+            return;
+        }
+        if (!apiToken && (!email || !globalApiKey)) {
+            alert('请填写 API Token 或 (Email + Global API Key)');
+            return;
+        }
     }
-    if (!config.apiToken && (!config.email || !config.globalApiKey)) {
-        alert('请填写 API Token 或 (Email + Global API Key)');
-        return;
-    }
+    // 如果 queryUrl 存在，其他字段可选（可以为空）
 
     fetch('/panel/cloudflare-config', {
         method: 'POST',
@@ -1757,7 +1784,7 @@ function saveCloudflareConfig() {
         if (data.success) {
             globalThis.cfQueryUrl = config.queryUrl; // 更新全局
             alert('✅ Cloudflare 配置已保存');
-            setTimeout(() => fetchcloudflareInfo(), 2000);
+            setTimeout(() => fetchcloudflareInfo(), 1000);
         } else {
             alert('保存失败: ' + data.message);
         }
@@ -1786,7 +1813,7 @@ function clearCloudflareConfig() {
             document.getElementById('cfQueryUrl').value = '';
             globalThis.cfQueryUrl = '';
             alert('✅ 配置已清除');
-            setTimeout(() => fetchcloudflareInfo(), 2000);
+            setTimeout(() => fetchcloudflareInfo(), 1000);
         } else {
             alert('清除失败: ' + data.message);
         }

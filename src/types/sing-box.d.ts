@@ -217,6 +217,11 @@ export interface VmessOutbound extends BaseOutbound {
     transport?: Transport
 }
 
+export interface DirectOutbound {
+    type: "direct";
+    tag: string;
+}
+
 export interface Selector {
     type: "selector";
     tag: string;
@@ -242,9 +247,10 @@ export type Outbound =
     | VmessOutbound
     | TrojanOutbound
     | Selector
-    | URLTest;
+    | URLTest
+    | DirectOutbound;
 
-export type ChainOutbound = Exclude<Outbound, Selector | URLTest>;
+export type ChainOutbound = Exclude<Outbound, Selector | URLTest | DirectOutbound>;
 
 interface Peer {
     address: string;
