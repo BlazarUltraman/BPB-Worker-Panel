@@ -1487,20 +1487,16 @@ function resetBackground() {
 }
 
 function applyBackgroundToPage(image, position, opacity) {
-    // 只有非内部路由才立即渲染（避免重置场景多一次 /background-image 请求）
-    if (image && image !== '/background-image') {
-        document.body.style.setProperty('background-image', `url(${image})`, 'important');
-    }
     document.body.style.setProperty('background-position', position, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
     document.querySelectorAll('.container-big').forEach(el => {
         el.style.setProperty('opacity', opacity, 'important');
     });
-    // 1.5 秒后切换为 worker 路由版本（与刷新页面后保持一致）
+    // 0.5 秒后切换为 worker 路由版本（与刷新页面后保持一致）
     setTimeout(() => {
         document.body.style.setProperty('background-image', `url('/background-image?t=${Date.now()}')`, 'important');
-    }, 1500);
+    }, 500);
 }
 
 function loadBackgroundOnInit() {
