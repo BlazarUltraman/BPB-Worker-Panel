@@ -1493,10 +1493,10 @@ function applyBackgroundToPage(image, position, opacity) {
     document.querySelectorAll('.container-big').forEach(el => {
         el.style.setProperty('opacity', opacity, 'important');
     });
-    // 0.5 秒后切换为 worker 路由版本（与刷新页面后保持一致）
+    // 立即切换为 worker 路由版本（与刷新页面后保持一致）
     setTimeout(() => {
         document.body.style.setProperty('background-image', `url('/background-image?t=${Date.now()}')`, 'important');
-    }, 500);
+    }, 0);
 }
 
 function loadBackgroundOnInit() {
