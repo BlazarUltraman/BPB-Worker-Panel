@@ -1487,16 +1487,13 @@ function resetBackground() {
 }
 
 function applyBackgroundToPage(image, position, opacity) {
+	document.body.style.setProperty('background-image', `url('/background-image?t=${Date.now()}')`, 'important');
     document.body.style.setProperty('background-position', position, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
     document.querySelectorAll('.container-big').forEach(el => {
         el.style.setProperty('opacity', opacity, 'important');
     });
-    // 立即切换为 worker 路由版本（与刷新页面后保持一致）
-    setTimeout(() => {
-        document.body.style.setProperty('background-image', `url('/background-image?t=${Date.now()}')`, 'important');
-    }, 0);
 }
 
 function loadBackgroundOnInit() {
