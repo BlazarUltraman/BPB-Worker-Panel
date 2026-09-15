@@ -19,7 +19,7 @@ export default {
 
 			if (upgradeHeader === 'websocket') {
 				initWs(env);
-				return await handleWebsocket(request);
+				return await handleWebsocket(request, env);
 			} else {
 				initHttp(request, env);
 				const { pathName } = globalThis.globalConfig;

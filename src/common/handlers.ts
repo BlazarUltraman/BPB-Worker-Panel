@@ -239,6 +239,7 @@ interface BackgroundConfig {
     image: string;
     position: string;
     opacity: number;
+    version?: number;
 }
 
 // 添加辅助函数 getDarkMode
@@ -247,7 +248,7 @@ async function getDarkMode(env: Env): Promise<boolean> {
     return proxySettings?.darkMode ?? false;
 }
 
-export async function handleWebsocket(request: Request): Promise<Response> {
+export async function handleWebsocket(request: Request, env: Env): Promise<Response> {
     const { pathName } = globalThis.globalConfig;
     const encodedPathConfig = pathName.replace("/", "");
 
@@ -268,7 +269,7 @@ export async function handleWebsocket(request: Request): Promise<Response> {
                 return await TrOverWSHandler(request);
 
             default:
-                return await fallback(request);
+                return await fallback(request, env);
         }
 
     } catch (error) {
@@ -365,10 +366,11 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
 }
 
 // 默认背景配置
-const defaultBackground = {
+const defaultBackground: BackgroundConfig = {
     image: '/background-image',
     position: 'left',
-    opacity: 0.85
+    opacity: 0.85,
+    version: 1
 };
 
 async function getBackgroundConfig(env: Env): Promise<Response> {
@@ -391,7 +393,17 @@ async function updateBackgroundConfig(request: Request, env: Env): Promise<Respo
     if (!image || typeof position !== 'string' || typeof opacity !== 'number' || opacity < 0 || opacity > 1) {
         return respond(false, HttpStatus.BAD_REQUEST, 'Invalid config');
     }
-    const config = { image, position, opacity };
+
+    // ← 新增：读取旧配置
+    let current = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
+    if (!current || typeof current !== 'object' || !current.image) {
+        current = { ...defaultBackground };
+    }
+
+    // ← 新增：图片链接变化 → 更新 version 强制刷新缓存；否则保留原版本
+    const version = (image !== current.image) ? Date.now() : (current.version || 1);
+
+    const config: BackgroundConfig = { image, position, opacity, version };
     await env.kv.put('backgroundConfig', JSON.stringify(config));
     return respond(true, HttpStatus.OK, 'Background config updated', config);
 }
@@ -592,7 +604,7 @@ async function getSettings(request: Request, env: Env): Promise<Response> {
     return respond(true, HttpStatus.OK, undefined, data);
 }
 
-export async function fallback(request: Request, env?: Env): Promise<Response> {
+export async function fallback(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
@@ -614,46 +626,16 @@ export async function fallback(request: Request, env?: Env): Promise<Response> {
         return await proxyAsset(asset.url, asset.type);
     }
     
-    // 预处理背景图（内部路径）—— 从 KV 动态读取，修改立即生效
-	if (pathname === '/background-image') {
-		let img = '';
-		if (env?.kv) {
-			try {
-				const cfg = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
-				img = cfg?.image || '';
-			} catch { /* 忽略 */ }
-		}
-		// 兜底：默认占位值走默认远程图，避免自我循环
-		if (!img || img === '/background-image') {
-			img = 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads';
-		}
-		// Base64 图片：直接解码返回
-		if (img.startsWith('data:')) {
-			const semiIdx = img.indexOf(';');
-			const commaIdx = img.indexOf(',');
-			const mime = semiIdx > 5 ? img.substring(5, semiIdx) : 'image/jpeg';
-			const binary = atob(img.substring(commaIdx + 1));
-			const bytes = new Uint8Array(binary.length);
-			for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-			return new Response(bytes, {
-				headers: { 'Content-Type': mime, 'Cache-Control': 'no-store' }
-			});
-		}
-		// 远程 URL：代理并禁用缓存，确保修改立即生效
-		try {
-			const resp = await fetch(img, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-			if (!resp.ok) return new Response('Resource not found', { status: 404 });
-			return new Response(resp.body, {
-				status: 200,
-				headers: {
-					'Content-Type': resp.headers.get('Content-Type') || 'image/jpeg',
-					'Cache-Control': 'no-store'
-				}
-			});
-		} catch {
-			return new Response('Proxy error', { status: 500 });
-		}
-	}
+    // 预处理默认背景图（内部路径）
+    if (pathname === '/background-image') {
+        // ← 优先读取用户设置的外链背景
+        const bgConfig = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
+        if (bgConfig?.image && /^https?:\/\//i.test(bgConfig.image)) {
+            return await proxyAsset(bgConfig.image, 'image/jpeg');
+        }
+        const defaultBgImage = 'https://framagit.org/Falcon/Source/-/raw/main/background/Toomi_15.jpg?ref_type=heads';
+        return await proxyAsset(defaultBgImage, 'image/jpeg');
+    }
 
     // ----- 原有的 fallback 逻辑（代理到 FALLBACK 域名） -----
     const { fallbackDomain } = globalThis.globalConfig;
@@ -782,7 +764,13 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
-    const bodyStyle = `background-image: url('/background-image'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+    // ← 新增：外链背景走 Worker 路径加载，携带版本号
+	let bgUrl = bgConfig.image;
+	if (/^https?:\/\//i.test(bgUrl)) {
+		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
+	}
+	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
@@ -820,7 +808,13 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
-    const bodyStyle = `background-image: url('/background-image'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	// ← 新增：外链背景走 Worker 路径加载，携带版本号
+	let bgUrl = bgConfig.image;
+	if (/^https?:\/\//i.test(bgUrl)) {
+		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
+	}
+	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
@@ -844,7 +838,7 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
 }
 
 export async function renderSecrets(env: Env): Promise<Response> {
-    const html = await decompressHtml(__SECRETS_HTML_CONTENT__, false) as string;
+    const html = await decompressHtml(__SECRETS_HTML_CONTENT__, true) as string;
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 

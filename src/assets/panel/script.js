@@ -1475,6 +1475,7 @@ function resetBackground() {
                 document.getElementById('bgImageInput').value = defaultBg.image;
                 document.getElementById('bgPositionSelect').value = defaultBg.position;
                 document.getElementById('bgOpacityInput').value = defaultBg.opacity;
+                globalThis.currentBgImage = defaultBg.image;   // ← 新增：同步基准
                 alert('✅ 已重置为默认背景');
             } else {
                 alert('重置失败');
@@ -1487,7 +1488,15 @@ function resetBackground() {
 }
 
 function applyBackgroundToPage(image, position, opacity) {
-	document.body.style.setProperty('background-image', `url('/background-image?t=${Date.now()}')`, 'important');
+    // ← 只有图片变化时，才更新背景图 URL（外链走 Worker 代理并加时间戳刷新缓存）；
+    //   仅改透明度/对齐方式时不动 backgroundImage，浏览器继续命中缓存
+    if (image !== globalThis.currentBgImage) {
+        const newBgUrl = /^https?:\/\//i.test(image)
+            ? '/background-image?v=' + Date.now()
+            : image;
+        document.body.style.setProperty('background-image', `url(${newBgUrl})`, 'important');
+        globalThis.currentBgImage = image;
+    }
     document.body.style.setProperty('background-position', position, 'important');
     document.body.style.setProperty('background-size', 'cover', 'important');
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
@@ -1506,6 +1515,7 @@ function loadBackgroundOnInit() {
                 document.getElementById('bgImageInput').value = image || '';
                 document.getElementById('bgPositionSelect').value = position || 'left';
                 document.getElementById('bgOpacityInput').value = opacity || 0.9;
+                globalThis.currentBgImage = image || '';
             }
         })
         .catch(err => console.error('加载背景配置失败:', err));
