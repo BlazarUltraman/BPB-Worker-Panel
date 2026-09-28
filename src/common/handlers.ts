@@ -764,17 +764,18 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
-    // ← 新增：外链背景走 Worker 路径加载，携带版本号
+    // 外链背景走 Worker 路径加载，携带版本号
 	let bgUrl = bgConfig.image;
 	if (/^https?:\/\//i.test(bgUrl)) {
 		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
 	}
-	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	// 只设置对齐/尺寸等静态属性；背景图由 <body> 之后的 script 延迟 5ms 加载
+	const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
 	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
-    // 保留原有 body 属性，仅设置 style
+    // 保留原有 body 属性，仅设置 style；并在 body 后插入延迟加载背景图的 script
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
 		// 检查是否已有 class 属性
         let newAttrs = attrs;
@@ -783,16 +784,22 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        return `<body${newAttrs} style="${bodyStyle}">`;  // 使用 newAttrs
+        // 延后 5ms 加载背景图：先让 container 透明度等样式立即生效，避免大体积 base64 阻塞首屏
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
+        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
-    // 插入容器透明度样式
+    // 插入容器透明度样式（透明度立即生效）
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
     const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
-    return new Response(finalHtml, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-    });
+	return new Response(finalHtml, {
+		headers: {
+			'Content-Type': 'text/html; charset=utf-8',
+			// ← 新增：登录页 HTML 不缓存，保证背景配置改动立即生效
+			'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+		}
+	});
 }
 
 async function renderLogin(request: Request, env: Env): Promise<Response> {
@@ -808,12 +815,13 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
-	// ← 新增：外链背景走 Worker 路径加载，携带版本号
+	// 外链背景走 Worker 路径加载，携带版本号
 	let bgUrl = bgConfig.image;
 	if (/^https?:\/\//i.test(bgUrl)) {
 		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
 	}
-	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	// 只设置对齐/尺寸等静态属性；背景图由 <body> 之后的 script 延迟 5ms 加载
+	const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
 	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
@@ -826,15 +834,21 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        return `<body${newAttrs} style="${bodyStyle}">`;
+        // 延后 5ms 加载背景图（透明度由 styleTag 立即生效）
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
+        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
     const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
-    return new Response(finalHtml, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-    });
+	return new Response(finalHtml, {
+		headers: {
+			'Content-Type': 'text/html; charset=utf-8',
+			// ← 新增：管理页 HTML 不缓存，保证背景/darkMode 改动立即生效
+			'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+		}
+	});
 }
 
 export async function renderSecrets(env: Env): Promise<Response> {
