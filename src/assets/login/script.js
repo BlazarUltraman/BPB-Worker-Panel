@@ -18,7 +18,10 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
             throw new Error(`Login failed with status ${status}: ${message}`);
         }
 
-        window.location.href = '/panel';
+        // 完全重载进入主页：
+        // 1. replace 不留登录页在历史记录，避免回退时又见登录页
+        // 2. 加时间戳参数强制绕过浏览器 bfcache / 缓存，从服务器拉取最新 HTML
+        window.location.replace('/panel?_t=' + Date.now());
     } catch (error) {
         console.error('Login error:', error.message || error);
     }
