@@ -775,7 +775,7 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
-    // 保留原有 body 属性，仅设置 style；并在 body 后插入延迟加载背景图的 script
+    // 保留原有 body 属性，仅设置 style；并在 body 后插入延迟加载背景图 + 100ms 一次性重载的 script
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
 		// 检查是否已有 class 属性
         let newAttrs = attrs;
@@ -784,8 +784,9 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        // 延后 5ms 加载背景图：先让 container 透明度等样式立即生效，避免大体积 base64 阻塞首屏
-        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
+        // 1) 延后 5ms 加载背景图；
+        // 2) 首次进入（URL 无 _reloaded=1）时，100ms 后带标记重载一次，确保配置全部生效
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);if(!/[?&]_reloaded=1(?:&|$)/.test(location.search)){setTimeout(function(){var u=new URL(location.href);u.searchParams.set('_reloaded','1');location.replace(u.toString());},100);}</script>`;
         return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
