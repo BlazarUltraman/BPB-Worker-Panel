@@ -1166,7 +1166,8 @@ function logout(event) {
                 throw new Error(`status ${status} - ${message}`);
             }
 
-            window.location.href = '/login';
+            // 登出后回到 /panel，由前端弹窗重新要求密码
+            window.location.href = '/panel';
         })
         .catch(error => console.error("Logout error:", error.message || error));
 }

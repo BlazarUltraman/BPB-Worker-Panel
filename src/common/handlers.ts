@@ -432,7 +432,9 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
     const { pathName } = globalThis.globalConfig;
 
     if (pathName === '/login') {
-        return await renderLogin(request, env);
+        // 登录页已合并到 /panel（密码弹窗），直接重定向
+        const { urlOrigin } = globalThis.httpConfig;
+        return Response.redirect(`${urlOrigin}/panel`, 302);
     }
 
     if (pathName === '/login/authenticate') {
@@ -750,12 +752,10 @@ export async function serveIcon(): Promise<Response> {
 
 async function renderPanel(request: Request, env: Env): Promise<Response> {
     const pwd = await env.kv.get('pwd');
+    // ← 不再 302 重定向；未认证时让前端弹窗处理
+    let isAuthed = true;
     if (pwd) {
-        const auth = await Authenticate(request, env);
-        if (!auth) {
-            const { urlOrigin } = globalThis.httpConfig;
-            return Response.redirect(`${urlOrigin}/login`, 302);
-        }
+        isAuthed = await Authenticate(request, env);
     }
 
     let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
@@ -764,42 +764,96 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
-    // 外链背景走 Worker 路径加载，携带版本号
-	let bgUrl = bgConfig.image;
-	if (/^https?:\/\//i.test(bgUrl)) {
-		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
-	}
-	// 只设置对齐/尺寸等静态属性；背景图由 <body> 之后的 script 延迟 5ms 加载
-	const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
-	
+    let bgUrl = bgConfig.image;
+    if (/^https?:\/\//i.test(bgUrl)) {
+        bgUrl = '/background-image?v=' + (bgConfig.version || 1);
+    }
+    const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+    
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
-    // 保留原有 body 属性，仅设置 style；并在 body 后插入延迟加载背景图的 script
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
-		// 检查是否已有 class 属性
         let newAttrs = attrs;
         if (attrs.includes('class=')) {
             newAttrs = attrs.replace(/class="([^"]*)"/, `class="$1${bodyClass}"`);
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        // 延后 5ms 加载背景图：先让 container 透明度等样式立即生效，避免大体积 base64 阻塞首屏
+        // 注入认证状态，供主面板脚本判断
+        const authFlag = `<script>window.__AUTHED__ = ${isAuthed};</script>`;
         const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
-        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
+        return `<body${newAttrs} style="${bodyStyle}">${authFlag}${bgScript}`;
     });
 
-    // 插入容器透明度样式（透明度立即生效）
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
-    const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
-	return new Response(finalHtml, {
-		headers: {
-			'Content-Type': 'text/html; charset=utf-8',
-			// ← 新增：登录页 HTML 不缓存，保证背景配置改动立即生效
-			'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-		}
-	});
+    // 未认证时注入全屏密码弹窗
+    const authGate = isAuthed ? '' : `
+<style>
+#authOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+#authOverlay .auth-box{background:#fff;color:#222;border-radius:14px;padding:32px 28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+body.dark-mode #authOverlay .auth-box{background:#1e1e1e;color:#e2e8f0}
+#authOverlay h2{margin:0 0 8px;font-size:1.3rem}
+#authOverlay p{margin:0 0 18px;font-size:.85rem;color:#888}
+#authOverlay input{width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:8px;font-size:1rem;margin-bottom:12px;box-sizing:border-box;text-align:center}
+body.dark-mode #authOverlay input{background:#2a2a2a;border-color:#444;color:#e2e8f0}
+#authOverlay button{width:100%;padding:12px;border:none;border-radius:8px;background:#667eea;color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
+#authOverlay button:hover{background:#5568d3}
+#authOverlay button:disabled{opacity:.6;cursor:not-allowed}
+#authOverlay .auth-err{color:#e53e3e;font-size:.85rem;min-height:20px;margin-bottom:8px}
+</style>
+<div id="authOverlay">
+  <div class="auth-box">
+    <h2>🔐 访问验证</h2>
+    <p>请输入面板密码以继续</p>
+    <div id="authErr" class="auth-err"></div>
+    <input type="password" id="authPwd" placeholder="请输入密码" autocomplete="current-password">
+    <button id="authBtn">登录</button>
+  </div>
+</div>
+<script>
+(function(){
+  var pwd = document.getElementById('authPwd');
+  var btn = document.getElementById('authBtn');
+  var err = document.getElementById('authErr');
+  document.body.style.overflow = 'hidden';
+  function submit(){
+    var v = pwd.value;
+    if (!v) { err.textContent = '请输入密码'; return; }
+    btn.disabled = true; btn.textContent = '验证中...';
+    fetch('/login/authenticate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: v
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.success) { location.reload(); }
+      else {
+        err.textContent = '❌ 密码错误，请重试';
+        btn.disabled = false; btn.textContent = '登录';
+        pwd.value = ''; pwd.focus();
+      }
+    }).catch(function(e){
+      err.textContent = '❌ 网络错误: ' + e.message;
+      btn.disabled = false; btn.textContent = '登录';
+    });
+  }
+  btn.addEventListener('click', submit);
+  pwd.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
+  setTimeout(function(){ pwd.focus(); }, 50);
+})();
+</script>`;
+
+    const finalHtml = modifiedHtml
+        .replace('</head>', styleTag + '</head>')
+        .replace('</body>', authGate + '</body>');
+
+    return new Response(finalHtml, {
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+    });
 }
 
 async function renderLogin(request: Request, env: Env): Promise<Response> {
