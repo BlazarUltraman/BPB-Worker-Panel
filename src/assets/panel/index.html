@@ -1378,6 +1378,33 @@
         polyfillCountryFlagEmojis();
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- ====== 密码验证弹窗（未认证时显示） ====== -->
+	<div id="authModal" class="modal">
+		<div class="modal-content" style="max-width: 420px;">
+			<div class="modal-header">
+				<h2 class="modal-title"><span class="cf-label-emoji">🔐</span>密码验证</h2>
+			</div>
+			<div class="cf-config-form">
+				<div class="cf-form-group">
+					<label class="cf-form-label">请输入密码以访问面板</label>
+					<div class="password-wrapper">
+						<input type="password" id="authPassword" class="cf-form-input"
+							placeholder="请输入密码" autocomplete="current-password">
+						<span id="authTogglePassword" class="material-symbols-rounded toggle-password">visibility_off</span>
+					</div>
+				</div>
+				<div id="authError" class="password-error"></div>
+				<div style="display: flex; justify-content: center;">
+					<button type="button" class="button" id="authSubmitBtn" style="width: 100%;">
+						登录
+						<span class="material-symbols-rounded">key_vertical</span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
     <script>__SCRIPT__</script>
 </body>
 

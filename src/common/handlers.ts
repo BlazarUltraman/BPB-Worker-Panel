@@ -432,7 +432,7 @@ export async function handleLogin(request: Request, env: Env): Promise<Response>
     const { pathName } = globalThis.globalConfig;
 
     if (pathName === '/login') {
-        // 登录页已合并到 /panel（密码弹窗），直接重定向
+        // 独立登录页已移除，直接进入面板（未认证时会弹出密码验证）
         const { urlOrigin } = globalThis.httpConfig;
         return Response.redirect(`${urlOrigin}/panel`, 302);
     }
@@ -751,12 +751,7 @@ export async function serveIcon(): Promise<Response> {
 }
 
 async function renderPanel(request: Request, env: Env): Promise<Response> {
-    const pwd = await env.kv.get('pwd');
-    // ← 不再 302 重定向；未认证时让前端弹窗处理
-    let isAuthed = true;
-    if (pwd) {
-        isAuthed = await Authenticate(request, env);
-    }
+    // 不再重定向到 /login：未认证时前端通过 /panel/settings 的 401 得知，并弹出密码验证弹窗
 
     let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
     if (!bgConfig || typeof bgConfig !== 'object' || !bgConfig.image) {
@@ -764,123 +759,39 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
-    let bgUrl = bgConfig.image;
-    if (/^https?:\/\//i.test(bgUrl)) {
-        bgUrl = '/background-image?v=' + (bgConfig.version || 1);
-    }
-    const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
-    
+    // ← 新增：外链背景走 Worker 路径加载，携带版本号
+	let bgUrl = bgConfig.image;
+	if (/^https?:\/\//i.test(bgUrl)) {
+		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
+	}
+	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
+    // 保留原有 body 属性，仅设置 style
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
+		// 检查是否已有 class 属性
         let newAttrs = attrs;
         if (attrs.includes('class=')) {
             newAttrs = attrs.replace(/class="([^"]*)"/, `class="$1${bodyClass}"`);
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        // 注入认证状态，供主面板脚本判断
-        const authFlag = `<script>window.__AUTHED__ = ${isAuthed};</script>`;
-        // 预加载背景图：加载完成（或超时兜底）后，同时设置 body 背景图 + 显示密码弹窗（如未认证）
-        const bgScript = `<script>
-(function(){
-  var bg = ${JSON.stringify(bgUrl)};
-  var done = false;
-  function reveal() {
-    if (done) return;
-    done = true;
-    // 设置 body 背景图（此时浏览器已缓存该图片，秒现）
-    document.body.style.setProperty('background-image', 'url("' + bg + '")', 'important');
-    // 未认证时，背景图就绪后再显示密码弹窗，两者同步出现
-    var overlay = document.getElementById('authOverlay');
-    if (overlay) {
-      overlay.style.display = 'flex';
-      // 触发 opacity 过渡（下一帧）
-      requestAnimationFrame(function(){ overlay.style.opacity = '1'; });
-      document.body.style.overflow = 'hidden';
-    }
-  }
-  var img = new Image();
-  img.onload = reveal;
-  img.onerror = reveal;
-  img.src = bg;
-  // 兜底：1s 内无论是否加载完成，都显示
-  setTimeout(reveal, 1000);
-})();
-</script>`;
-        return `<body${newAttrs} style="${bodyStyle}">${authFlag}${bgScript}`;
+        return `<body${newAttrs} style="${bodyStyle}">`;  // 使用 newAttrs
     });
 
+    // 插入容器透明度样式
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
+    const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
-    // 未认证时注入全屏密码弹窗（初始隐藏，等背景图就绪后再淡入）
-    const authGate = isAuthed ? '' : `
-<style>
-#authOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;display:none;opacity:0;transition:opacity .25s ease;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
-#authOverlay .auth-box{background:#fff;color:#222;border-radius:14px;padding:32px 28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
-body.dark-mode #authOverlay .auth-box{background:#1e1e1e;color:#e2e8f0}
-#authOverlay h2{margin:0 0 8px;font-size:1.3rem}
-#authOverlay p{margin:0 0 18px;font-size:.85rem;color:#888}
-#authOverlay input{width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:8px;font-size:1rem;margin-bottom:12px;box-sizing:border-box;text-align:center}
-body.dark-mode #authOverlay input{background:#2a2a2a;border-color:#444;color:#e2e8f0}
-#authOverlay button{width:100%;padding:12px;border:none;border-radius:8px;background:#667eea;color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
-#authOverlay button:hover{background:#5568d3}
-#authOverlay button:disabled{opacity:.6;cursor:not-allowed}
-#authOverlay .auth-err{color:#e53e3e;font-size:.85rem;min-height:20px;margin-bottom:8px}
-</style>
-<div id="authOverlay">
-  <div class="auth-box">
-    <h2>🔐 访问验证</h2>
-    <p>请输入面板密码以继续</p>
-    <div id="authErr" class="auth-err"></div>
-    <input type="password" id="authPwd" placeholder="请输入密码" autocomplete="current-password">
-    <button id="authBtn">登录</button>
-  </div>
-</div>
-<script>
-(function(){
-  var pwd = document.getElementById('authPwd');
-  var btn = document.getElementById('authBtn');
-  var err = document.getElementById('authErr');
-  // 注意：不再这里锁 overflow，交给 reveal 时机
-  function submit(){
-    var v = pwd.value;
-    if (!v) { err.textContent = '请输入密码'; return; }
-    btn.disabled = true; btn.textContent = '验证中...';
-    fetch('/login/authenticate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: v
-    }).then(function(r){ return r.json(); }).then(function(d){
-      if (d.success) { location.reload(); }
-      else {
-        err.textContent = '❌ 密码错误，请重试';
-        btn.disabled = false; btn.textContent = '登录';
-        pwd.value = ''; pwd.focus();
-      }
-    }).catch(function(e){
-      err.textContent = '❌ 网络错误: ' + e.message;
-      btn.disabled = false; btn.textContent = '登录';
-    });
-  }
-  btn.addEventListener('click', submit);
-  pwd.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
-  // 自动 focus（弹窗可能还是 display:none，但 focus 无害；reveal 后也会保留）
-  setTimeout(function(){ try { pwd.focus(); } catch(e){} }, 50);
-})();
-</script>`;
-
-    const finalHtml = modifiedHtml
-        .replace('</head>', styleTag + '</head>')
-        .replace('</body>', authGate + '</body>');
-
-    return new Response(finalHtml, {
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-        }
-    });
+	return new Response(finalHtml, {
+		headers: {
+			'Content-Type': 'text/html; charset=utf-8',
+			// ← 新增：登录页 HTML 不缓存，保证背景配置改动立即生效
+			'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+		}
+	});
 }
 
 async function renderLogin(request: Request, env: Env): Promise<Response> {
@@ -896,13 +807,12 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
-	// 外链背景走 Worker 路径加载，携带版本号
+	// ← 新增：外链背景走 Worker 路径加载，携带版本号
 	let bgUrl = bgConfig.image;
 	if (/^https?:\/\//i.test(bgUrl)) {
 		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
 	}
-	// 只设置对齐/尺寸等静态属性；背景图由 <body> 之后的 script 延迟 5ms 加载
-	const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
 	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
@@ -915,9 +825,7 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        // 延后 5ms 加载背景图（透明度由 styleTag 立即生效）
-        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
-        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
+        return `<body${newAttrs} style="${bodyStyle}">`;
     });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;

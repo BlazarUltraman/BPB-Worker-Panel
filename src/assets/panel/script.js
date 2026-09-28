@@ -20,10 +20,17 @@ fetch('/panel/settings')
     .then(async response => response.json())
     .then(({ success, status, message, body }) => {
 
-        if (status === 401 && !body.isPassSet) {
-            const closeBtn = document.querySelector(".close");
-            openResetPass();
-            closeBtn.style.display = 'none';
+        if (status === 401) {
+            if (!body.isPassSet) {
+                // 从未设置密码：弹出"重置密码"弹窗（保持原行为）
+                const closeBtn = document.querySelector("#resetPassModal .close");
+                openResetPass();
+                if (closeBtn) closeBtn.style.display = 'none';
+            } else {
+                // 已设置密码但未认证：弹出密码验证弹窗
+                showAuthModal();
+            }
+            return; // 不再抛错，让 finally 继续执行
         }
 
         if (!success) {
@@ -37,6 +44,10 @@ fetch('/panel/settings')
     .catch(error => console.error("Data query error:", error.message || error))
     .finally(() => {
         window.onclick = (event) => {
+            // 认证弹窗禁止点击遮罩关闭
+            const authModal = document.getElementById('authModal');
+            if (authModal && event.target === authModal) return;
+
             const qrModal = document.getElementById('qrModal');
             const qrcodeContainer = document.getElementById('qrcode-container');
 
@@ -54,7 +65,67 @@ fetch('/panel/settings')
                 this.textContent = isPassword ? "visibility" : "visibility_off";
             });
         });
+
+        // 绑定认证弹窗的提交按钮和回车键
+        const authSubmitBtn = document.getElementById('authSubmitBtn');
+        if (authSubmitBtn) authSubmitBtn.addEventListener('click', submitAuthPassword);
+
+        const authInput = document.getElementById('authPassword');
+        if (authInput) {
+            authInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') submitAuthPassword();
+            });
+        }
     });
+
+// ==================== 密码验证弹窗 ====================
+function showAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const input = document.getElementById('authPassword');
+    if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 100);
+    }
+    const errorEl = document.getElementById('authError');
+    if (errorEl) errorEl.textContent = '';
+}
+
+async function submitAuthPassword() {
+    const input = document.getElementById('authPassword');
+    const errorEl = document.getElementById('authError');
+    const password = input ? input.value : '';
+
+    if (!password) {
+        if (errorEl) errorEl.textContent = '⚠️ 请输入密码';
+        return;
+    }
+
+    try {
+        const response = await fetch('/login/authenticate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: password
+        });
+        const { success } = await response.json();
+
+        if (success) {
+            // 认证成功 → 刷新页面，此时 /panel/settings 会返回正常数据
+            window.location.reload();
+        } else {
+            if (errorEl) errorEl.textContent = '⚠️ 密码错误';
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+    } catch (err) {
+        if (errorEl) errorEl.textContent = '⚠️ 请求失败: ' + (err.message || err);
+    }
+}
+// ==================== END 密码验证弹窗 ====================
 
 async function initiatePanel(proxySettings) {
     const {
@@ -1166,8 +1237,7 @@ function logout(event) {
                 throw new Error(`status ${status} - ${message}`);
             }
 
-            // 登出后回到 /panel，由前端弹窗重新要求密码
-            window.location.href = '/panel';
+            window.location.href = '/login';
         })
         .catch(error => console.error("Logout error:", error.message || error));
 }
