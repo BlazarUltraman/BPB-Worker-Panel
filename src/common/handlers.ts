@@ -782,16 +782,42 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
         }
         // 注入认证状态，供主面板脚本判断
         const authFlag = `<script>window.__AUTHED__ = ${isAuthed};</script>`;
-        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
+        // 预加载背景图：加载完成（或超时兜底）后，同时设置 body 背景图 + 显示密码弹窗（如未认证）
+        const bgScript = `<script>
+(function(){
+  var bg = ${JSON.stringify(bgUrl)};
+  var done = false;
+  function reveal() {
+    if (done) return;
+    done = true;
+    // 设置 body 背景图（此时浏览器已缓存该图片，秒现）
+    document.body.style.setProperty('background-image', 'url("' + bg + '")', 'important');
+    // 未认证时，背景图就绪后再显示密码弹窗，两者同步出现
+    var overlay = document.getElementById('authOverlay');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      // 触发 opacity 过渡（下一帧）
+      requestAnimationFrame(function(){ overlay.style.opacity = '1'; });
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  var img = new Image();
+  img.onload = reveal;
+  img.onerror = reveal;
+  img.src = bg;
+  // 兜底：1s 内无论是否加载完成，都显示
+  setTimeout(reveal, 1000);
+})();
+</script>`;
         return `<body${newAttrs} style="${bodyStyle}">${authFlag}${bgScript}`;
     });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
 
-    // 未认证时注入全屏密码弹窗
+    // 未认证时注入全屏密码弹窗（初始隐藏，等背景图就绪后再淡入）
     const authGate = isAuthed ? '' : `
 <style>
-#authOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+#authOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;display:none;opacity:0;transition:opacity .25s ease;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
 #authOverlay .auth-box{background:#fff;color:#222;border-radius:14px;padding:32px 28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
 body.dark-mode #authOverlay .auth-box{background:#1e1e1e;color:#e2e8f0}
 #authOverlay h2{margin:0 0 8px;font-size:1.3rem}
@@ -817,7 +843,7 @@ body.dark-mode #authOverlay input{background:#2a2a2a;border-color:#444;color:#e2
   var pwd = document.getElementById('authPwd');
   var btn = document.getElementById('authBtn');
   var err = document.getElementById('authErr');
-  document.body.style.overflow = 'hidden';
+  // 注意：不再这里锁 overflow，交给 reveal 时机
   function submit(){
     var v = pwd.value;
     if (!v) { err.textContent = '请输入密码'; return; }
@@ -840,7 +866,8 @@ body.dark-mode #authOverlay input{background:#2a2a2a;border-color:#444;color:#e2
   }
   btn.addEventListener('click', submit);
   pwd.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
-  setTimeout(function(){ pwd.focus(); }, 50);
+  // 自动 focus（弹窗可能还是 display:none，但 focus 无害；reveal 后也会保留）
+  setTimeout(function(){ try { pwd.focus(); } catch(e){} }, 50);
 })();
 </script>`;
 
