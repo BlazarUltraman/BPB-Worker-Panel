@@ -26,7 +26,7 @@ export async function generateJWTToken(request: Request, env: Env): Promise<Resp
     const jwtToken = await new SignJWT({ userID })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('168h')
+        .setExpirationTime('24h')
         .sign(secret);
 
     return respond(true, HttpStatus.OK, 'Successfully generated Auth token', null, {

@@ -16,116 +16,86 @@ const [
 const defaultHttpsPorts = [443, 8443, 2053, 2083, 2087, 2096];
 const defaultHttpPorts = [80, 8080, 8880, 2052, 2082, 2086, 2095];
 
-fetch('/panel/settings')
-    .then(async response => response.json())
-    .then(({ success, status, message, body }) => {
-
-        if (status === 401) {
-            if (!body.isPassSet) {
-                // 从未设置密码：弹出"重置密码"弹窗（保持原行为）
-                const closeBtn = document.querySelector("#resetPassModal .close");
+function loadPanelData() {
+    fetch('/panel/settings')
+        .then(async response => response.json())
+        .then(({ success, status, message, body }) => {
+            if (status === 401 && !body.isPassSet) {
+                const closeBtn = document.querySelector(".close");
                 openResetPass();
-                if (closeBtn) closeBtn.style.display = 'none';
-            } else {
-                // 已设置密码但未认证：弹出密码验证弹窗
-                showAuthModal();
+                closeBtn.style.display = 'none';
             }
-            return; // 不再抛错，让 finally 继续执行
-        }
-
-        if (!success) {
-            throw new Error(`status ${status} - ${message}`);
-        }
-
-        const { subPath, proxySettings } = body;
-        globalThis.subPath = encodeURIComponent(subPath);
-        initiatePanel(proxySettings);
-    })
-    .catch(error => console.error("Data query error:", error.message || error))
-    .finally(() => {
-        window.onclick = (event) => {
-            // 认证弹窗禁止点击遮罩关闭
-            const authModal = document.getElementById('authModal');
-            if (authModal && event.target === authModal) return;
-
-            const qrModal = document.getElementById('qrModal');
-            const qrcodeContainer = document.getElementById('qrcode-container');
-
-            if (event.target == qrModal) {
-                qrModal.style.display = "none";
-                qrcodeContainer.lastElementChild.remove();
+            if (!success) {
+                throw new Error(`status ${status} - ${message}`);
             }
-        }
-
-        document.querySelectorAll(".toggle-password").forEach(toggle => {
-            toggle.addEventListener("click", function () {
-                const input = this.previousElementSibling;
-                const isPassword = input.type === "password";
-                input.type = isPassword ? "text" : "password";
-                this.textContent = isPassword ? "visibility" : "visibility_off";
+            const { subPath, proxySettings } = body;
+            globalThis.subPath = encodeURIComponent(subPath);
+            initiatePanel(proxySettings);
+        })
+        .catch(error => console.error("Data query error:", error.message || error))
+        .finally(() => {
+            window.onclick = (event) => {
+                const qrModal = document.getElementById('qrModal');
+                const qrcodeContainer = document.getElementById('qrcode-container');
+                if (event.target == qrModal) {
+                    qrModal.style.display = "none";
+                    qrcodeContainer.lastElementChild.remove();
+                }
+            };
+            document.querySelectorAll(".toggle-password").forEach(toggle => {
+                toggle.addEventListener("click", function () {
+                    const input = this.previousElementSibling;
+                    const isPassword = input.type === "password";
+                    input.type = isPassword ? "text" : "password";
+                    this.textContent = isPassword ? "visibility" : "visibility_off";
+                });
             });
         });
-
-        // 绑定认证弹窗的提交按钮和回车键
-        const authSubmitBtn = document.getElementById('authSubmitBtn');
-        if (authSubmitBtn) authSubmitBtn.addEventListener('click', submitAuthPassword);
-
-        const authInput = document.getElementById('authPassword');
-        if (authInput) {
-            authInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') submitAuthPassword();
-            });
-        }
-    });
-
-// ==================== 密码验证弹窗 ====================
-function showAuthModal() {
-    const modal = document.getElementById('authModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
-
-    const input = document.getElementById('authPassword');
-    if (input) {
-        input.value = '';
-        setTimeout(() => input.focus(), 100);
-    }
-    const errorEl = document.getElementById('authError');
-    if (errorEl) errorEl.textContent = '';
 }
 
-async function submitAuthPassword() {
-    const input = document.getElementById('authPassword');
-    const errorEl = document.getElementById('authError');
-    const password = input ? input.value : '';
+// 页面加载：根据认证状态决定是否显示遮罩
+document.addEventListener('DOMContentLoaded', function () {
+    const overlay = document.getElementById('authOverlay');
 
-    if (!password) {
-        if (errorEl) errorEl.textContent = '⚠️ 请输入密码';
+    if (window.isAuthenticated || !overlay) {
+        if (overlay) overlay.classList.add('hidden');
+        loadPanelData();
         return;
     }
 
-    try {
-        const response = await fetch('/login/authenticate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: password
-        });
-        const { success } = await response.json();
+    const passwordInput = document.getElementById('authPassword');
+    const loginBtn = document.getElementById('authLoginBtn');
+    const errorEl = document.getElementById('authError');
 
-        if (success) {
-            // 认证成功 → 刷新页面，此时 /panel/settings 会返回正常数据
-            window.location.reload();
-        } else {
-            if (errorEl) errorEl.textContent = '⚠️ 密码错误';
-            if (input) {
-                input.value = '';
-                input.focus();
+    async function doLogin() {
+        const password = passwordInput.value;
+        errorEl.textContent = '';
+        try {
+            const response = await fetch('/panel/authenticate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: password
+            });
+            const data = await response.json();
+            if (data.success) {
+                overlay.classList.add('hidden');
+                loadPanelData();
+            } else {
+                errorEl.textContent = '⚠️ 密码错误，请重试';
+                passwordInput.value = '';
+                passwordInput.focus();
             }
+        } catch (e) {
+            errorEl.textContent = '⚠️ 请求失败：' + (e.message || e);
         }
-    } catch (err) {
-        if (errorEl) errorEl.textContent = '⚠️ 请求失败: ' + (err.message || err);
     }
-}
-// ==================== END 密码验证弹窗 ====================
+
+    loginBtn.addEventListener('click', doLogin);
+    passwordInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doLogin();
+    });
+    setTimeout(() => passwordInput.focus(), 50);
+});
 
 async function initiatePanel(proxySettings) {
     const {
