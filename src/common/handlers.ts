@@ -847,6 +847,7 @@ try{
 }catch(e){}
 </script>`;
         return `<body${newAttrs} style="${bodyStyle}">${injectScript}`;
+    });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
     const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
