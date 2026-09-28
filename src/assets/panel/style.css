@@ -198,6 +198,7 @@ h1 {
     width: 100%;
 }
 
+.password-wrapper input[type="password"],
 .form-control input[type="password"],
 .form-control input[type="file"],
 input[type="text"],
