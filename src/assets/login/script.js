@@ -18,8 +18,6 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
             throw new Error(`Login failed with status ${status}: ${message}`);
         }
 
-        // 标记"刚登录"，供 /panel 页面识别并触发一次完全重载
-        try { sessionStorage.setItem('justLoggedIn', '1'); } catch (e) {}
         window.location.href = '/panel';
     } catch (error) {
         console.error('Login error:', error.message || error);

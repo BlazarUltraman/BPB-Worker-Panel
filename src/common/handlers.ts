@@ -834,19 +834,9 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        // 1) 延后 5ms 加载背景图：先让 container 透明度等样式立即生效
-        // 2) 若本次是从登录页跳转过来（sessionStorage 标记），80ms 后完全重载一次，
-        //    确保页面拿到最新的配置/缓存状态；重载后立即清除标记，避免刷新循环
-        const injectScript = `<script>
-setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);
-try{
-  if(sessionStorage.getItem('justLoggedIn')==='1'){
-    sessionStorage.removeItem('justLoggedIn');
-    setTimeout(function(){location.reload();},80);
-  }
-}catch(e){}
-</script>`;
-        return `<body${newAttrs} style="${bodyStyle}">${injectScript}`;
+        // 延后 5ms 加载背景图（透明度由 styleTag 立即生效）
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
+        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
