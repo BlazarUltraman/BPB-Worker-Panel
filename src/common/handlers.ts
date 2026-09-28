@@ -834,8 +834,8 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        // 延后 50ms 加载背景图（透明度由 styleTag 立即生效）
-        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},50);</script>`;
+        // 延后 100ms 加载背景图（透明度由 styleTag 立即生效）
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},100);</script>`;
         return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
