@@ -283,9 +283,6 @@ export async function handlePanel(request: Request, env: Env): Promise<Response>
     switch (pathName) {
         case '/panel':
             return await renderPanel(request, env);
-            
-        case '/panel/authenticate':
-			return await generateJWTToken(request, env);
 
         case '/panel/settings':
             return await getSettings(request, env);
@@ -753,9 +750,12 @@ export async function serveIcon(): Promise<Response> {
 
 async function renderPanel(request: Request, env: Env): Promise<Response> {
     const pwd = await env.kv.get('pwd');
-    let isAuthenticated = true;
     if (pwd) {
-        isAuthenticated = await Authenticate(request, env);
+        const auth = await Authenticate(request, env);
+        if (!auth) {
+            const { urlOrigin } = globalThis.httpConfig;
+            return Response.redirect(`${urlOrigin}/login`, 302);
+        }
     }
 
     let bgConfig = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
@@ -764,64 +764,42 @@ async function renderPanel(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__PANEL_HTML_CONTENT__, true) as string;
-    let bgUrl = bgConfig.image;
-    if (/^https?:\/\//i.test(bgUrl)) {
-        bgUrl = '/background-image?v=' + (bgConfig.version || 1);
-    }
-    const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
-
+    // 外链背景走 Worker 路径加载，携带版本号
+	let bgUrl = bgConfig.image;
+	if (/^https?:\/\//i.test(bgUrl)) {
+		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
+	}
+	// 只设置对齐/尺寸等静态属性；背景图由 <body> 之后的 script 延迟 5ms 加载
+	const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
 
+    // 保留原有 body 属性，仅设置 style；并在 body 后插入延迟加载背景图的 script
     const modifiedHtml = html.replace(/<body([^>]*)>/, (match, attrs) => {
+		// 检查是否已有 class 属性
         let newAttrs = attrs;
         if (attrs.includes('class=')) {
             newAttrs = attrs.replace(/class="([^"]*)"/, `class="$1${bodyClass}"`);
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        return `<body${newAttrs} style="${bodyStyle}">`;
+        // 延后 5ms 加载背景图：先让 container 透明度等样式立即生效，避免大体积 base64 阻塞首屏
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},5);</script>`;
+        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
-    // === 新增：认证状态 + 登录遮罩 ===
-    const overlayClass = isAuthenticated ? 'auth-overlay hidden' : 'auth-overlay';
-    const authScript = `<script>window.isAuthenticated = ${isAuthenticated};</script>`;
-    const authOverlay = `
-<div id="authOverlay" class="${overlayClass}">
-    <div class="auth-card">
-        <h1 class="auth-title">Web Max Panel</h1>
-        <p class="auth-subtitle">请输入密码以访问服务</p>
-        <input type="password" id="authPassword" class="auth-input" placeholder="请输入密码" autofocus>
-        <div id="authError" class="auth-error"></div>
-        <button type="button" id="authLoginBtn" class="auth-btn">登录</button>
-    </div>
-</div>`;
-
-    const authStyle = `<style>
-.auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 99999; }
-.auth-overlay.hidden { display: none; }
-.auth-card { background: var(--form-background-color); color: var(--color); padding: 30px 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center; min-width: 300px; }
-.auth-title { margin: 0 0 8px; color: var(--header-color); }
-.auth-subtitle { margin: 0 0 20px; color: var(--hr-text-color); font-size: 0.9rem; }
-.auth-input { width: 100%; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; box-sizing: border-box; margin-bottom: 8px; background: var(--input-background-color); color: var(--color); text-align: center; }
-.auth-input:focus { outline: none; border-color: var(--secondary-color); }
-.auth-error { color: red; font-size: 0.85rem; min-height: 1.2em; margin-bottom: 8px; }
-.auth-btn { width: 100%; padding: 10px 20px; background: linear-gradient(135deg, #12cd9e 0%, #a881d0 100%); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-</style>`;
-
+    // 插入容器透明度样式（透明度立即生效）
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;
+    const finalHtml = modifiedHtml.replace('</head>', styleTag + '</head>');
 
-    const finalHtml = modifiedHtml
-        .replace('</head>', authStyle + styleTag + '</head>')
-        .replace(/(<body[^>]*>)/, '$1' + authScript + authOverlay);
-
-    return new Response(finalHtml, {
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-        }
-    });
+	return new Response(finalHtml, {
+		headers: {
+			'Content-Type': 'text/html; charset=utf-8',
+			// ← 新增：登录页 HTML 不缓存，保证背景配置改动立即生效
+			'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+		}
+	});
 }
 
 async function renderLogin(request: Request, env: Env): Promise<Response> {
@@ -837,12 +815,13 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
     }
 
     const html = await decompressHtml(__LOGIN_HTML_CONTENT__, true) as string;
-	// ← 新增：外链背景走 Worker 路径加载，携带版本号
+	// 外链背景走 Worker 路径加载，携带版本号
 	let bgUrl = bgConfig.image;
 	if (/^https?:\/\//i.test(bgUrl)) {
 		bgUrl = '/background-image?v=' + (bgConfig.version || 1);
 	}
-	const bodyStyle = `background-image: url('${bgUrl}'); background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
+	// 只设置对齐/尺寸等静态属性；背景图由 <body> 之后的 script 延迟 5ms 加载
+	const bodyStyle = `background-size: cover; background-position: ${bgConfig.position}; background-attachment: fixed;`;
 	
     const darkMode = await getDarkMode(env);
     const bodyClass = darkMode ? ' dark-mode' : '';
@@ -855,7 +834,9 @@ async function renderLogin(request: Request, env: Env): Promise<Response> {
         } else {
             newAttrs = attrs + ` class="${bodyClass.trim()}"`;
         }
-        return `<body${newAttrs} style="${bodyStyle}">`;
+        // 延后 50ms 加载背景图（透明度由 styleTag 立即生效）
+        const bgScript = `<script>setTimeout(function(){document.body.style.setProperty('background-image','url('+${JSON.stringify(bgUrl)}+')','important');},50);</script>`;
+        return `<body${newAttrs} style="${bodyStyle}">${bgScript}`;
     });
 
     const styleTag = `<style>.container-big { opacity: ${bgConfig.opacity} !important; }</style>`;

@@ -16,86 +16,45 @@ const [
 const defaultHttpsPorts = [443, 8443, 2053, 2083, 2087, 2096];
 const defaultHttpPorts = [80, 8080, 8880, 2052, 2082, 2086, 2095];
 
-function loadPanelData() {
-    fetch('/panel/settings')
-        .then(async response => response.json())
-        .then(({ success, status, message, body }) => {
-            if (status === 401 && !body.isPassSet) {
-                const closeBtn = document.querySelector(".close");
-                openResetPass();
-                closeBtn.style.display = 'none';
+fetch('/panel/settings')
+    .then(async response => response.json())
+    .then(({ success, status, message, body }) => {
+
+        if (status === 401 && !body.isPassSet) {
+            const closeBtn = document.querySelector(".close");
+            openResetPass();
+            closeBtn.style.display = 'none';
+        }
+
+        if (!success) {
+            throw new Error(`status ${status} - ${message}`);
+        }
+
+        const { subPath, proxySettings } = body;
+        globalThis.subPath = encodeURIComponent(subPath);
+        initiatePanel(proxySettings);
+    })
+    .catch(error => console.error("Data query error:", error.message || error))
+    .finally(() => {
+        window.onclick = (event) => {
+            const qrModal = document.getElementById('qrModal');
+            const qrcodeContainer = document.getElementById('qrcode-container');
+
+            if (event.target == qrModal) {
+                qrModal.style.display = "none";
+                qrcodeContainer.lastElementChild.remove();
             }
-            if (!success) {
-                throw new Error(`status ${status} - ${message}`);
-            }
-            const { subPath, proxySettings } = body;
-            globalThis.subPath = encodeURIComponent(subPath);
-            initiatePanel(proxySettings);
-        })
-        .catch(error => console.error("Data query error:", error.message || error))
-        .finally(() => {
-            window.onclick = (event) => {
-                const qrModal = document.getElementById('qrModal');
-                const qrcodeContainer = document.getElementById('qrcode-container');
-                if (event.target == qrModal) {
-                    qrModal.style.display = "none";
-                    qrcodeContainer.lastElementChild.remove();
-                }
-            };
-            document.querySelectorAll(".toggle-password").forEach(toggle => {
-                toggle.addEventListener("click", function () {
-                    const input = this.previousElementSibling;
-                    const isPassword = input.type === "password";
-                    input.type = isPassword ? "text" : "password";
-                    this.textContent = isPassword ? "visibility" : "visibility_off";
-                });
+        }
+
+        document.querySelectorAll(".toggle-password").forEach(toggle => {
+            toggle.addEventListener("click", function () {
+                const input = this.previousElementSibling;
+                const isPassword = input.type === "password";
+                input.type = isPassword ? "text" : "password";
+                this.textContent = isPassword ? "visibility" : "visibility_off";
             });
         });
-}
-
-// 页面加载：根据认证状态决定是否显示遮罩
-document.addEventListener('DOMContentLoaded', function () {
-    const overlay = document.getElementById('authOverlay');
-
-    if (window.isAuthenticated || !overlay) {
-        if (overlay) overlay.classList.add('hidden');
-        loadPanelData();
-        return;
-    }
-
-    const passwordInput = document.getElementById('authPassword');
-    const loginBtn = document.getElementById('authLoginBtn');
-    const errorEl = document.getElementById('authError');
-
-    async function doLogin() {
-        const password = passwordInput.value;
-        errorEl.textContent = '';
-        try {
-            const response = await fetch('/panel/authenticate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: password
-            });
-            const data = await response.json();
-            if (data.success) {
-                overlay.classList.add('hidden');
-                loadPanelData();
-            } else {
-                errorEl.textContent = '⚠️ 密码错误，请重试';
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        } catch (e) {
-            errorEl.textContent = '⚠️ 请求失败：' + (e.message || e);
-        }
-    }
-
-    loginBtn.addEventListener('click', doLogin);
-    passwordInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') doLogin();
     });
-    setTimeout(() => passwordInput.focus(), 50);
-});
 
 async function initiatePanel(proxySettings) {
     const {
