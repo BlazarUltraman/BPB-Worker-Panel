@@ -118,10 +118,9 @@ h1 {
 
 /* ===== 登录表单的包裹层：让内容在卡片内居中，并限制其内容宽度 ===== */
 .login-wrapper {
-    max-width: 480px;
     width: 100%;
     margin: 0 auto;
-    padding: 10px 0;
+    padding: 30px 20px;
     display: flex;
     flex-direction: column;
     gap: var(--container-gap);
