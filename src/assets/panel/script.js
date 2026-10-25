@@ -15,9 +15,10 @@ const [
     'input[type=checkbox]'
 ].map(query => proxyForm.querySelectorAll(query));
 
+
 getUsage();
-initPanel();
-fetchIPInfo();
+localStorage.getItem('darkMode') === 'enabled' && document.body.classList.add('dark-mode');
+initPanel().then(fetchIPInfo);
 
 async function initPanel(settings, tgSettings, subscriptions, clients) {
     try {
@@ -44,6 +45,13 @@ async function initPanel(settings, tgSettings, subscriptions, clients) {
         }
 
         renderPanel(settings, tgSettings, subscriptions, clients);
+		await loadCloudflareConfig();
+		await loadBackgroundOnInit();
+		fetchcloudflareInfo();
+		renderCustomGroups();
+		setInterval(updateCountdown, 1000);
+		updateCountdown();
+		updateLinks();
     } catch (error) {
         console.error('Panel initiation error:', error);
     }
@@ -118,14 +126,21 @@ function isNewerVersion(latest, current) {
 }
 
 function renderPanel(proxySettings, tgSettings, subscriptions, clients) {
-    const {
-        securePath,
-        ports,
-        xrayUdpNoises,
-        remoteSettings
-    } = proxySettings;
+	const {
+		securePath,
+		ports,
+		xrayUdpNoises,
+		remoteSettings,
+		customGroups,       // ✅ 新增
+		linkIPs,            // ✅ 新增
+		linkUrl             // ✅ 新增（可选）
+	} = proxySettings;
 
-    const path = encodeURIComponent(securePath);
+	globalThis.customGroups = customGroups || [];
+	renderCustomGroups();
+	renderLinkIPs(linkIPs);
+	
+	const path = encodeURIComponent(securePath);
     if (path !== window.location.pathname.split('/')[1]) {
         setTimeout(() => {
             window.location.href = `../${path}/panel`;
@@ -136,22 +151,39 @@ function renderPanel(proxySettings, tgSettings, subscriptions, clients) {
     document.getElementById('doh').textContent = dohUrl.href;
     document.getElementById('fetchSettingsBtn').disabled = !remoteSettings;
 
+    globalThis.customGroups = customGroups || [];
+    renderCustomGroups();
+    renderLinkIPs(linkIPs);
+    
     selectElements.forEach(elm => elm.value = proxySettings[elm.id]);
     checkboxElements.forEach(elm => elm.checked = proxySettings[elm.id]);
     inputElements.forEach(elm => elm.value = proxySettings[elm.id] || '');
-    textareaElements.forEach(elm => {
-        const key = elm.id;
-        const element = document.getElementById(key);
-        const value = proxySettings[key]?.join('\r\n');
-        const rowsCount = proxySettings[key].length;
-        element.style.height = 'auto';
-        if (rowsCount) element.rows = rowsCount;
-        element.value = value;
-        elm.addEventListener('input', () => {
-            elm.style.height = 'auto';
-            elm.style.height = `${elm.scrollHeight}px`;
-        });
-    });
+	textareaElements.forEach(elm => {
+		const key = elm.id;
+		const element = document.getElementById(key);
+
+		// ✅ linkUrl 是 string，特殊处理，跳过数组逻辑
+		if (key === 'linkUrl') {
+			element.value = proxySettings[key] || '';
+			element.style.height = 'auto';
+			element.style.height = `${element.scrollHeight}px`;
+			element.addEventListener('input', () => {
+				element.style.height = 'auto';
+				element.style.height = `${element.scrollHeight}px`;
+			});
+			return;
+		}
+
+		const value = proxySettings[key]?.join('\r\n');
+		const rowsCount = (proxySettings[key] || []).length;
+		element.style.height = 'auto';
+		if (rowsCount) element.rows = rowsCount;
+		element.value = value || '';
+		elm.addEventListener('input', () => {
+			elm.style.height = 'auto';
+			elm.style.height = `${elm.scrollHeight}px`;
+		});
+	});
 
     renderPorts(ports.map(Number));
     renderNoises(xrayUdpNoises);
@@ -264,15 +296,14 @@ async function fetchIPInfo() {
     stopWaiting(icons);
 }
 
-function generateSubUrl(type, core, tag) {
+function generateSubUrl(type, core, tag, useLink = false) {
     const url = new URL(`./sub/${type}`, window.location.href);
     url.searchParams.append('app', core);
+    if (useLink) url.searchParams.append('link', '');
     url.hash = `💦 BPB ${tag}`;
-
     if (core === 'sing-box' && type !== 'raw') {
         return `sing-box://import-remote-profile?url=${url.href}`;
     }
-
     return url.href;
 }
 
@@ -708,7 +739,9 @@ function validateSettings() {
         const value = form[key];
         form[key] = value?.split('\n').map(val => val.trim()).filter(Boolean) || [];
     });
-
+    
+    form.customGroups = globalThis.customGroups || [];
+    form.linkUrl = document.getElementById('linkUrl')?.value.trim() || '';
     return form;
 }
 
@@ -1152,16 +1185,29 @@ function renderSubscriptions(subscriptions) {
             const ctaSection = elm('td');
 
             const wgCore = ['wireguard', 'amnezia'].includes(core);
-            if (!wgCore) {
-                const qrBtn = elm('button', { title: 'Display QR code', onclick: () => showQRCode(url) }, createIcon('qr_code'));
-                const copyBtn = elm('button', { title: 'Copy subscription URL', onclick: () => copyToClipboard(url) }, createIcon('content_copy'));
-                ctaSection.append(qrBtn, copyBtn);
-            }
+			if (!wgCore) {
+				const qrBtn = elm('button', { title: 'QR', onclick: async () => {
+					const useLink = await showSubTypeModal();
+					if (useLink === null) return;
+					showQRCode(generateSubUrl(type, core, label, useLink));
+				}}, createIcon('qr_code'));
+				
+				const copyBtn = elm('button', { title: 'Copy', onclick: async () => {
+					const useLink = await showSubTypeModal();
+					if (useLink === null) return;
+					copyToClipboard(generateSubUrl(type, core, label, useLink));
+				}}, createIcon('content_copy'));
+				ctaSection.append(qrBtn, copyBtn);
+			}
 
-            if (type !== 'raw') {
-                const dlBtn = elm('button', { title: 'Download config', onclick: () => dlUrl(url) }, createIcon('download'));
-                ctaSection.appendChild(dlBtn);
-            }
+			if (type !== 'raw') {
+				const dlBtn = elm('button', { title: 'Download', onclick: async () => {
+					const useLink = await showSubTypeModal();
+					if (useLink === null) return;
+					dlUrl(generateSubUrl(type, core, label, useLink));
+				}}, createIcon('download'));
+				ctaSection.appendChild(dlBtn);
+			}
 
             return elm('tr', {}, [clientSection, ctaSection]);
         }));
@@ -1191,4 +1237,320 @@ function renderClients(clients) {
 
         document.getElementById('supported-clients').appendChild(row);
     });
+}
+
+// ============ Cloudflare 用量 ============
+async function fetchcloudflareInfo() {
+    const usageRes = await fetch('./panel/cloudflare-usage', { cache: 'no-store' });
+    const usageData = await usageRes.json();
+    const kvRes = await fetch('./panel/kv-usage', { cache: 'no-store' });
+    const kvData = await kvRes.json();
+    updateCloudflareUI(usageData, kvData);
+}
+
+function updateCloudflareUI(usageData, kvData) {
+    const usageEmoji = document.getElementById('usage-status-emoji');
+    const kvEmoji = document.getElementById('kv-status-emoji');
+    if (usageEmoji) usageEmoji.textContent = usageData.success ? '🟢' : '🔴';
+    if (kvEmoji) kvEmoji.textContent = kvData.success ? '🟢' : '🔴';
+
+    if (usageData.success && usageData.body) {
+        const total = usageData.body.total || 0;
+        document.getElementById('cf-request-used').textContent = total.toLocaleString();
+        document.getElementById('cf-request-percent').textContent = (usageData.body.percentage || '0') + '%';
+    }
+
+    if (kvData.success && kvData.body) {
+        document.getElementById('cf-kv-read-used').textContent = (kvData.body.readTotal || 0).toLocaleString();
+        document.getElementById('cf-kv-read-percent').textContent = (kvData.body.readPercentage || '0') + '%';
+        document.getElementById('cf-kv-write-used').textContent = (kvData.body.writeTotal || 0).toLocaleString();
+        document.getElementById('cf-kv-write-percent').textContent = (kvData.body.writePercentage || '0') + '%';
+
+        let html = '';
+        if (kvData.body.details?.length) {
+            html = kvData.body.details.map(ns =>
+                `<div style="padding:5px 0;"><strong>${ns.namespaceName}</strong><br>
+                 读: ${ns.read || 0} | 写: ${ns.write || 0} | 删: ${ns.delete || 0} | 列: ${ns.list || 0}</div>`
+            ).join('');
+        } else {
+            html = '暂无数据';
+        }
+        document.getElementById('cf-kv-details').innerHTML = html;
+    }
+}
+
+// ============ Cloudflare 配置 ============
+async function loadCloudflareConfig() {
+    const res = await fetch('./panel/cloudflare-config');
+    const data = await res.json();
+    if (data.success && data.body) {
+        document.getElementById('cfAccountId').value = data.body.accountId || '';
+        document.getElementById('cfApiToken').value = data.body.apiToken || '';
+        document.getElementById('cfEmail').value = data.body.email || '';
+        document.getElementById('cfGlobalApiKey').value = data.body.globalApiKey || '';
+        document.getElementById('cfQueryUrl').value = data.body.queryUrl || '';
+    }
+}
+
+async function saveCloudflareConfig() {
+    const config = {
+        accountId: document.getElementById('cfAccountId').value.trim(),
+        apiToken: document.getElementById('cfApiToken').value.trim(),
+        email: document.getElementById('cfEmail').value.trim(),
+        globalApiKey: document.getElementById('cfGlobalApiKey').value.trim(),
+        queryUrl: document.getElementById('cfQueryUrl').value.trim()
+    };
+    if (!config.queryUrl && (!config.accountId || (!config.apiToken && (!config.email || !config.globalApiKey)))) {
+        return notify('error', 'Cloudflare Config', ['请填写 Account ID + API Token 或 Email + Global API Key，或提供 Query URL']);
+    }
+    const res = await fetch('./panel/cloudflare-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+    });
+    const data = await res.json();
+    if (data.success) {
+        notify('success', 'Cloudflare Config', ['配置已保存']);
+        setTimeout(fetchcloudflareInfo, 500);
+    } else {
+        notify('error', 'Cloudflare Config', [data.message || '保存失败']);
+    }
+}
+
+async function clearCloudflareConfig() {
+    const ok = await notify('confirm', 'Cloudflare Config', ['确定清除配置？']);
+    if (!ok) return;
+    const res = await fetch('./panel/cloudflare-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId: '', apiToken: '', email: '', globalApiKey: '', queryUrl: '' })
+    });
+    const data = await res.json();
+    if (data.success) {
+        ['cfAccountId', 'cfApiToken', 'cfEmail', 'cfGlobalApiKey', 'cfQueryUrl'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        notify('success', 'Cloudflare Config', ['配置已清除']);
+    }
+}
+
+// ============ 背景 ============
+async function loadBackgroundOnInit() {
+    const res = await fetch('./panel/background-config');
+    const data = await res.json();
+    if (data.success && data.body) {
+        document.getElementById('bgImageInput').value = data.body.image || '';
+        document.getElementById('bgPositionSelect').value = data.body.position || 'left';
+        document.getElementById('bgOpacityInput').value = data.body.opacity || 0.9;
+        globalThis.currentBgImage = data.body.image || '';
+    }
+}
+
+async function saveBackground() {
+    const image = document.getElementById('bgImageInput').value.trim();
+    const position = document.getElementById('bgPositionSelect').value;
+    const opacity = parseFloat(document.getElementById('bgOpacityInput').value);
+    if (!image) return notify('error', '背景', ['请输入背景图地址']);
+    if (isNaN(opacity) || opacity < 0 || opacity > 1) return notify('error', '背景', ['透明度必须在 0 ~ 1 之间']);
+    const res = await fetch('./panel/background-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image, position, opacity })
+    });
+    const data = await res.json();
+    if (data.success) {
+        applyBackgroundToPage(image, position, opacity);
+        notify('success', '背景', ['已保存']);
+    } else {
+        notify('error', '背景', [data.message || '保存失败']);
+    }
+}
+
+async function resetBackground() {
+    const ok = await notify('confirm', '背景', ['确定重置为默认？']);
+    if (!ok) return;
+    const res = await fetch('./panel/reset-background', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+        const bg = data.body;
+        document.getElementById('bgImageInput').value = bg.image;
+        document.getElementById('bgPositionSelect').value = bg.position;
+        document.getElementById('bgOpacityInput').value = bg.opacity;
+        applyBackgroundToPage(bg.image, bg.position, bg.opacity);
+        globalThis.currentBgImage = bg.image;
+        notify('success', '背景', ['已重置']);
+    }
+}
+
+function applyBackgroundToPage(image, position, opacity) {
+    if (image !== globalThis.currentBgImage) {
+        const newBg = /^https?:\/\//i.test(image) ? `/background-image?v=${Date.now()}` : image;
+        document.body.style.setProperty('background-image', `url(${newBg})`, 'important');
+        globalThis.currentBgImage = image;
+    }
+    document.body.style.setProperty('background-position', position, 'important');
+    document.body.style.setProperty('background-size', 'cover', 'important');
+    document.body.style.setProperty('background-attachment', 'fixed', 'important');
+    
+    // ✅ 应用到 .container-big 的透明度
+    document.querySelectorAll('.container-big').forEach(el => {
+        el.style.setProperty('opacity', opacity, 'important');
+    });
+}
+
+function convertBgImageToBase64() {
+    const file = document.getElementById('bgImageFile').files[0];
+    if (!file) return;
+    if (!file.type.match('image.*')) return notify('error', 'Base64', ['请选择图片文件']);
+    if (file.size > 0.7 * 1024 * 1024) return notify('error', 'Base64', ['图片不能超过 700KB']);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('bgPreviewImg').src = e.target.result;
+        document.getElementById('bgImagePreview').style.display = 'block';
+        document.getElementById('bgBase64Result').value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function copyBgBase64() {
+    const v = document.getElementById('bgBase64Result').value;
+    if (!v) return notify('error', 'Base64', ['没有可复制的内容']);
+    navigator.clipboard.writeText(v).then(() => notify('info', 'Base64', ['已复制']));
+}
+
+function clearBgBase64() {
+    document.getElementById('bgImageFile').value = '';
+    document.getElementById('bgImagePreview').style.display = 'none';
+    document.getElementById('bgBase64Result').value = '';
+}
+
+function applyBgBase64AsBackground() {
+    const v = document.getElementById('bgBase64Result').value;
+    if (!v) return notify('error', 'Base64', ['请先生成 Base64']);
+    document.getElementById('bgImageInput').value = v;
+    notify('info', 'Base64', ['已填入背景输入框，点击"保存"应用']);
+}
+
+document.getElementById('bgImageFile')?.addEventListener('change', convertBgImageToBase64);
+
+// ============ Link IPs ============
+function renderLinkIPs(linkIPs) {
+    const display = document.getElementById('linkIPsDisplay');
+    if (!display) return;
+    display.textContent = linkIPs?.length ? linkIPs.join(', ') : '暂无链接节点';
+}
+
+// ============ 订阅来源选择 ============
+function showSubTypeModal() {
+    return new Promise(resolve => {
+        const modal = document.getElementById('subTypeModal');
+        modal.hidden = false;
+        document.getElementById('subTypeLink').onclick = () => { modal.hidden = true; resolve(true); };
+        document.getElementById('subTypeClean').onclick = () => { modal.hidden = true; resolve(false); };
+        modal.querySelector('.modal-close').onclick = () => { modal.hidden = true; resolve(null); };
+    });
+}
+
+function closeSubTypeModal() {
+    document.getElementById('subTypeModal').hidden = true;
+}
+
+// ============ 自定义分组 ============
+function renderCustomGroups() {
+    const list = document.getElementById('customGroupList');
+    if (!list) return;
+    const groups = globalThis.customGroups || [];
+    if (groups.length === 0) {
+        list.innerHTML = '<div style="color:var(--hr-text-color);padding:8px;text-align:center;">暂无自定义分组</div>';
+    } else {
+        list.innerHTML = groups.map((g, i) => `
+            <div class="custom-group-item">
+                <input type="checkbox" class="group-checkbox" data-index="${i}">
+                <span class="group-info"><strong>${escapeHtml(g.name)}</strong> — ${escapeHtml(g.url)}</span>
+                <button type="button" class="delete-noise" onclick="removeCustomGroup(${i})">✕</button>
+            </div>
+        `).join('');
+    }
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function addCustomGroup() {
+    const name = document.getElementById('newGroupName').value.trim();
+    const url = document.getElementById('newGroupUrl').value.trim();
+    if (!name || !url) return notify('error', 'Custom Groups', ['请填写完整']);
+    if (!globalThis.customGroups) globalThis.customGroups = [];
+    globalThis.customGroups.push({ name, url });
+    document.getElementById('newGroupName').value = '';
+    document.getElementById('newGroupUrl').value = '';
+    renderCustomGroups();
+    handleProxyFormChanges(true);
+}
+
+function removeCustomGroup(index) {
+    globalThis.customGroups.splice(index, 1);
+    renderCustomGroups();
+    handleProxyFormChanges(true);
+}
+
+function moveSelected(direction) {
+    const checks = document.querySelectorAll('.group-checkbox:checked');
+    if (!checks.length) return notify('error', 'Custom Groups', ['请先勾选']);
+    const indices = Array.from(checks).map(cb => parseInt(cb.dataset.index)).sort((a, b) => a - b);
+    const groups = globalThis.customGroups;
+    const items = indices.map(i => groups[i]);
+    const firstIdx = indices[0];
+    const lastIdx = indices[indices.length - 1];
+    const count = indices.length;
+    [...indices].sort((a, b) => b - a).forEach(i => groups.splice(i, 1));
+    let pos;
+    if (direction === 'top') pos = 0;
+    else if (direction === 'bottom') pos = groups.length;
+    else if (direction === 'up') pos = Math.max(0, firstIdx - 1);
+    else pos = Math.min(groups.length, lastIdx - count + 2);
+    if (direction === 'bottom') groups.push(...items);
+    else groups.splice(pos, 0, ...items);
+    renderCustomGroups();
+    handleProxyFormChanges(true);
+}
+
+// ============ 暗色模式 ============
+async function darkModeToggle() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+    await fetch('./panel/dark-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ darkMode: isDark })
+    });
+}
+
+// ============ UTC 倒计时 ============
+function updateCountdown() {
+    const now = new Date();
+    const remaining = 24 * 3600 * 1000 - (now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds()) * 1000;
+    const el = document.getElementById('resetCountdown');
+    if (!el) return;
+    const fmt = (n) => String(n).padStart(2, '0');
+    el.textContent = `${fmt(Math.floor(remaining / 3600000))}:${fmt(Math.floor((remaining % 3600000) / 60000))}:${fmt(Math.floor((remaining % 60000) / 1000))}`;
+}
+
+// ============ 动态域名替换 ============
+function updateLinks() {
+    const hostname = window.location.hostname;
+    if (hostname.includes('pages.dev') && hostname.includes('-')) {
+        const dashIndex = hostname.indexOf('-');
+        const dotIndex = hostname.indexOf('.');
+        if (dashIndex !== -1 && dotIndex !== -1 && dashIndex < dotIndex) {
+            const suffix = hostname.substring(dashIndex, dotIndex);
+            document.querySelectorAll('a[data-type]').forEach(link => {
+                const type = link.getAttribute('data-type');
+                if (!type) return;
+                const urlObj = new URL(link.href);
+                link.href = `https://${type}${suffix}.pages.dev${urlObj.pathname}${urlObj.search}${urlObj.hash}`;
+            });
+        }
+    }
 }
