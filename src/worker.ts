@@ -14,7 +14,7 @@ export default {
 	async fetch(request: Request, env: Env) {
 		try {
 			init(request, env);
-			if (request.headers.get('Upgrade') === 'websocket') return handleWebsocket(request);
+			if (request.headers.get('Upgrade') === 'websocket') return handleWebsocket(request, env);
 			const { securePath, pathname } = getGlobals();
 			const path = pathname.split('/').splice(0, 3).join('/');
 
@@ -38,10 +38,10 @@ export default {
 					return handleProxyIPs(request, env);
 				
 				case `/${securePath}/qrcode`:
-					return generateQRCode(request);
+					return generateQRCode(request, env);
 					
 				default:
-					return fallback(request);
+					return fallback(request, env);
 			}
 		} catch (error) {
 			return renderError(error);

@@ -16,7 +16,10 @@ import {
     isDomain,
     isHttps,
     parseHostPort,
-    getProtocols
+    getProtocols,
+    fetchCustomGroupRules,
+    isSupportedClashRule,
+    escapeRegExp
 } from '@utils';
 
 function buildBalancer(tag: string, selector: string, hasFallback: boolean): Balancer {
@@ -262,7 +265,7 @@ async function addWorkerlessConfigs(configs: Config[]) {
     configs.push(cfDnsConfig, googleDnsConfig);
 }
 
-export async function getXrCustomConfigs(isFragment: boolean): Promise<Response> {
+export async function getXrCustomConfigs(isFragment: boolean, useLink = false): Promise<Response> {
     const {
         chainProxy,
         ports,
@@ -283,7 +286,7 @@ export async function getXrCustomConfigs(isFragment: boolean): Promise<Response>
         const proxies: Outbound[] = [];
         const chains: Outbound[] = [];
         const totalPorts = ports.filter(port => !isFragment && domain.endsWith('workers.dev') || isHttps(port));
-        const hosts = await getConfigAddresses(domain, isFragment);
+        const hosts = await getConfigAddresses(domain, isFragment, useLink);
         
         if (upstreamServer && upstreamPort && !isFragment) {
             totalPorts.unshift(upstreamPort);
@@ -329,6 +332,80 @@ export async function getXrCustomConfigs(isFragment: boolean): Promise<Response>
         await addBestFragmentConfigs(configs, chainOutbound);
         await addWorkerlessConfigs(configs);
     }
+    
+	// ===== 自定义分组（替换原 customGroups 块） =====
+	const mainConfigs = configs.filter(c =>
+		c.routing.balancers?.some((b: any) => b.tag === 'all-proxies')
+	);
+
+	const customGroups = getSettings().customGroups || [];
+	if (mainConfigs.length > 0 && customGroups.length > 0) {
+		// 合并同名分组规则
+		const merged = new Map<string, string[]>();
+		for (const g of customGroups) {
+			if (!g.url) continue;
+			const rules = await fetchCustomGroupRules(g.url);
+			if (!rules.length) continue;
+			if (!merged.has(g.name)) merged.set(g.name, []);
+			merged.get(g.name)!.push(...rules);
+		}
+
+		// 解析规则 → 一次构建，避免每个 config 重复计算
+		const parsedRules: { name: string; rule: any }[] = [];
+		for (const [name, rules] of merged) {
+			for (const rule of [...new Set(rules)]) {
+				if (!isSupportedClashRule(rule)) continue;
+				const trimmed = rule.trim();
+				if (!trimmed || trimmed.startsWith('#')) continue;
+				const parts = trimmed.split(',');
+				const type = parts[0].trim().toUpperCase();
+				const value = parts[1]?.trim();
+				if (!value) continue;
+
+				const xrRule: any = { type: 'field', outboundTag: name };
+				switch (type) {
+					case 'DOMAIN': case 'DOMAIN-FULL':
+						xrRule.domain = [`full:${value}`]; break;
+					case 'DOMAIN-SUFFIX':
+						xrRule.domain = [`domain:${value}`]; break;
+					case 'DOMAIN-KEYWORD':
+						xrRule.domain = [`regexp:.*${escapeRegExp(value)}.*`]; break;
+					case 'IP-CIDR': case 'IP-CIDR6':
+						xrRule.ip = [value]; break;
+					default: continue;
+				}
+				parsedRules.push({ name, rule: xrRule });
+			}
+		}
+
+		for (const mainConfig of mainConfigs) {
+			// ✅ 用该配置实际的 outbounds 构建 selector，避免引用不存在的 tag
+			const configProxyTags = mainConfig.outbounds
+				.filter(o => o.tag?.startsWith('proxy-') || o.tag?.startsWith('chain-'))
+				.map(o => o.tag);
+
+			if (configProxyTags.length === 0) continue;
+
+			// 每个分组一个 balancer
+			if (!mainConfig.routing.balancers) mainConfig.routing.balancers = [];
+			for (const name of merged.keys()) {
+				mainConfig.routing.balancers.push({
+					tag: name,
+					selector: configProxyTags,
+					strategy: { type: 'leastPing' }
+				});
+			}
+
+			// 插入 rules
+			if (parsedRules.length) {
+				const rulesArr = mainConfig.routing.rules;
+				let idx = rulesArr.findIndex((r: any) => r.outboundTag === 'block');
+				if (idx === -1) idx = rulesArr.findIndex((r: any) => r.outboundTag === 'direct');
+				if (idx === -1) idx = rulesArr.length;
+				rulesArr.splice(idx, 0, ...parsedRules.map(r => r.rule));
+			}
+		}
+	}
 
     const fileName = isFragment ? 'fragment' : 'normal';
     return new Response(JSON.stringify(configs, null, 4), {

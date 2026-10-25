@@ -25,9 +25,9 @@ export async function getDataset(env: Env): Promise<{
             warpAccounts = await fetchWarpAccounts(env);
         }
 
-        if (VERSION !== settings.panelVersion) {
-            settings = await updateDataset(env);
-        }
+		if (VERSION !== settings.panelVersion) {
+			settings = await updateDataset(env, settings as PanelSettings);
+		}
 
         let telegramBot: TelegramBot | null = await env.kv.get('telegramBot', { type: 'json' });
         if (!telegramBot) {
@@ -159,6 +159,8 @@ export async function updateDataset(env: Env, newSettings?: PanelSettings): Prom
             ['amneziaNoiseSizeMax'],
             ['customSubs'],
             ['remoteSettings'],
+            ['linkUrl'],
+            ['customGroups'],
             ['customConfigs']
         ];
 
@@ -174,6 +176,23 @@ export async function updateDataset(env: Env, newSettings?: PanelSettings): Prom
             panelVersion: VERSION
         };
 
+        // linkUrl → linkIPs 联动（带缓存比对）
+		const linkUrl = newSettings?.linkUrl ?? currentSettings?.linkUrl ?? kvSettings.linkUrl;
+		const currentLinkIPs = currentSettings?.linkIPs ?? kvSettings.linkIPs ?? [];
+
+		if (linkUrl) {
+			const newIPs = await fetchMultipleLinkIPs(linkUrl);
+			const sortedNew = [...newIPs].sort();
+			const sortedCur = [...currentLinkIPs].sort();
+			const same = sortedNew.length === sortedCur.length && sortedNew.every((v, i) => v === sortedCur[i]);
+			updatedSettings.linkIPs = same ? currentLinkIPs : newIPs;
+		} else {
+			updatedSettings.linkIPs = [];
+		}
+
+		// customGroups 保证是数组
+		updatedSettings.customGroups = Array.isArray(updatedSettings.customGroups) ? updatedSettings.customGroups : [];
+        
         await env.kv.put('proxySettings', JSON.stringify(updatedSettings));
         return updatedSettings;
     } catch (error) {
@@ -193,4 +212,77 @@ async function getDnsParams(dns: string): Promise<DnsHost> {
     }
 
     return dohHost;
+}
+
+export interface CloudflareConfig {
+    accountId: string;
+    apiToken: string;
+    email: string;
+    globalApiKey: string;
+    queryUrl?: string;
+}
+
+export interface BackgroundConfig {
+    image: string;
+    position: string;
+    opacity: number;
+    version?: number;
+}
+
+export const defaultBackground: BackgroundConfig = {
+    image: '/background-image',
+    position: 'left',
+    opacity: 0.85,
+    version: 1
+};
+
+const defaultCfConfig: CloudflareConfig = {
+    accountId: '', apiToken: '', email: '', globalApiKey: '', queryUrl: ''
+};
+
+export async function getCloudflareConfig(env: Env): Promise<CloudflareConfig> {
+    const stored = await env.kv.get('cfConfig', 'json') as CloudflareConfig | null;
+    return stored ?? { ...defaultCfConfig };
+}
+
+export async function saveCloudflareConfig(env: Env, config: CloudflareConfig): Promise<void> {
+    await env.kv.put('cfConfig', JSON.stringify(config));
+}
+
+export async function getBackgroundConfig(env: Env): Promise<BackgroundConfig> {
+    const cfg = await env.kv.get('backgroundConfig', { type: 'json' }) as BackgroundConfig | null;
+    return cfg && cfg.image ? cfg : { ...defaultBackground };
+}
+
+export async function saveBackgroundConfig(env: Env, cfg: BackgroundConfig): Promise<BackgroundConfig> {
+    const current = await getBackgroundConfig(env);
+    // 图片变化才 bump version，强制刷新缓存；否则保留原版本
+    const version = cfg.image !== current.image ? Date.now() : (current.version || 1);
+    const next = { ...cfg, version };
+    await env.kv.put('backgroundConfig', JSON.stringify(next));
+    return next;
+}
+
+async function fetchLinkIPs(url: string): Promise<string[]> {
+    if (!url) return [];
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text = await resp.text();
+        return text.split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !l.startsWith('#'));
+	} catch (e) {
+		let host = 'invalid-url';
+		try { host = new URL(url).host; } catch { /* noop */ }
+		console.error(`Failed to fetch link IPs from ${host}:`, e);
+		return [];
+	}
+}
+
+export async function fetchMultipleLinkIPs(input: string): Promise<string[]> {
+    if (!input) return [];
+    const urls = input.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    const results = await Promise.all(urls.map(u => fetchLinkIPs(u).catch(() => [])));
+    return [...new Set(results.flat())];
 }

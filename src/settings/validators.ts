@@ -33,8 +33,42 @@ const validators = [
     validatePath,
     validateCustomDomain,
     validateExtSubs,
-    validateRemoteSettings
+    validateRemoteSettings,
+    validateLinkUrl,
+	validateCustomGroups
 ];
+
+function validateLinkUrl(form: PanelSettings, errors: ValidationError[]) {
+    if (!form.linkUrl) return;
+    const urls = form.linkUrl.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    const invalids = urls.filter(u => !isValidUrl(u));
+    if (invalids.length) {
+        errors.push({
+            field: 'Link URL',
+            message: [
+                'Invalid URLs.',
+                'Please enter each value in a new line or comma separated.',
+                'Invalid values are:\n',
+                ...invalids.map(v => `+ ${v}`)
+            ]
+        });
+    }
+}
+
+function validateCustomGroups(form: PanelSettings, errors: ValidationError[]) {
+    if (!Array.isArray(form.customGroups)) return;
+    const invalids = form.customGroups.filter(g => !g.name || !isValidUrl(g.url));
+    if (invalids.length) {
+        errors.push({
+            field: 'Custom Groups',
+            message: [
+                'Each group must have a name and a valid URL.',
+                'Invalid values are:\n',
+                ...invalids.map(g => `+ ${g.name || '(no name)'} — ${g.url || '(no url)'}`)
+            ]
+        });
+    }
+}
 
 export function validateSettings(form: PanelSettings | null): ValidationError[] | null {
     if (!form) return null;

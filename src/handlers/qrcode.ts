@@ -113,7 +113,7 @@ async function createPNG(
 }
 
 
-export async function generateQRCode(request: Request): Promise<Response> {
+export async function generateQRCode(request: Request, env: Env): Promise<Response> {
     const { searchParams, origin } = getGlobals();
     const data = searchParams.get('data') ?? '';
 
@@ -127,7 +127,7 @@ export async function generateQRCode(request: Request): Promise<Response> {
     }
 
     if (url.origin !== origin) {
-        return fallback(request);
+        return fallback(request, env);
     }
 
     const qr = qrcode(0, 'M');

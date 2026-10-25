@@ -1,5 +1,5 @@
 import { Outbound, WireguardEndpoint, Config } from '#types/sing-box';
-import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
+import { getConfigAddresses, generateRemark, isHttps, getProtocols, fetchCustomGroupRules, isSupportedClashRule } from '@utils';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds.js';
 import { getSettings, getWarpAccounts } from '@settings';
 import { buildRoutingRules } from './routing';
@@ -83,7 +83,7 @@ async function buildConfig(
     return config;
 }
 
-export async function getSbCustomConfig(isFragment: boolean): Promise<Response> {
+export async function getSbCustomConfig(isFragment: boolean, useLink = false): Promise<Response> {
     const {
         chainProxy,
         ports,
@@ -107,7 +107,7 @@ export async function getSbCustomConfig(isFragment: boolean): Promise<Response> 
 
     for (const domain of domains) {
         const totalPorts = ports.filter(port => !isFragment && domain.endsWith('workers.dev') || isHttps(port));
-        const hosts = await getConfigAddresses(domain, isFragment);
+        const hosts = await getConfigAddresses(domain, isFragment, useLink);
         if (upstreamServer && upstreamPort) {
             totalPorts.unshift(upstreamPort);
             hosts.unshift(upstreamServer);
@@ -149,13 +149,64 @@ export async function getSbCustomConfig(isFragment: boolean): Promise<Response> 
         }
     }
 
-    const config = await buildConfig(
-        outbounds,
-        [],
-        tagGroup,
-        false,
-        isChain
-    );
+    const config = await buildConfig(outbounds, [], tagGroup, false, isChain);
+
+	// ===== 自定义分组 =====
+	const customGroups = getSettings().customGroups || [];
+	if (customGroups.length) {
+		const allProxies = [
+			...Object.keys(tagGroup).filter(k => tagGroup[k].length),
+			...Object.values(tagGroup).flat(),
+			'direct'
+		];
+
+		const merged = new Map<string, string[]>();
+		for (const g of customGroups) {
+			if (!g.url) continue;
+			const rules = await fetchCustomGroupRules(g.url);
+			if (!rules.length) continue;
+			if (!merged.has(g.name)) merged.set(g.name, []);
+			merged.get(g.name)!.push(...rules);
+		}
+
+		const extraOutbounds: any[] = [];
+		const extraRules: any[] = [];
+		for (const [name, rules] of merged) {
+			extraOutbounds.push({
+				type: 'selector', tag: name, outbounds: allProxies,
+				interrupt_exist_connections: false
+			});
+			for (const rule of [...new Set(rules)]) {
+				if (!isSupportedClashRule(rule)) continue;
+				const trimmed = rule.trim();
+				if (!trimmed || trimmed.startsWith('#')) continue;
+				const parts = trimmed.split(',');
+				const type = parts[0].trim().toUpperCase();
+				const value = parts[1]?.trim();
+				if (!value) continue;
+				const singRule: any = { outbound: name };
+				switch (type) {
+					case 'DOMAIN': case 'DOMAIN-FULL': singRule.domain = [value]; break;
+					case 'DOMAIN-SUFFIX': singRule.domain_suffix = [value]; break;
+					case 'DOMAIN-KEYWORD': singRule.domain_keyword = [value]; break;
+					case 'IP-CIDR': case 'IP-CIDR6': singRule.ip_cidr = [value]; break;
+					default: continue;
+				}
+				extraRules.push(singRule);
+			}
+		}
+
+		// 插入 outbounds（Selector 之后）
+		const selIdx = config.outbounds.findIndex(o => o.tag === '✅ Selector');
+		config.outbounds.splice(selIdx + 1, 0, ...extraOutbounds);
+
+		// 插入 route.rules（reject/final 之前）
+		const rulesArr = config.route.rules;
+		let idx = rulesArr.findIndex((r: any) => r.action === 'reject');
+		if (idx === -1) idx = rulesArr.findIndex((r: any) => r.outbound === '✅ Selector');
+		if (idx === -1) idx = rulesArr.length;
+		rulesArr.splice(idx, 0, ...extraRules);
+	}
 
     const fileName = isFragment ? 'fragment' : 'normal';
     return new Response(JSON.stringify(config, null, 4), {

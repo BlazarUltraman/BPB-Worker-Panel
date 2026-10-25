@@ -55,17 +55,25 @@ export function getProtocols() {
     return protocols.split(',');
 }
 
-export async function getConfigAddresses(domain: string, isFragment: boolean): Promise<string[]> {
-    const { enableIPv6, customCdnAddrs, cleanIPs } = getSettings();
+export async function getConfigAddresses(domain: string, isFragment: boolean, useLink = false): Promise<string[]> {
+    const { enableIPv6, customCdnAddrs, cleanIPs, linkIPs } = getSettings();
     const { ipv4, ipv6 } = await resolveDNS(domain, !enableIPv6);
-    const addrs = [
-        domain,
-        ...ipv4,
-        ...ipv6.map((ip: string) => `[${ip}]`),
-        ...cleanIPs
-    ];
+    const ipList = useLink ? linkIPs : cleanIPs;
 
-    return addrs.concatIf(!isFragment, customCdnAddrs);
+	const fromLinks = (ipList || []).map(item => {
+		const raw = item.split('#')[0].trim();
+		if (!raw) return null;
+		const { host } = parseHostPort(raw, true);
+		return host || null;
+	}).filter(Boolean) as string[];
+
+    return [
+        domain,
+        'www.speedtest.net',
+        ...ipv4,
+        ...ipv6.map(ip => `[${ip}]`),
+        ...fromLinks
+    ].concatIf(!isFragment, customCdnAddrs);
 }
 
 export function generateRemark(
@@ -403,6 +411,42 @@ export function extractProxyParams(chainProxy: string) {
         default:
             return {};
     }
+}
+
+export async function fetchCustomGroupRules(url: string): Promise<string[]> {
+    try {
+        const resp = await fetch(url);
+        const text = await resp.text();
+        const lines = text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+
+        const yamlLines = lines.filter(line => /^\s*-\s+/.test(line));
+        if (yamlLines.length > 0) {
+            return yamlLines
+                .map(line => line.replace(/^\s*-\s*/, '').trim())
+                .filter(Boolean);
+        }
+        return lines.filter(line => !/^payload\s*:/.test(line));
+	} catch (e) {
+		console.warn(`Failed to fetch custom group rules from ${url}:`, e);
+		return [];
+	}
+}
+
+export function isSupportedClashRule(rule: string): boolean {
+    const parts = rule.split(',');
+    const type = parts[0]?.trim().toUpperCase();
+    const supported = [
+        'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'DOMAIN-FULL',
+        'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'SRC-IP-CIDR',
+        'SRC-PORT', 'DST-PORT', 'PROCESS-NAME'
+    ];
+    return supported.includes(type);
+}
+
+export function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function extractUpstreamParams(upstreamProxy: string): UpstreamProxy {

@@ -18,6 +18,6 @@ export async function handleTelegram(request: Request, env: Env): Promise<Respon
             return handleTelegramWebhook(request, env);
 
         default:
-            return fallback(request);
+            return fallback(request, env);
     }
 }

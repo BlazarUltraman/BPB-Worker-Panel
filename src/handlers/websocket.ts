@@ -4,7 +4,7 @@ import { VlOverWSHandler } from '@protocols/vless';
 import { getGlobals } from '@settings';
 import { fallback } from './utils';
 
-export async function handleWebsocket(request: Request): Promise<Response> {
+export async function handleWebsocket(request: Request, env: Env): Promise<Response> {
     const { pathname } = getGlobals();
     const protocol = pathname.split('/')[1];
 
@@ -12,12 +12,10 @@ export async function handleWebsocket(request: Request): Promise<Response> {
         switch (protocol) {
             case 'vl':
                 return VlOverWSHandler(request);
-
             case 'tr':
                 return TrOverWSHandler(request);
-
             default:
-                return fallback(request);
+                return fallback(request, env);
         }
     } catch (error) {
         return new Response('Bad Request', { status: HttpStatus.BAD_REQUEST });

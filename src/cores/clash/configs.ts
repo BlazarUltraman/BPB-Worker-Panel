@@ -2,7 +2,7 @@ import { buildDNS } from './dns';
 import { buildRoutingRules, buildRuleProviders } from './routing';
 import { buildChainOutbound, buildUrlTest, buildWarpOutbound, buildWebsocketOutbound } from './outbounds';
 import type { WireguardOutbound, Config, Outbound } from '#types/clash';
-import { getConfigAddresses, generateRemark, isHttps, getProtocols } from '@utils';
+import { getConfigAddresses, generateRemark, isHttps, getProtocols, fetchCustomGroupRules, isSupportedClashRule } from '@utils';
 import { sniffer, tun } from './inbounds';
 import { getSettings, getWarpAccounts } from '@settings';
 
@@ -82,7 +82,7 @@ async function buildConfig(
     return config;
 }
 
-export async function getClNormalConfig(): Promise<Response> {
+export async function getClNormalConfig(useLink = false): Promise<Response> {
     const {
         chainProxy,
         ports,
@@ -106,7 +106,7 @@ export async function getClNormalConfig(): Promise<Response> {
 
     for (const domain of domains) {
         const totalPorts = ports.filter(port => domain.endsWith('workers.dev') || isHttps(port));
-        const hosts = await getConfigAddresses(domain, false);
+        const hosts = await getConfigAddresses(domain, false, useLink);
         if (upstreamServer && upstreamPort) {
             totalPorts.unshift(upstreamPort);
             hosts.unshift(upstreamServer);
@@ -157,7 +157,53 @@ export async function getClNormalConfig(): Promise<Response> {
         false,
         false
     );
+    
+	const customGroups = getSettings().customGroups || [];
+	if (customGroups.length) {
+		const allProxies = [
+			...Object.keys(tagGroup).filter(k => tagGroup[k].length),
+			...Object.values(tagGroup).flat()
+		];
 
+		// 合并同名分组
+		const merged = new Map<string, string[]>();
+		for (const g of customGroups) {
+			if (!g.url) continue;
+			const rules = await fetchCustomGroupRules(g.url);
+			if (!rules.length) continue;
+			if (!merged.has(g.name)) merged.set(g.name, []);
+			merged.get(g.name)!.push(...rules);
+		}
+
+		const newGroups: any[] = [];
+		const insertedRules: string[] = [];
+		for (const [name, rules] of merged) {
+			newGroups.push({ name, type: 'select', proxies: allProxies });
+			for (const rule of [...new Set(rules)]) {
+				if (!isSupportedClashRule(rule)) continue;
+				const trimmed = rule.trim();
+				if (!trimmed || trimmed.startsWith('#')) continue;
+				const parts = trimmed.split(',');
+				const type = parts[0].trim().toUpperCase();
+				// 只有域名/IP 规则且缺少目标时自动追加分组名
+				const routeTypes = ['DOMAIN','DOMAIN-SUFFIX','DOMAIN-KEYWORD','DOMAIN-FULL',
+					'IP-CIDR','IP-CIDR6','GEOIP','SRC-IP-CIDR','SRC-PORT','DST-PORT','PROCESS-NAME'];
+				insertedRules.push(routeTypes.includes(type) && parts.length < 3 ? `${trimmed},${name}` : trimmed);
+			}
+		}
+
+		// 插入 proxy-groups（Selector 之后）
+		const selIdx = config['proxy-groups'].findIndex((g: any) => g.name === '✅ Selector');
+		config['proxy-groups'].splice(selIdx + 1, 0, ...newGroups);
+
+		// 插入 rules（REJECT/MATCH 之前）
+		const rulesArr = config.rules;
+		let idx = rulesArr.findIndex((r: string) => r.includes('REJECT'));
+		if (idx === -1) idx = rulesArr.findIndex((r: string) => r.startsWith('MATCH'));
+		if (idx === -1) idx = rulesArr.length;
+		rulesArr.splice(idx, 0, ...insertedRules);
+	}
+	
     return new Response(JSON.stringify(config, null, 4), {
         status: 200,
         headers: {

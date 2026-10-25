@@ -75,6 +75,10 @@ export interface KvSettings {
     customConfigs: string[];
     remoteSettings: string;
     panelVersion: string;
+	linkUrl: string;          // 用户输入的链接列表（逗号/换行分隔）
+	linkIPs: string[];        // 从链接动态拉取的节点
+	customGroups: Array<{ name: string; url: string }>;
+	darkMode: boolean;
 }
 
 export interface TelegramBot {
@@ -117,6 +121,10 @@ export interface SharedSettings extends
         | 'remoteSettings'
         | 'customDomain'
         | 'panelVersion'
+        | 'linkUrl'
+        | 'linkIPs'
+        | 'customGroups'
+        | 'darkMode'
     > { }
 
 export interface PanelSettings extends KvSettings, MainSettings { };

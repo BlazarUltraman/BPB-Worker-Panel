@@ -27,7 +27,7 @@ export async function handleProxyIPs(request: Request, env: Env): Promise<Respon
             return testProxyIP();
 
         default:
-            return fallback(request);
+            return fallback(request, env);
     }
 }
 

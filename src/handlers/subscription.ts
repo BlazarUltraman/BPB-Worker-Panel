@@ -7,23 +7,40 @@ import { fallback } from './utils';
 import { getWireguardConfigs } from '@cores/wireguard';
 import { HttpStatus } from '@common';
 import { SharedSettings } from '#types/settings';
+import { fetchMultipleLinkIPs } from '@kv';
 
 export async function handleSubscriptions(request: Request, env: Env): Promise<Response> {
     await setSettings(env);
     const { pathname, client } = getGlobals();
+    const url = new URL(request.url);
+    const useLink = url.searchParams.has('link');
     const path = pathname.split('/')[3];
+
+    // Link 订阅时刷新 linkIPs
+    if (useLink) {
+        const kv = getKvSettings();
+        if (kv.linkUrl) {
+            const newIPs = await fetchMultipleLinkIPs(kv.linkUrl);
+            const sortedNew = [...newIPs].sort();
+            const sortedCur = [...(kv.linkIPs || [])].sort();
+            const same = sortedNew.length === sortedCur.length && sortedNew.every((v, i) => v === sortedCur[i]);
+            if (!same && newIPs.length > 0) {
+                const updated = { ...kv, linkIPs: newIPs };
+                await env.kv.put('proxySettings', JSON.stringify(updated));
+				await setSettings(env);   // 重新从 KV 读取，更新内存中的 kvSettings
+            }
+        }
+    }
 
     switch (path) {
         case 'normal':
             switch (client) {
-                case 'xray':
-                    return getXrCustomConfigs(false);
-
-                case 'sing-box':
-                    return getSbCustomConfig(false);
-
-                case 'clash':
-                    return getClNormalConfig();
+				case 'xray':
+					return getXrCustomConfigs(false, useLink);
+				case 'sing-box':
+					return getSbCustomConfig(false, useLink);
+				case 'clash':
+					return getClNormalConfig(useLink);
 
                 default:
                     break;
@@ -39,17 +56,15 @@ export async function handleSubscriptions(request: Request, env: Env): Promise<R
                     break;
             }
 
-        case 'fragment':
-            switch (client) {
-                case 'xray':
-                    return getXrCustomConfigs(true);
-
-                case 'sing-box':
-                    return getSbCustomConfig(true);
-
-                default:
-                    break;
-            }
+		case 'fragment':
+			switch (client) {
+				case 'xray':
+					return getXrCustomConfigs(true, useLink);
+				case 'sing-box':
+					return getSbCustomConfig(true, useLink);
+				default:
+					break;
+			}
 
         case 'warp':
             switch (client) {
@@ -91,7 +106,7 @@ export async function handleSubscriptions(request: Request, env: Env): Promise<R
             return shareSettings();
 
         default:
-            return fallback(request);
+            return fallback(request, env);
     }
 }
 

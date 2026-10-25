@@ -80,6 +80,10 @@ export function getSharedSettings(): SharedSettings {
         remoteSettings,
         customDomain,
         panelVersion,
+        linkUrl,          // ✅ 从 destructure 中移除
+        linkIPs,
+        customGroups,
+        darkMode,
         ...proxySettings
     } = kvSettings;
 
@@ -271,5 +275,9 @@ let kvSettings: KvSettings = {
     customBlockRules: [],
     customBypassSanctionRules: [],
     remoteSettings: '',
+    linkUrl: '',
+	linkIPs: [],
+	customGroups: [],
+	darkMode: false,
     panelVersion: VERSION
 };
