@@ -1,18 +1,13 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join, dirname as pathDirname } from 'path';
 import { fileURLToPath } from 'url';
-import { build } from 'esbuild';
 import { globSync } from 'glob';
-import { minify as jsMinify } from 'terser';
-import { minify as htmlMinify } from 'html-minifier';
 import pkg from '../package.json' with { type: 'json' };
-import { gzipSync } from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = pathDirname(__filename);
 
 const ASSET_PATH = join(__dirname, '../src/assets');
-const DIST_PATH = join(__dirname, '../dist/');
 
 const green = '\x1b[32m';
 const red = '\x1b[31m';
@@ -34,67 +29,25 @@ async function processHtmlPages() {
 
         if (dir !== 'error') {
             const css = readFileSync(base('style.css'), 'utf8');
-
             const script = readFileSync(base('script.js'), 'utf8');
-            const { code } = await jsMinify(script);
 
             html = html
                 .replace('/* CSS_PLACEHOLDER */', css)
-                .replace('/* JS_PLACEHOLDER */', code);
+                .replace('/* JS_PLACEHOLDER */', script);
         }
 
-        const minifiedHtml = htmlMinify(html, {
-            collapseWhitespace: true,
-            removeAttributeQuotes: true,
-            minifyCSS: true
-        });
-
-        const compressed = gzipSync(minifiedHtml, { level: 9 });
-        result[dir] = compressed.toString('base64');
+        result[dir] = html;
     }
 
-    console.log(`${success} Assets bundled successfuly!`);
+    console.log(`${success} Assets processed successfully!`);
     return result;
 }
 
 async function buildWorker() {
     const htmls = await processHtmlPages();
-    const faviconBase64 = readFileSync('./src/assets/favicon.ico').toString('base64');
-
-    const code = await build({
-        entryPoints: [join(__dirname, '../src/worker.ts')],
-        bundle: true,
-        format: 'esm',
-        write: false,
-        external: [
-            'cloudflare:sockets',
-            'node:crypto'
-        ],
-        platform: 'browser',
-        target: 'esnext',
-        loader: { '.ts': 'ts' },
-        define: { VERSION: `"${pkg.version}"` }
-    });
-
-    console.log(`${success} Worker built successfuly!`);
-
-    const { code: script } = await jsMinify(code.outputFiles[0].text, {
-        module: true,
-        output: {
-            comments: false
-        },
-        compress: {
-            dead_code: false,
-            unused: false
-        }
-    });
-
-    console.log(`${success} Worker minified successfuly!`);
-
-    const base64Gzip = gzipSync(script, { level: 9 }).toString("base64");
+    const faviconBase64 = readFileSync(join(ASSET_PATH, 'favicon.ico')).toString('base64');
 
     const embededContents = {
-        SOURCE_CONTENT: base64Gzip,
         PANEL_HTML_CONTENT: htmls['panel'],
         LOGIN_HTML_CONTENT: htmls['login'],
         ERROR_HTML_CONTENT: htmls['error'],
@@ -102,16 +55,11 @@ async function buildWorker() {
         ICON_CONTENT: faviconBase64
     };
 
-    const worker = `Object.assign(globalThis, ${JSON.stringify(embededContents)});${script}`;
-
-    mkdirSync(DIST_PATH, { recursive: true });
-    writeFileSync('./dist/worker.js', worker, 'utf8');
-
     console.log(`${success} Done!`);
+    return embededContents;
 }
 
 buildWorker().catch(err => {
     console.error(`${failure} Build failed:`, err);
     process.exit(1);
 });
-
