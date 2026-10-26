@@ -1210,57 +1210,56 @@
 
                         </form>
                     </div>
-                    
-                    <!-- ===== Subscriptions 折叠（新增结构） ===== -->
-					<div class="container">
-						<details>
-							<summary>
-								<h2><span class="material-symbols-rounded">link</span> Subscriptions</h2>
-							</summary>
-							<div id="subscriptions" class="section" style="margin-top: 10px;"></div>
-						</details>
-					</div>
-					
                 </details>
+                
+                <!-- ===== Subscriptions 折叠（新增结构） ===== -->
+				<div class="container">
+					<details>
+						<summary>
+							<h2><span class="material-symbols-rounded">link</span> Subscriptions</h2>
+						</summary>
+						<div id="subscriptions" class="section" style="margin-top: 10px;"></div>
+					</details>
+				</div>
+
+				<!-- ===== Supported Clients 折叠（新增结构） ===== -->
+				<div class="container">
+					<details>
+						<summary>
+							<h2><span class="material-symbols-rounded">verified</span> Supported Clients</h2>
+						</summary>
+						<div class="info-table" style="margin-top: 10px;">
+							<table>
+								<thead>
+									<tr>
+										<th scope="col">Client</th>
+										<th scope="col">Minimum Requirement</th>
+										<th scope="col">Get Latest</th>
+									</tr>
+								</thead>
+								<tbody id="supported-clients"></tbody>
+							</table>
+						</div>
+					</details>
+				</div>
+
+				<!-- ===== DoH 卡片 ===== -->
+				<div class="container">
+					<h2><span class="material-symbols-rounded">dns</span> DNS over HTTPS</h2>
+					<div class="value-container">
+						<div class="output-container">
+							<span id="doh" class="output"></span>
+						</div>
+						<button class="svg-btn" onclick="copyDoh()">
+							<span class="material-symbols-rounded">
+								content_copy
+							</span>
+						</button>
+					</div>
+				</div>
             </div>
 
             
-
-            <!-- ===== Supported Clients 折叠（新增结构） ===== -->
-            <div class="container">
-                <details>
-                    <summary>
-                        <h2><span class="material-symbols-rounded">verified</span> Supported Clients</h2>
-                    </summary>
-                    <div class="info-table" style="margin-top: 10px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col">Client</th>
-                                    <th scope="col">Minimum Requirement</th>
-                                    <th scope="col">Get Latest</th>
-                                </tr>
-                            </thead>
-                            <tbody id="supported-clients"></tbody>
-                        </table>
-                    </div>
-                </details>
-            </div>
-
-            <!-- ===== DoH 卡片 ===== -->
-            <div class="container">
-                <h2><span class="material-symbols-rounded">dns</span> DNS over HTTPS</h2>
-                <div class="value-container">
-                    <div class="output-container">
-                        <span id="doh" class="output"></span>
-                    </div>
-                    <button class="svg-btn" onclick="copyDoh()">
-                        <span class="material-symbols-rounded">
-                            content_copy
-                        </span>
-                    </button>
-                </div>
-            </div>
 
             <!-- ===== My IP 卡片 ===== -->
             <div class="container">
